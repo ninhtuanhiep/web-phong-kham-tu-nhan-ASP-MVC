@@ -11,8 +11,9 @@
 }
 <link rel="stylesheet" href="~/css/BacSiHome/LichLamViec.css" />
 <div class="llv-page">
+
     <div class="container">
-        @if (TempData["Success"] != null)
+        @* @if (TempData["Success"] != null)
         {
             <div class="alert alert-success d-flex align-items-center gap-2 mb-3" style="border-radius:10px">
                 <i class="bi bi-check-circle-fill fs-5"></i> @TempData["Success"]
@@ -23,7 +24,35 @@
             <div class="alert alert-danger d-flex align-items-center gap-2 mb-3" style="border-radius:10px">
                 <i class="bi bi-exclamation-circle-fill fs-5"></i> @TempData["Error"]
             </div>
-        }
+        } *@
+        <div class="notification-container" id="toastContainer">
+            @if (TempData["Success"] != null)
+            {
+                <div class="custom-toast success" id="successToast">
+                    <span class="toast-icon"><i class="bi bi-check-circle-fill"></i></span>
+                    <div class="toast-content">
+                        <div class="toast-title">Thành công</div>
+                        <div class="toast-msg">@TempData["Success"]</div>
+                    </div>
+                    <button class="toast-close" onclick="closeToast('successToast')">
+                        <i class="bi bi-x"></i>
+                    </button>
+                </div>
+            }
+            @if (TempData["Error"] != null)
+            {
+                <div class="custom-toast error" id="errorToast">
+                    <span class="toast-icon"><i class="bi bi-x-circle-fill"></i></span>
+                    <div class="toast-content">
+                        <div class="toast-title">Lỗi</div>
+                        <div class="toast-msg">@TempData["Error"]</div>
+                    </div>
+                    <button class="toast-close" onclick="closeToast('errorToast')">
+                        <i class="bi bi-x"></i>
+                    </button>
+                </div>
+            }
+        </div>
         <a asp-area="BacSi" asp-controller="Profile" asp-action="Index" class="detail-back">
             <i class="bi bi-arrow-left"></i> Quay lại trang thông tin
         </a>
@@ -235,4 +264,36 @@
     function closeModalBtn() {
         document.getElementById('modalOverlay').classList.remove('show');
     }
+
+    function closeToast(id) {
+        const toast = document.getElementById(id);
+
+        // Nếu không tìm thấy hoặc đã đang ẩn rồi thì bỏ qua
+        if (!toast || toast.classList.contains('toast-out')) return;
+
+        // Bắt đầu kích hoạt hiệu ứng ẩn bằng CSS
+        toast.classList.add('toast-out');
+
+        // Chờ hiệu ứng kết thúc hoàn toàn mới xóa khỏi DOM
+        toast.addEventListener('transitionend', function handler(e) {
+            // Chỉ xóa khi thuộc tính 'opacity' hoặc 'transform' hoàn tất
+            if (e.propertyName === 'opacity' || e.propertyName === 'transform') {
+                toast.remove();
+            }
+        }, { once: true });
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        // Tự động đóng sau 4 giây (cho người dùng kịp đọc)
+        const autoCloseIds = ['successToast', 'errorToast'];
+
+        autoCloseIds.forEach(id => {
+            const toast = document.getElementById(id);
+            if (toast) {
+                setTimeout(() => {
+                    closeToast(id);
+                }, 2000);
+            }
+        });
+    });
 </script>

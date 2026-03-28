@@ -13,17 +13,22 @@
 <div>
     <div class="page-hd">
         <h1>Quản lý lịch làm việc</h1>
-        @if (TempData["Success"] != null)
-        {
+        <div class="notification-container" id="toastContainer">
+            @if (TempData["Success"] != null)
+            {
                 <div class="custom-toast success" id="successToast">
                     <span class="toast-icon"><i class="bi bi-check-circle-fill"></i></span>
                     <div class="toast-content">
                         <div class="toast-title">Thành công</div>
                         <div class="toast-msg">@TempData["Success"]</div>
-            </div>
-        }
-        @if (TempData["Error"] != null)
-        {
+                    </div>
+                    <button class="toast-close" onclick="closeToast('successToast')">
+                        <i class="bi bi-x"></i>
+                    </button>
+                </div>
+            }
+            @if (TempData["Error"] != null)
+            {
                 <div class="custom-toast error" id="errorToast">
                     <span class="toast-icon"><i class="bi bi-x-circle-fill"></i></span>
                     <div class="toast-content">
@@ -33,8 +38,9 @@
                     <button class="toast-close" onclick="closeToast('errorToast')">
                         <i class="bi bi-x"></i>
                     </button>
-            </div>
-        }
+                </div>
+            }
+        </div>
     </div>
 
     <!-- FORM TẠO LỊCH NHANH -->
@@ -284,3 +290,36 @@
     </div>
 </div>
 @inject web_phong_kham_tu_nhan.Data.ApplicationDbContext _context
+<script>
+    function closeToast(id) {
+        const toast = document.getElementById(id);
+
+        // Nếu không tìm thấy hoặc đã đang ẩn rồi thì bỏ qua
+        if (!toast || toast.classList.contains('toast-out')) return;
+
+        // Bắt đầu kích hoạt hiệu ứng ẩn bằng CSS
+        toast.classList.add('toast-out');
+
+        // Chờ hiệu ứng kết thúc hoàn toàn mới xóa khỏi DOM
+        toast.addEventListener('transitionend', function handler(e) {
+            // Chỉ xóa khi thuộc tính 'opacity' hoặc 'transform' hoàn tất
+            if (e.propertyName === 'opacity' || e.propertyName === 'transform') {
+                toast.remove();
+            }
+        }, { once: true });
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        // Tự động đóng sau 4 giây (cho người dùng kịp đọc)
+        const autoCloseIds = ['successToast', 'errorToast'];
+
+        autoCloseIds.forEach(id => {
+            const toast = document.getElementById(id);
+            if (toast) {
+                setTimeout(() => {
+                    closeToast(id);
+                }, 2000);
+            }
+        });
+    });
+</script>
