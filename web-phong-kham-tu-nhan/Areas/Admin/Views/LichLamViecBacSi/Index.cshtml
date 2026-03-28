@@ -15,14 +15,24 @@
         <h1>Quản lý lịch làm việc</h1>
         @if (TempData["Success"] != null)
         {
-            <div class="alert alert-success py-2 px-3 mb-0" style="border-radius:8px;font-size:13px">
-                <i class="bi bi-check-circle-fill me-1"></i> @TempData["Success"]
+                <div class="custom-toast success" id="successToast">
+                    <span class="toast-icon"><i class="bi bi-check-circle-fill"></i></span>
+                    <div class="toast-content">
+                        <div class="toast-title">Thành công</div>
+                        <div class="toast-msg">@TempData["Success"]</div>
             </div>
         }
         @if (TempData["Error"] != null)
         {
-            <div class="alert alert-danger py-2 px-3 mb-0" style="border-radius:8px;font-size:13px">
-                <i class="bi bi-exclamation-circle-fill me-1"></i> @TempData["Error"]
+                <div class="custom-toast error" id="errorToast">
+                    <span class="toast-icon"><i class="bi bi-x-circle-fill"></i></span>
+                    <div class="toast-content">
+                        <div class="toast-title">Lỗi</div>
+                        <div class="toast-msg">@TempData["Error"]</div>
+                    </div>
+                    <button class="toast-close" onclick="closeToast('errorToast')">
+                        <i class="bi bi-x"></i>
+                    </button>
             </div>
         }
     </div>
