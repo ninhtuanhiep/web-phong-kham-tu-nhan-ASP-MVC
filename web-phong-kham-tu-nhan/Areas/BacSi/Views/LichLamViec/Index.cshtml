@@ -1,0 +1,238 @@
+﻿@model List<web_phong_kham_tu_nhan.Models.Entities.LichLamViecBacSi>
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Lịch làm việc";
+    DateTime startOfWeek = (DateTime)ViewBag.StartOfWeek;
+    DateTime endOfWeek = (DateTime)ViewBag.EndOfWeek;
+    var doctor = ViewBag.Doctor as web_phong_kham_tu_nhan.Models.Entities.BacSi;
+    string[] tenThu = { "CN", "T2", "T3", "T4", "T5", "T6", "T7" };
+    string[] tenThuFull = { "Chủ nhật", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7" };
+}
+<link rel="stylesheet" href="~/css/BacSiHome/LichLamViec.css" />
+<div class="llv-page">
+    <div class="container">
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success d-flex align-items-center gap-2 mb-3" style="border-radius:10px">
+                <i class="bi bi-check-circle-fill fs-5"></i> @TempData["Success"]
+            </div>
+        }
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger d-flex align-items-center gap-2 mb-3" style="border-radius:10px">
+                <i class="bi bi-exclamation-circle-fill fs-5"></i> @TempData["Error"]
+            </div>
+        }
+        <a asp-area="BacSi" asp-controller="Profile" asp-action="Index" class="detail-back">
+            <i class="bi bi-arrow-left"></i> Quay lại trang thông tin
+        </a>
+
+        <!-- HEADER -->
+        <div class="llv-header">
+            <div>
+                <h2><i class="bi bi-calendar3 me-2"></i>Lịch làm việc của tôi</h2>
+                <p>Xem lịch theo tuần &amp; gửi đơn xin nghỉ</p>
+            </div>
+            @if (doctor != null)
+            {
+                <div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:50px;padding:7px 16px 7px 7px">
+                    <img src="@(doctor.ImageUrl ?? "/Images/default-avatar.png")"
+                         onerror="this.src='/Images/default-avatar.png'"
+                         style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.5)" />
+                    <span style="font-size:13px;font-weight:600">BS. @doctor.FullName</span>
+                </div>
+            }
+        </div>
+
+        <!-- STATS -->
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-icon" style="background:#eff6ff;color:#0d6efd"><i class="bi bi-calendar-check"></i></div>
+                <div><div class="stat-num">@ViewBag.NgayLamThang</div><div class="stat-label">Ngày làm tháng này</div></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background:#fffbeb;color:#f59e0b"><i class="bi bi-calendar-x"></i></div>
+                <div><div class="stat-num">@ViewBag.NgayNghiThang</div><div class="stat-label">Ngày nghỉ tháng này</div></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background:#f8fafc;color:#94a3b8"><i class="bi bi-hourglass-split"></i></div>
+                <div><div class="stat-num">@ViewBag.DonChoDuyet</div><div class="stat-label">Đơn chờ duyệt</div></div>
+            </div>
+        </div>
+
+        <!-- NAV TUẦN -->
+        <div class="week-nav">
+            <a href="@Url.Action("Index", new { tuan = startOfWeek.AddDays(-7).ToString("yyyy-MM-dd") })" class="btn-nav">
+                <i class="bi bi-chevron-left"></i>
+            </a>
+            <div>
+                <div class="week-label">
+                    @startOfWeek.ToString("dd/MM") — @endOfWeek.ToString("dd/MM/yyyy")
+                </div>
+                <div class="week-sub">
+                    @if (startOfWeek <= DateTime.Today && DateTime.Today <= endOfWeek)
+                    {
+                        <span class="badge bg-primary">Tuần này</span>
+                    }
+                </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+                <a href="@Url.Action("Index", new { tuan = DateTime.Today.ToString("yyyy-MM-dd") })"
+                   class="btn-today2"><i class="bi bi-calendar-day"></i> Tuần này</a>
+                <a href="@Url.Action("Index", new { tuan = startOfWeek.AddDays(7).ToString("yyyy-MM-dd") })" class="btn-nav">
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- LEGEND -->
+        <div class="legend">
+            <div class="legend-item"><div class="legend-dot" style="background:#eff6ff;border:2px solid #0d6efd"></div> Làm việc</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#fffbeb;border:2px solid #f59e0b"></div> Nghỉ phép</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#fef2f2;border:2px solid #ef4444"></div> Nghỉ bệnh</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#f8fafc;border:2px solid #94a3b8"></div> Chờ duyệt</div>
+        </div>
+
+        <!-- BẢNG LỊCH TUẦN -->
+        <div class="week-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Ca</th>
+                        @for (int i = 0; i < 7; i++)
+                        {
+                            DateTime ngay = startOfWeek.AddDays(i);
+                            bool isToday = ngay.Date == DateTime.Today;
+                            <th class="@(isToday ? "today-col" : "")">
+                                <div class="th-date @(isToday ? "today" : "")">@ngay.Day</div>
+                                <div class="th-day">@tenThuFull[(int)ngay.DayOfWeek]</div>
+                                @if (isToday)
+                                {
+                                    <small class="badge bg-primary" style="font-size:10px">Hôm nay</small>
+                                }
+                            </th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        string[] cacas = { "Sang", "Chieu", "CaNgay" };
+                        string[] caLabels = { "Sáng", "Chiều", "Cả ngày" };
+                    }
+                    @for (int caIdx = 0; caIdx < cacas.Length; caIdx++)
+                    {
+                        string ca = cacas[caIdx];
+                        <tr>
+                            <td>@caLabels[caIdx]</td>
+                            @for (int i = 0; i < 7; i++)
+                            {
+                                DateTime ngay = startOfWeek.AddDays(i);
+                                bool isToday = ngay.Date == DateTime.Today;
+                                var lichNgayCa = Model.Where(l => l.Ngay.Date == ngay.Date && l.CaLam == ca).ToList();
+                                <td class="@(isToday ? "today-col" : "")">
+                                    @if (!lichNgayCa.Any())
+                                    {
+                                        <div class="empty-cell">—</div>
+                                    }
+                                    else
+                                    {
+                                        foreach (var l in lichNgayCa)
+                                        {
+                                            string cellClass = "lich-cell lich-cell-" + l.TrangThai;
+                                            string ttLabel = l.TrangThai == 0 ? "Làm việc"
+                                            : l.TrangThai == 1 ? "Nghỉ phép"
+                                            : l.TrangThai == 2 ? "Nghỉ bệnh"
+                                            : "Chờ duyệt";
+                                            <div class="@cellClass">
+                                                <div class="lich-cell-title">@ttLabel</div>
+                                                <div class="lich-cell-sub">
+                                                    <i class="bi bi-people-fill"></i> Tối đa @l.SoBenhNhanToiDa BN
+                                                </div>
+                                                @if (!string.IsNullOrEmpty(l.GhiChu))
+                                                {
+                                                    <div class="lich-cell-sub mt-1">
+                                                        <i class="bi bi-chat-text"></i> @l.GhiChu
+                                                    </div>
+                                                }
+
+                                                @if (l.TrangThai == 0 && ngay.Date >= DateTime.Today)
+                                                {
+                                                    <button class="btn-xinngh" title="Xin nghỉ"
+                                                            onclick="openModal(@l.Id, '@ngay.ToString("dd/MM/yyyy")', '@caLabels[caIdx]')">
+                                                        <i class="bi bi-x"></i>
+                                                    </button>
+                                                }
+                                                @if (l.TrangThai == 3)
+                                                {
+                                                    <form asp-area="BacSi" asp-controller="LichLamViec"
+                                                          asp-action="HuyDon" method="post" style="display:inline">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="id" value="@l.Id" />
+                                                        <button type="submit" class="btn-huyday" title="Hủy đơn">
+                                                            <i class="bi bi-arrow-counterclockwise"></i>
+                                                        </button>
+                                                    </form>
+                                                }
+                                            </div>
+                                        }
+                                    }
+                                </td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL XIN NGHỈ -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+    <div class="modal-box">
+        <div class="modal-hd">
+            <h5><i class="bi bi-calendar-x me-2"></i>Gửi đơn xin nghỉ</h5>
+            <button class="modal-cl" onclick="closeModalBtn()"><i class="bi bi-x"></i></button>
+        </div>
+        <div class="modal-bd">
+            <div class="modal-info">
+                <strong id="modalInfoTitle">Thông tin ca</strong>
+                <span id="modalInfoSub"></span>
+            </div>
+            <form asp-area="BacSi" asp-controller="LichLamViec" asp-action="XinNghi" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" id="modalLichId" />
+                <div class="mb-3">
+                    <label class="form-label fw-semibold" style="font-size:13px">
+                        <i class="bi bi-chat-text text-danger me-1"></i> Lý do xin nghỉ
+                    </label>
+                    <textarea name="lyDo" class="form-control" rows="3"
+                              placeholder="Nhập lý do xin nghỉ (không bắt buộc)..."
+                              style="border-radius:8px;font-size:14px"></textarea>
+                </div>
+                <div class="alert alert-warning d-flex align-items-center gap-2" style="border-radius:8px;font-size:13px">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    Đơn sẽ chờ Admin xác nhận trước khi có hiệu lực.
+                </div>
+                <button type="submit" class="btn-submit-nghi">
+                    <i class="bi bi-send me-2"></i>Gửi đơn xin nghỉ
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openModal(id, ngay, ca) {
+        document.getElementById('modalLichId').value = id;
+        document.getElementById('modalInfoTitle').textContent = 'Ca ' + ca + ' — ngày ' + ngay;
+        document.getElementById('modalOverlay').classList.add('show');
+    }
+    function closeModal(e) {
+        if (e.target === document.getElementById('modalOverlay'))
+            document.getElementById('modalOverlay').classList.remove('show');
+    }
+    function closeModalBtn() {
+        document.getElementById('modalOverlay').classList.remove('show');
+    }
+</script>

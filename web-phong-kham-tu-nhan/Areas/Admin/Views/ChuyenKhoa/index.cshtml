@@ -1,0 +1,54 @@
+﻿@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+@model List<web_phong_kham_tu_nhan.Models.ViewModel.ChuyenKhoaVM>
+<div class="main-content">
+
+    <div class="page-header">
+        <h1>Quản Lý Chuyên Khoa</h1>
+        <p>Quản lý các chuyên khoa và khoa y tế</p>
+    </div>
+
+    <div class="card-box">
+
+        <div class="card-header">
+            <h5>Tất cả chuyên khoa và khoa y tế</h5>
+            <div class="header-actions">
+                <input type="search" id="searchInput" placeholder="Nhập chuyên khoa cần tìm" class="form-control search-box" />
+                <a asp-action="Create" class="btn btn-primary">Thêm chuyên khoa mới</a>
+            </div>
+        </div>
+
+        <table id="specialtyTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Tên chuyên khoa</th>
+                    <th>Mô tả</th>
+                    <th class="text-center">Số bác sĩ</th>
+                    <th class="text-center">Tổng số bệnh nhân</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach(var item in Model)
+                {
+                    <tr>
+                        <td>#@item.Id</td>
+                        <td class="fw-bold">@item.Name</td>
+                        <td>@item.MoTa</td>
+                        <td class="text-center">@item.DoctorCount</td>
+                        <td class="text-center">@item.PatientCount</td>
+                        <td>
+                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning me-1">✏</a>
+                            <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger btn-delete">🗑</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+
+    </table>
+
+    </div>
+</div>

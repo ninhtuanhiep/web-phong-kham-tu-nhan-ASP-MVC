@@ -1,0 +1,225 @@
+﻿@using web_phong_kham_tu_nhan.Data
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+<style>
+    .swal2-confirm {
+        background-color: #dc3545 !important;
+        color: white !important;
+    }
+</style>
+
+<div class="dashboard-container">
+    <div class="dashboard-header d-flex justify-content-between align-items-center mb-4 page-header">
+
+        <!-- Bên trái -->
+        <div>
+            <h1>Admin Dashboard</h1>
+            <p class="text-muted mb-0">Chào mừng trở lại, Quản trị viên</p>
+        </div>
+
+        <!-- Bên phải -->
+        <div class="d-flex align-items-center gap-3">
+
+            @if (User.Identity != null && User.Identity.IsAuthenticated)
+            {
+                <div class="text-end">
+                    <div class="fw-semibold">
+                        @User.Identity.Name
+                    </div>
+
+                    <small class="text-muted">
+                        @User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value
+                    </small>
+                </div>
+
+                <form id="logoutForm" asp-area=""
+                      asp-controller="Account"
+                      asp-action="Dangxuat"
+                      method="post">
+
+                    @Html.AntiForgeryToken()
+
+                    <button type="button" class="btn btn-outline-secondary" onclick="confirmLogout()">
+                        <i class="bi bi-box-arrow-right"></i> Logout
+                    </button>
+
+                </form>
+            }
+
+        </div>
+
+    </div>
+    
+    <!-- CARDS -->
+    <div class="stats-grid">
+
+        <div class="stat-card blue">
+            <h3>@ViewBag.TotalPatients</h3>
+            <p>Bệnh nhân</p>
+        </div>
+
+        <div class="stat-card red">
+            <h3>@ViewBag.TotalDoctors</h3>
+            <p>Bác sĩ</p>
+        </div>
+
+        <div class="stat-card green">
+            <h3>@ViewBag.TotalAppointments</h3>
+            <p>Lịch hẹn</p>
+        </div>
+
+        <div class="stat-card yellow">
+            <h3>@ViewBag.Pending</h3>
+            <p>Chờ duyệt</p>
+        </div>
+
+    </div>
+
+
+    <!-- CHART + MONTH -->
+
+    <div class="dashboard-row">
+
+        <div class="dashboard-card large">
+
+            <h4>Thống kê trạng thái lịch hẹn</h4>
+
+            <div class="chart-center">
+                <canvas id="statusChart"></canvas>
+            </div>
+
+
+        </div>
+
+        <div class="dashboard-card large">
+
+            <h4>Lịch hẹn theo tháng</h4>
+
+            <canvas id="monthChart"></canvas>
+
+        </div>
+
+    </div>
+
+
+    <!-- TABLES -->
+
+    <div class="dashboard-row">
+
+        <div class="dashboard-card">
+
+            <h4>Lịch hẹn hôm nay</h4>
+
+            <table class="table">
+
+                <thead>
+                    <tr>
+                        <th>Bệnh nhân</th>
+                        <th>Bác sĩ</th>
+                        <th>Giờ</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    @foreach (var item in ViewBag.TodayAppointments)
+                    {
+                        <tr>
+                            <td>@item.BenhNhan?.FullName</td>
+                            <td>@item.BacSi?.FullName</td>
+                            <td>@item.TimeSlot</td>
+                        </tr>
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+
+        <div class="dashboard-card">
+
+            <h4>Bác sĩ có nhiều lịch nhất</h4>
+
+            <table class="table">
+
+                <thead>
+                    <tr>
+                        <th>Bác sĩ</th>
+                        <th>Số lịch</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    @foreach (var doc in ViewBag.TopDoctors)
+                    {
+                        <tr>
+                            <td>@doc.DoctorName</td>
+                            <td>@doc.Total</td>
+                        </tr>
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script src="~/js/Chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    function confirmLogout() {
+        Swal.fire({
+            title: 'Sếp có việc phải đi rồi ư T_T',
+            // text: "Sếp đi thong thả ^^",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Ta đi đây',
+            cancelButtonText: 'Thôi để ta ở lại với ngươi',
+            // confirmButtonColor: '#dc3545',
+            // cancelButtonColor: '#3085d6'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('logoutForm').submit();
+            }
+        });
+    }
+</script>
+
+<script>
+
+    renderStatusChart(
+        @ViewBag.Pending,
+        @ViewBag.Approved,
+        @ViewBag.Completed
+    );
+
+
+    renderMonthlyChart(
+
+    [
+    @foreach (var m in ViewBag.MonthlyStats)
+    {
+        @Html.Raw("'Tháng " + m.Month + "',")
+    }
+    ],
+
+    [
+    @foreach (var m in ViewBag.MonthlyStats)
+    {
+        @Html.Raw(m.Count + ",")
+    }
+    ]
+
+    );
+
+</script>

@@ -1,0 +1,110 @@
+﻿@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+@model List<web_phong_kham_tu_nhan.Models.Entities.BacSi>
+<div class="main-content">
+
+    <div class="page-header">
+        <h1>Quản Lý Bác Sĩ</h1>
+        <p>Quản lý hồ sơ bác sĩ, chuyên khoa và lịch trình</p>
+    </div>
+
+    <div class="card-box">
+
+        <div class="card-header">
+            <h5>Tất cả bác sĩ</h5>
+            <div class="header-actions">
+                <input type="search" id="searchInput" placeholder="Nhập bác sĩ cần tìm" class="form-control search-box" />
+                <a asp-action="Create" class="btn btn-primary">Thêm bác sĩ mới</a>
+            </div>
+        </div>
+
+        <table id="doctorTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Tên bác sĩ</th>
+                    <th>Chuyên khoa</th>
+                    <th>Email</th>
+                    <th>Số điện thoại</th>
+                    <th class="text-center">Số bệnh nhân</th>
+                    <th>Trạng thái</th>
+                    <th>Tài khoản</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if(Model != null && Model.Count > 0)
+                {
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>#@item.Id</td>
+                            <td class="fw-bold">@item.FullName</td>
+                            <td>@item.ChuyenKhoa?.Name</td>
+                            <td>@item.Email</td>
+                            <td>@item.DienThoai</td>
+                            <td class="text-center">@item.LichHens?.Select(x => x.BenhNhanId).Distinct().Count()</td>
+                            <td>
+                                @if (item.TrangThai == 1)
+                                {
+                                    <span class="status-badge status-active">
+                                        Đang làm việc
+                                    </span>
+                                }
+                                else if (item.TrangThai == 2)
+                                {
+                                    <span class="status-badge status-inactive-doctor">
+                                        Nghỉ phép
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="status-badge status-onLeave">
+                                        Đã nghỉ việc
+                                    </span>
+                                }
+                            </td>
+                            <td>
+                                @if (item.UserId == null)
+                                {
+                                    <form asp-area="Admin" asp-controller="BacSi" asp-action="TaoTaiKhoan"
+                                          method="post" style="display:inline"
+                                          onsubmit="return confirm('Tạo tài khoản cho BS. @item.FullName?')">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <button type="submit" class="btn btn-sm btn-success">
+                                            <i class="bi bi-person-plus"></i> Tạo tài khoản
+                                        </button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-check-circle"></i> Có tài khoản
+                                    </span>
+                                }
+                            </td>
+                            <td>
+                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning me-1">✏</a>
+                                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger btn-delete">🗑</a>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="7" class="text-center text-muted">
+                            Không có dữ liệu bác sĩ nào. Vui lòng thêm bác sĩ mới.
+                        </td>
+                    </tr>
+                }
+
+            </tbody>
+
+        </table>
+
+    </div>
+</div>

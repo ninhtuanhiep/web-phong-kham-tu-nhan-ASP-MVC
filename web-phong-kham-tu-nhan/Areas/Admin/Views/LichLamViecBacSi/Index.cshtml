@@ -1,0 +1,276 @@
+﻿@model List<web_phong_kham_tu_nhan.Models.Entities.LichLamViecBacSi>
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Quản lý lịch làm việc";
+    DateTime startOfWeek = (DateTime)ViewBag.StartOfWeek;
+    DateTime endOfWeek = (DateTime)ViewBag.EndOfWeek;
+    string viewMode = ViewBag.ViewMode as string ?? "tuan";
+    int? bacSiId = ViewBag.BacSiId as int?;
+    string[] tenThuFull = { "CN", "T2", "T3", "T4", "T5", "T6", "T7" };
+}
+<link rel="stylesheet" href="~/css/Admin/LichLamViecBacSi.css"/>
+<div>
+    <div class="page-hd">
+        <h1>Quản lý lịch làm việc</h1>
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success py-2 px-3 mb-0" style="border-radius:8px;font-size:13px">
+                <i class="bi bi-check-circle-fill me-1"></i> @TempData["Success"]
+            </div>
+        }
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger py-2 px-3 mb-0" style="border-radius:8px;font-size:13px">
+                <i class="bi bi-exclamation-circle-fill me-1"></i> @TempData["Error"]
+            </div>
+        }
+    </div>
+
+    <!-- FORM TẠO LỊCH NHANH -->
+    <div class="create-card">
+        <h6><i class="bi bi-calendar-plus text-primary"></i> Tạo lịch làm việc</h6>
+        <form asp-area="Admin" asp-controller="LichLamViecBacSi" asp-action="Create" method="post">
+            @Html.AntiForgeryToken()
+            <div class="form-row">
+                <div class="form-group">
+                    <label><i class="bi bi-person-badge me-1"></i>Bác sĩ</label>
+                    <select name="bacSiId" class="form-select form-select-sm" required>
+                        <option value="">-- Chọn bác sĩ --</option>
+                        @foreach (SelectListItem item in (IEnumerable<SelectListItem>)ViewBag.BacSis)
+                        {
+                            <option value="@item.Value">@item.Text</option>
+                        }
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label><i class="bi bi-calendar-event me-1"></i>Từ ngày</label>
+                    <input type="date" name="ngayBatDau" class="form-control form-control-sm"
+                           value="@DateTime.Today.ToString("yyyy-MM-dd")" required />
+                </div>
+                <div class="form-group">
+                    <label><i class="bi bi-calendar-event me-1"></i>Đến ngày</label>
+                    <input type="date" name="ngayKetThuc" class="form-control form-control-sm"
+                           value="@DateTime.Today.ToString("yyyy-MM-dd")" required />
+                </div>
+                <div class="form-group">
+                    <label><i class="bi bi-sun me-1"></i>Ca làm việc</label>
+                    <select name="ca" class="form-select form-select-sm">
+                        <option value="Sang">Sáng</option>
+                        <option value="Chieu">Chiều</option>
+                        <option value="CaNgay">Cả ngày</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label><i class="bi bi-people me-1"></i>Số BN tối đa</label>
+                    <input type="number" name="soBenhNhanToiDa" class="form-control form-control-sm"
+                           value="20" min="1" max="100" />
+                </div>
+                <div class="form-group" style="grid-column:span 2">
+                    <label><i class="bi bi-chat-text me-1"></i>Ghi chú</label>
+                    <input type="text" name="ghiChu" class="form-control form-control-sm"
+                           placeholder="Ghi chú thêm (không bắt buộc)" />
+                </div>
+                <div style="display:flex;align-items:flex-end">
+                    <button type="submit" class="btn btn-primary btn-sm w-100">
+                        <i class="bi bi-plus-circle me-1"></i> Tạo lịch
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+    <!-- Filter bác sĩ -->
+    <form method="get" asp-area="Admin" asp-controller="LichLamViecBacSi" asp-action="Index"
+          style="display:flex;gap:8px;align-items:center">
+        <input type="hidden" name="view"  value="@viewMode" />
+        <input type="hidden" name="tuan"  value="@startOfWeek.ToString("yyyy-MM-dd")" />
+        @*<select name="bacSiId" class="form-select form-select-sm" style="width:200px"
+                onchange="this.form.submit()">
+            <option value="">-- Tất cả bác sĩ --</option>
+            @foreach (SelectListItem item in (IEnumerable<SelectListItem>)ViewBag.BacSis)
+            {
+                <option value="@item.Value" selected="@(bacSiId.HasValue && bacSiId.Value.ToString() == item.Value ? "selected" : "")">
+                    @item.Text
+                </option>
+            }
+        </select>
+        *@
+            <select name="bacSiId" class="form-select form-select-sm" style="width:200px" onchange="this.form.submit()">
+                <option value="">-- Tất cả bác sĩ --</option>
+                @foreach (SelectListItem item in (IEnumerable<SelectListItem>)ViewBag.BacSis)
+                {
+                    <option value="@item.Value" selected="@(bacSiId?.ToString() == item.Value)">
+                        @item.Text
+                    </option>
+                }
+            </select>
+    </form>
+
+    <!-- View switch -->
+    <div class="view-switch">
+        <a href="@Url.Action("Index","LichLamViecBacSi", new { view = "tuan", tuan = startOfWeek.ToString("yyyy-MM-dd"), bacSiId = bacSiId })"
+           class="@(viewMode == "tuan" ? "active" : "")">
+            <i class="bi bi-calendar-week me-1"></i>Tuần
+        </a>
+            @{
+                var dauThangCuaTuanNay = new DateTime(startOfWeek.Year, startOfWeek.Month, 1).ToString("yyyy-MM-dd");
+            }
+        <a href="@Url.Action("Index", "LichLamViecBacSi", new { view = "thang", tuan = dauThangCuaTuanNay, bacSiId = bacSiId })"
+           class="@(viewMode == "thang" ? "active" : "")">
+            <i class="bi bi-calendar-month me-1"></i>Tháng
+        </a>
+    </div>
+
+    <!-- Đơn xin nghỉ -->
+    @{
+        int donChoDuyet = _context.LichLamViecBacSis.Count(l => l.TrangThai == 3);
+    }
+    @if (donChoDuyet > 0)
+    {
+            <a asp-area="Admin" asp-controller="LichLamViecBacSi" asp-action="DonXinNghi"
+           class="don-count text-decoration-none">
+            <i class="bi bi-bell-fill"></i>
+            @donChoDuyet đơn xin nghỉ chờ duyệt
+        </a>
+    }
+</div>
+
+    <!-- NAV TUẦN -->
+    <div class="week-nav">
+        @*<a href="@Url.Action("Index", new { view = viewMode, tuan = startOfWeek.AddDays(-7).ToString("yyyy-MM-dd"), bacSiId })"
+           class="btn-nav"><i class="bi bi-chevron-left"></i></a>*@
+        <a href="@Url.Action("Index", "LichLamViecBacSi", new { 
+            view = viewMode, 
+            tuan = (viewMode == "thang" ? startOfWeek.AddMonths(-1) : startOfWeek.AddDays(-7)).ToString("yyyy-MM-dd"), 
+            bacSiId = bacSiId 
+        })" class="btn-nav">
+            <i class="bi bi-chevron-left"></i>
+        </a>
+        <div>
+            <div class="week-label">
+                @startOfWeek.ToString("dd/MM") — @endOfWeek.ToString("dd/MM/yyyy")
+            </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+            <a href="@Url.Action("Index", new { view = viewMode, tuan = DateTime.Today.ToString("yyyy-MM-dd"), bacSiId })"
+               class="btn btn-sm btn-outline-primary" style="border-radius:8px">Tuần này</a>
+
+            @*<a href="@Url.Action("Index", new { view = viewMode, tuan = startOfWeek.AddDays(7).ToString("yyyy-MM-dd"), bacSiId })"
+               class="btn-nav"><i class="bi bi-chevron-right"></i></a>*@
+
+        <a href="@Url.Action("Index", "LichLamViecBacSi", new { 
+            view = viewMode, 
+            tuan = (viewMode == "thang" ? startOfWeek.AddMonths(1) : startOfWeek.AddDays(7)).ToString("yyyy-MM-dd"), 
+            bacSiId = bacSiId 
+        })" class="btn-nav">
+            <i class="bi bi-chevron-right"></i>
+        </a>
+        </div>
+    </div>
+
+    <!-- LEGEND -->
+    <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#eff6ff;border:1.5px solid #0d6efd"></div> Làm việc</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#fffbeb;border:1.5px solid #f59e0b"></div> Nghỉ phép</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#fef2f2;border:1.5px solid #ef4444"></div> Nghỉ bệnh</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#fef9c3;border:1.5px solid #eab308"></div> Chờ duyệt</div>
+    </div>
+
+    <!-- BẢNG LỊCH -->
+    <div class="week-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Ca / Bác sĩ</th>
+                    @for (int i = 0; i < 7; i++)
+                    {
+                        DateTime ngay = startOfWeek.AddDays(i);
+                        bool isToday = ngay.Date == DateTime.Today;
+                        <th class="@(isToday ? "today-col" : "")">
+                            <div class="th-date @(isToday ? "today" : "")">@ngay.Day</div>
+                            <div style="font-size:10px;color:#94a3b8">@tenThuFull[(int)ngay.DayOfWeek]</div>
+                        </th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    string[] cacas = { "Sang", "Chieu", "CaNgay" };
+                    string[] caLabels = { "Sáng", "Chiều", "Cả ngày" };
+                }
+                @for (int caIdx = 0; caIdx < cacas.Length; caIdx++)
+                {
+                    string ca = cacas[caIdx];
+                    <tr>
+                        <td>@caLabels[caIdx]</td>
+                        @for (int i = 0; i < 7; i++)
+                        {
+                            DateTime ngay = startOfWeek.AddDays(i);
+                            bool isToday = ngay.Date == DateTime.Today;
+                            var lichNgayCa = Model.Where(l => l.Ngay.Date == ngay.Date && l.CaLam == ca).ToList();
+                            <td class="@(isToday ? "today-col" : "")">
+                                @if (!lichNgayCa.Any())
+                                {
+                                    <div class="empty-cell">+</div>
+                                }
+                                else
+                                {
+                                    foreach (var l in lichNgayCa)
+                                    {
+                                        string ttLabel = l.TrangThai == 0 ? "Làm việc"
+                                        : l.TrangThai == 1 ? "Nghỉ phép"
+                                        : l.TrangThai == 2 ? "Nghỉ bệnh"
+                                        : "Chờ duyệt";
+                                        <div class="lich-cell lich-cell-@l.TrangThai">
+                                            <div class="lich-cell-name">
+                                                BS. @(l.BacSi != null ? l.BacSi.FullName : "")
+                                            </div>
+                                            <div class="lich-cell-sub">@ttLabel · @l.SoBenhNhanToiDa BN</div>
+                                            @if (l.TrangThai == 3)
+                                            {
+                                                <div>
+                                                    <span class="badge-choDuyet">Xin nghỉ</span>
+                                                    <form asp-area="Admin" asp-controller="LichLamViecBacSi"
+                                                          asp-action="DuyetNghi" method="post" style="display:inline">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="id" value="@l.Id" />
+                                                        <input type="hidden" name="chaphuan" value="true" />
+                                                        <button type="submit" class="btn btn-success btn-sm py-0 px-1 mt-1" style="font-size:10px">
+                                                            Duyệt
+                                                        </button>
+                                                    </form>
+                                                    <form asp-area="Admin" asp-controller="LichLamViecBacSi"
+                                                          asp-action="DuyetNghi" method="post" style="display:inline">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="id" value="@l.Id" />
+                                                        <input type="hidden" name="chaphuan" value="false" />
+                                                        <button type="submit" class="btn btn-outline-danger btn-sm py-0 px-1 mt-1" style="font-size:10px">
+                                                            Từ chối
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            }
+                                            <form asp-area="Admin" asp-controller="LichLamViecBacSi"
+                                                  asp-action="Delete" method="post" style="display:inline"
+                                                  onsubmit="return confirm('Xóa lịch này?')">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@l.Id" />
+                                                <button type="submit" class="btn-del-cell" title="Xóa">
+                                                    <i class="bi bi-trash3"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    }
+                                }
+                            </td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+@inject web_phong_kham_tu_nhan.Data.ApplicationDbContext _context

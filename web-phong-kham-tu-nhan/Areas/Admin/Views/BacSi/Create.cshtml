@@ -1,0 +1,81 @@
+﻿@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+@model web_phong_kham_tu_nhan.Models.Entities.BacSi
+
+<div class="create-wrapper">
+    <div class="create-container">
+        <div class="form-header">
+            <h2 class="create-title">Thêm Bác Sĩ</h2>
+            <a asp-action="Index" class="close-btn">✕</a>
+        </div>
+
+
+        <form asp-action="Create" method="post" enctype="multipart/form-data">
+            <div class="mb-3">
+                <label>Chọn ảnh đại diện</label>
+                <input name="ImageFile" type="file" class="form-control" />
+                <span asp-validation-for="ImageFile" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label>Tên bác sĩ</label>
+                <input asp-for="FullName" class="form-control" />
+                <span asp-validation-for="FullName" class="text-danger"></span>
+            </div>
+
+
+            <div class="mb-3">
+                <label>Email</label>
+                <input asp-for="Email" class="form-control" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label>Số điện thoại</label>
+                <input asp-for="DienThoai" class="form-control" />
+                <span asp-validation-for="DienThoai" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label>Chuyên khoa</label>
+
+                <select asp-for="ChuyenKhoaId"
+                        asp-items="ViewBag.ChuyenKhoas"
+                        class="form-control">
+
+                    <option value="">-- Chọn chuyên khoa --</option>
+
+                </select>
+
+                <span asp-validation-for="ChuyenKhoaId" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label>Tóm tắt chuyên môn</label>
+                <input asp-for="tieuSu" class="form-control" />
+                <span asp-validation-for="tieuSu" class="text-danger"></span>
+            </div>
+
+
+            <div class="mb-3">
+                <label>Trạng thái</label>
+
+                <select asp-for="TrangThai" class="form-control">
+                    <option value="1">Đang làm việc</option>
+                    <option value="2">Nghỉ Phép</option>
+                    <option value="3">Đã nghỉ việc</option>
+                </select>
+
+            </div>
+
+            <button type="submit" class="btn btn-primary">Lưu</button>
+
+            <a asp-action="Index" class="btn btn-secondary">
+                Quay lại
+            </a>
+
+        </form>
+
+    </div>
+</div>

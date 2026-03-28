@@ -1,0 +1,170 @@
+﻿@model List<web_phong_kham_tu_nhan.Models.Entities.LichHen>
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<link rel="stylesheet" href="~/css/BenhNhanHome/myAppointment.css" />
+<div class="appt-page">
+    <div class="container">
+        <div class="notification-container" id="toastContainer">
+            @if (TempData["Success"] != null)
+            {
+                <div class="custom-toast success" id="successToast">
+                    <span class="toast-icon"><i class="bi bi-check-circle-fill"></i></span>
+                    <div class="toast-content">
+                        <div class="toast-title">Thành công</div>
+                        <div class="toast-msg">@TempData["Success"]</div>
+                    </div>
+                    <button class="toast-close" onclick="closeToast('successToast')">
+                        <i class="bi bi-x"></i>
+                    </button>
+                </div>
+            }
+            @if (TempData["Error"] != null)
+            {
+                <div class="custom-toast error" id="errorToast">
+                    <span class="toast-icon"><i class="bi bi-x-circle-fill"></i></span>
+                    <div class="toast-content">
+                        <div class="toast-title">Lỗi</div>
+                        <div class="toast-msg">@TempData["Error"]</div>
+                    </div>
+                    <button class="toast-close" onclick="closeToast('errorToast')">
+                        <i class="bi bi-x"></i>
+                    </button>
+                </div>
+            }
+        </div>
+        <a asp-area="BenhNhan" asp-controller="Profile" asp-action="Index" class="detail-back">
+            <i class="bi bi-arrow-left"></i> Quay lại trang thông tin
+        </a>
+
+        <div class="appt-header">
+            <div>
+                <h2><i class="bi bi-calendar2-week me-2"></i>Lịch hẹn của tôi</h2>
+                <p>Quản lý toàn bộ lịch khám tại Phòng Khám An Khang</p>
+            </div>
+            <a asp-area="BenhNhan" asp-controller="LichHen" asp-action="Create"
+               class="btn btn-light fw-bold px-4" style="color:#0d6efd;border-radius:50px">
+                <i class="bi bi-plus-circle me-2"></i>Đặt lịch mới
+            </a>
+        </div>
+
+        <div class="filter-tabs">
+            <button class="filter-tab active" onclick="filterAppt('all',this)">
+                Tất cả <span class="badge bg-secondary ms-1">@Model.Count</span>
+            </button>
+            <button class="filter-tab" onclick="filterAppt('0',this)">
+                <i class="bi bi-hourglass-split me-1"></i>Chờ xác nhận
+                <span class="badge bg-warning text-dark ms-1">@Model.Count(a => a.TrangThai == 0)</span>
+            </button>
+            <button class="filter-tab" onclick="filterAppt('1',this)">
+                <i class="bi bi-calendar-check me-1"></i>Đã xác nhận
+                <span class="badge bg-primary ms-1">@Model.Count(a => a.TrangThai == 1)</span>
+            </button>
+            <button class="filter-tab" onclick="filterAppt('2',this)">
+                <i class="bi bi-patch-check me-1"></i>Hoàn thành
+                <span class="badge bg-success ms-1">@Model.Count(a => a.TrangThai == 2)</span>
+            </button>
+            <button class="filter-tab" onclick="filterAppt('3',this)">
+                <i class="bi bi-x-circle me-1"></i>Đã hủy
+                <span class="badge bg-secondary ms-1">@Model.Count(a => a.TrangThai == 3)</span>
+            </button>
+        </div>
+
+        @if (!Model.Any())
+        {
+            <div class="empty-box">
+                <i class="bi bi-calendar-x"></i>
+                <h5>Chưa có lịch hẹn nào</h5>
+                <p>Hãy đặt lịch khám để được chăm sóc sức khỏe tốt nhất.</p>
+                @* <a asp-area="BenhNhan" asp-controller="LichHen" asp-action="Create"
+                   class="btn btn-primary px-4 mt-2" style="border-radius:8px">
+                    <i class="bi bi-plus-circle me-2"></i>Đặt lịch ngay
+                </a> *@
+            </div>
+        }
+        else
+        {
+            <div id="apptList">
+                @foreach (var item in Model)
+                {
+                    string ttLabel = "Không xác định";
+                    string ttBadge = "secondary";
+                    string ttIcon = "bi-question-circle";
+
+                    if (item.TrangThai == 0) { ttLabel = "Chờ xác nhận"; ttBadge = "warning"; ttIcon = "bi-hourglass-split"; }
+                    else if (item.TrangThai == 1) { ttLabel = "Đã xác nhận"; ttBadge = "primary"; ttIcon = "bi-calendar-check"; }
+                    else if (item.TrangThai == 2) { ttLabel = "Hoàn thành"; ttBadge = "success"; ttIcon = "bi-patch-check-fill"; }
+                    else if (item.TrangThai == 3) { ttLabel = "Đã hủy"; ttBadge = "secondary"; ttIcon = "bi-x-circle"; }
+
+                    <div class="appt-card" data-status="@item.TrangThai">
+                        <div class="appt-card-top">
+                            <span class="appt-id"><i class="bi bi-hash"></i>LH-@item.Id.ToString("D4")</span>
+                            <span class="appt-date-lbl"><i class="bi bi-calendar3"></i>Đặt ngày @item.CreatedAt.ToString("dd/MM/yyyy")</span>
+                        </div>
+                        <div class="appt-body">
+                            <img src="@(item.BacSi != null && item.BacSi.ImageUrl != null ? item.BacSi.ImageUrl : "/Images/default-avatar.png")"
+                                 class="appt-img"
+                                 onerror="this.src='/Images/default-avatar.png'"
+                                 alt="@(item.BacSi != null ? item.BacSi.FullName : "")" />
+                            <div>
+                                <div class="appt-doctor-name">@(item.BacSi != null ? item.BacSi.FullName : "Chưa xác định")</div>
+                                <div class="appt-spec">@(item.ChuyenKhoa != null ? item.ChuyenKhoa.Name : "")</div>
+                                <div class="appt-meta">
+                                    <span class="appt-meta-item"><i class="bi bi-calendar-event"></i>@item.AppointmentDate.ToString("dd/MM/yyyy")</span>
+                                    <span class="appt-meta-item"><i class="bi bi-clock"></i>@item.TimeSlot</span>
+                                </div>
+                            </div>
+                            <div>
+                                <span class="badge bg-@ttBadge bg-opacity-10 text-@ttBadge border border-@ttBadge border-opacity-25 d-inline-flex align-items-center gap-1 p-2">
+                                    <i class="bi @ttIcon"></i> @ttLabel
+                                </span>
+                            </div>
+                        </div>
+                        <div class="appt-footer">
+                            <a asp-area="BenhNhan" asp-controller="LichHen" asp-action="Detail" asp-route-id="@item.Id" class="btn-detail">
+                                <i class="bi bi-eye"></i> Chi tiết
+                            </a>
+                            @if (item.TrangThai == 0 || item.TrangThai == 1)
+                            {
+                                <a asp-area="BenhNhan" asp-controller="LichHen" asp-action="Reschedule" asp-route-id="@item.Id" class="btn-reschedule">
+                                    <i class="bi bi-arrow-repeat"></i> Đổi lịch
+                                </a>
+                                <form asp-area="BenhNhan" asp-controller="LichHen" asp-action="Cancel" method="post" style="display:inline"
+                                      onsubmit="return confirm('Bạn có chắc muốn hủy lịch hẹn này?')">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@item.Id" />
+                                    <button type="submit" class="btn-cancel"><i class="bi bi-x-circle"></i> Hủy lịch</button>
+                                </form>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+<script>
+        function filterAppt(status, btn) {
+            document.querySelectorAll('.filter-tab').forEach(function(t){ t.classList.remove('active'); });
+            btn.classList.add('active');
+            document.querySelectorAll('.appt-card').forEach(function(c){
+                c.style.display = (status === 'all' || c.dataset.status === status) ? '' : 'none';
+            });
+        }
+
+    function closeToast(id) {
+        const toast = document.getElementById(id);
+        if (!toast || toast.classList.contains('toast-out')) return;
+        toast.classList.add('toast-out');
+        setTimeout(() => toast.remove(), 500);
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        ['successToast', 'errorToast'].forEach(function (id) {
+            const toast = document.getElementById(id);
+            if (toast) setTimeout(() => closeToast(id), 3500);
+        });
+    });
+</script>

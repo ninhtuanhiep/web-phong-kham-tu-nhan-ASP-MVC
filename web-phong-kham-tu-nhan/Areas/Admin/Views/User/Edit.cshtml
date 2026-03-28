@@ -1,0 +1,142 @@
+﻿@model web_phong_kham_tu_nhan.Models.Entities.User
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container mt-4">
+
+    <div class="card shadow-lg border-0">
+
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">
+                <i class="bi bi-person-plus"></i> Chỉnh sửa thông tin người dùng
+            </h4>
+        </div>
+
+        <div class="card-body">
+
+            <form asp-action="Edit" method="post">
+                <input type="hidden" asp-for="Id" />
+
+                <div class="row">
+
+                    <!-- Họ tên -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Họ và tên</label>
+                        <input asp-for="FullName" class="form-control" placeholder="Nhập họ tên..." />
+                    </div>
+
+                    <!-- Email -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Email</label>
+                        <input asp-for="Email" class="form-control" placeholder="example@gmail.com" />
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Số điện thoại</label>
+                        <input asp-for="PhoneNumber" class="form-control" />
+                    </div>
+
+                    <!-- Mật khẩu -->
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">Mật khẩu</label>
+
+                        <div class="input-group">
+
+                            <input asp-for="Password"
+                                   type="password"
+                                   class="form-control"
+                                   id="password"
+                                   placeholder="Bỏ trống để giữ mật khẩu cũ..." />
+
+                            <button type="button"
+                                    class="btn btn-outline-secondary"
+                                    onclick="togglePassword()">
+
+                                <i id="eyeIcon" class="bi bi-eye"></i>
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                    <!-- Vai trò -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Vai trò</label>
+
+                        <select asp-for="Role" class="form-select">
+
+                            <option value="">-- Chọn vai trò --</option>
+
+                            <option value="Admin">Admin</option>
+                            <option value="Bác sĩ">Bác sĩ</option>
+                            <option value="Bệnh nhân">Bệnh nhân</option>
+
+                        </select>
+
+                    </div>
+
+                    <!-- Trạng thái -->
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">Trạng thái</label>
+
+                        <select asp-for="IsActive" class="form-select">
+
+                            <option value="true">Hoạt động</option>
+                            <option value="false">Bị khóa</option>
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+                <hr />
+
+                <div class="d-flex justify-content-end">
+
+                    <a asp-action="Index" class="btn btn-secondary me-2">
+                        Quay lại
+                    </a>
+
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-save"></i> Lưu thay đổi
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+    function togglePassword() {
+
+        var password = document.getElementById("password");
+        var icon = document.getElementById("eyeIcon");
+
+        if (password.type === "password") {
+
+            password.type = "text";
+            icon.classList.remove("bi-eye");
+            icon.classList.add("bi-eye-slash");
+
+        } else {
+
+            password.type = "password";
+            icon.classList.remove("bi-eye-slash");
+            icon.classList.add("bi-eye");
+
+        }
+    }
+
+</script>

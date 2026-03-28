@@ -1,0 +1,103 @@
+﻿@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+@model web_phong_kham_tu_nhan.Models.Entities.LichHen
+
+<div class="container mt-5">
+
+    <div class="card detail-card shadow-lg">
+
+        <div class="card-header detail-header">
+            <h3>📋 CHI TIẾT LỊCH KHÁM</h3>
+        </div>
+
+        <div class="card-body">
+
+            <div class="row">
+
+                <!-- Thông tin bệnh nhân -->
+                <div class="col-md-6 mb-4">
+                    <div class="info-box">
+                        <h5 class="info-title">👤 Thông tin bệnh nhân</h5>
+
+                        <p><strong>Tên bệnh nhân:</strong> @Model.BenhNhan?.FullName</p>
+                        <p><strong>ID bệnh nhân:</strong> #@Model.BenhNhanId</p>
+                    </div>
+                </div>
+
+                <!-- Thông tin bác sĩ -->
+                <div class="col-md-6 mb-4">
+                    <div class="info-box">
+                        <h5 class="info-title">🩺 Bác sĩ phụ trách</h5>
+
+                        <p><strong>Bác sĩ:</strong> @Model.BacSi?.FullName</p>
+                        <p><strong>Chuyên khoa:</strong> @Model.ChuyenKhoa?.Name</p>
+                    </div>
+                </div>
+
+                <!-- Thông tin lịch khám -->
+                <div class="col-md-6 mb-4">
+                    <div class="info-box">
+                        <h5 class="info-title">📅 Thông tin lịch khám</h5>
+
+                        <p>
+                            <strong>Ngày khám:</strong>
+                            @Model.AppointmentDate.ToString("dd/MM/yyyy")
+                        </p>
+
+                        <p>
+                            <strong>Thời gian:</strong>
+                            @Model.TimeSlot
+                        </p>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-4">
+                    <div class="info-box">
+                        <h5 class="info-title">📅 Lý do khám</h5>
+                        <p>@(Model.LyDoKham ?? "Chưa có thông tin về lý do khám")</p>
+                    </div>
+                </div>
+
+                <!-- Trạng thái -->
+                <div class="col-md-6 mb-4">
+                    <div class="info-box">
+                        <h5 class="info-title">📊 Trạng thái</h5>
+
+                        @if (Model.TrangThai == 0)
+                        {
+                            <span class="status-badge status-inactive">
+                                ⏳ Chưa giải quyết
+                            </span>
+                        }
+                        else if (Model.TrangThai == 1)
+                        {
+                            <span class="status-badge status-approved">
+                                ✔ Đã phê duyệt
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="status-badge status-completed">
+                                🏥 Đã khám
+                            </span>
+                        }
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Buttons -->
+            <div class="detail-buttons mt-4">
+                <a asp-action="Index" class="btn btn-secondary">
+                    ← Quay lại
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

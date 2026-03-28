@@ -1,0 +1,139 @@
+﻿@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+@model web_phong_kham_tu_nhan.Models.Entities.LichHen
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<div class="container mt-5">
+    <div class="card appointment-card shadow-lg">
+
+        <div class="card-header appointment-header">
+            <h3>📅 THÊM LỊCH HẸN MỚI</h3>
+        </div>
+
+        <div class="card-body">
+
+            <form asp-action="Create" method="post">
+
+                <div class="row">
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Bệnh nhân</label>
+                        <select asp-for="BenhNhanId" class="form-control select1" asp-items="ViewBag.Patients">
+                            <option value="">-- Select Patient --</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Chuyên khoa</label>
+                        <select asp-for="ChuyenKhoaId" class="form-control select1" asp-items="ViewBag.Specialties" id="chuyenKhoaSelect">
+                            <option value="">--Chọn chuyên khoa--</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Bác sĩ</label>
+                        <select asp-for="BacSiId" class="form-control select2" asp-items="ViewBag.Doctors" id="doctorSelect" disabled>
+                            <option value="">--Chọn bác sĩ--</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Ngày khám</label>
+                        <input asp-for="AppointmentDate" type="date" class="form-control" />
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Thời gian khám</label>
+                        <input asp-for="TimeSlot" type="time" class="form-control" />
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Trạng thái</label>
+                        <select asp-for="TrangThai" class="form-control">
+
+                            <option value="0">Chưa giải quyết</option>
+                            <option value="1">Đã phê duyệt</option>
+                            <option value="2">Đã khám</option>
+
+                        </select>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Lý do thăm khám</label>
+                        <textarea asp-for="LyDoKham" class="form-control" rows="3" placeholder="Vui lòng ghi lý do thăm khám..."></textarea>
+                    </div>
+
+                </div>
+
+                <div class="form-buttons mt-4">
+
+                    <button type="submit" class="btn btn-success">
+                        Lưu lịch khám
+                    </button>
+
+                    <a asp-action="Index" class="btn btn-secondary">
+                        Quay lại ->
+                    </a>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+</div>
+
+
+<script>
+    $(document).ready(function () {
+        $('.select2').select2({
+            placeholder: "Vui lòng chọn chuyên khoa trước",
+            allowClear: true,
+            width: '100%'
+        });
+
+        $('.select1').select2({
+            placeholder: "Tìm kiếm...",
+            allowClear: true,
+            width: '100%'
+        });
+    });
+
+ 
+    $(document).ready(function () {
+
+        $('#chuyenKhoaSelect').change(function () {
+
+            var specialtyId = $(this).val();
+
+            if (specialtyId) {
+
+                $.get('/Admin/LichHen/GetDoctorsBySpecialty', { specialtyId: specialtyId }, function (data) {
+
+                    var doctorSelect = $('#doctorSelect');
+
+                    doctorSelect.empty();
+
+                    doctorSelect.append('<option value="">--Chọn bác sĩ--</option>');
+
+                    $.each(data, function (index, doctor) {
+                        doctorSelect.append('<option value="' + doctor.id + '">' + doctor.name + '</option>');
+                    });
+
+                    doctorSelect.prop('disabled', false);
+
+                });
+
+            } else {
+
+                $('#doctorSelect').prop('disabled', true);
+            }
+        });
+
+    });
+</script>

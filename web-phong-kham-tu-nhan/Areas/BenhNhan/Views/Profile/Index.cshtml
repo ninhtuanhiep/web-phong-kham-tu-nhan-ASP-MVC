@@ -1,0 +1,401 @@
+﻿@model web_phong_kham_tu_nhan.Models.Entities.BenhNhan
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+@{
+    string activeTab = TempData["ActiveTab"] as string ?? "info";
+    if(TempData["PwError"] != null || TempData["PwSuccess"] != null)
+    {
+        activeTab = "password";
+    }
+}
+<link rel="stylesheet" href="~/css/BenhNhanHome/profile_index.css"/>
+<div class="profile-page">
+    <div class="container">
+        <div class="notification-container">
+            @if (TempData["Success"] != null)
+            {
+                <div class="custom-toast" id="successToast">
+                    <i class="bi bi-check-circle-fill text-success fs-4"></i>
+                    <div class="toast-content">
+                        <div style="font-weight: 600; color: #1e293b;">Thành công</div>
+                        <div style="font-size: 14px; color: #64748b;">@TempData["Success"]</div>
+                    </div>
+                    <button type="button" class="ms-auto border-0 bg-transparent" onclick="closeToast()">
+                        <i class="bi bi-x text-secondary"></i>
+                    </button>
+                </div>
+            }
+        </div>
+
+        <div class="profile-layout">
+            <!-- ══ SIDEBAR ══ -->
+            <aside class="profile-sidebar">
+                <div class="sidebar-avatar">
+                    <div class="avatar-circle">
+                        <i class="bi bi-person-fill"></i>
+                    </div>
+                    <div class="sidebar-name">@(Model.FullName ?? "Người dùng")</div>
+                    <div class="sidebar-role">Bệnh nhân</div>
+                </div>
+
+                <nav class="sidebar-menu">
+                    <a class="sidebar-item @(activeTab == "info" ? "active" : "")" onclick="switchTab('info', this)">
+                        <i class="bi bi-person-lines-fill"></i> Thông tin cá nhân
+                    </a>
+                    <a class="sidebar-item @(activeTab == "edit" ? "active" : "")" onclick="switchTab('edit', this)">
+                        <i class="bi bi-pencil-square"></i> Chỉnh sửa thông tin
+                    </a>
+                    <a class="sidebar-item @(activeTab == "medical" ? "active" : "")" onclick="switchTab('medical', this)">
+                        <i class="bi bi-clipboard2-heart-fill"></i> Lịch sử y tế
+                    </a>
+                    <a class="sidebar-item @(activeTab == "password" ? "active" : "")" onclick="switchTab('password', this)">
+                        <i class="bi bi-shield-lock-fill"></i> Đổi mật khẩu
+                    </a>
+
+                    <div class="sidebar-divider"></div>
+
+                    <a asp-area="BenhNhan" asp-controller="LichHen" asp-action="MyAppointment"
+                       class="sidebar-item">
+                        <i class="bi bi-calendar2-week"></i> Lịch hẹn của tôi
+                    </a>
+                    <a asp-area="BenhNhan" asp-controller="LichHen" asp-action="Create"
+                       class="sidebar-item">
+                        <i class="bi bi-calendar-plus"></i> Đặt lịch khám
+                    </a>
+
+                    <div class="sidebar-divider"></div>
+
+                    <form asp-area="" asp-controller="Account" asp-action="Dangxuat" method="post">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="sidebar-item danger w-100 text-start border-0 bg-transparent">
+                            <i class="bi bi-box-arrow-right"></i> Đăng xuất
+                        </button>
+                    </form>
+                </nav>
+
+                <!-- Thống kê nhanh -->
+                <div class="quick-stat">
+                    <span class="quick-stat-label">Tổng lịch hẹn</span>
+                    <span class="quick-stat-num">@(Model.LichHens != null ? Model.LichHens.Count() : 0)</span>
+                </div>
+            </aside>
+
+             <!-- ══ CONTENT ══ -->
+    <div class="profile-content">
+
+        <!-- TAB 1: Xem thông tin -->
+        <div class="tab-panel @(activeTab == "info" ? "active" : "")" id="tab-info">
+            <div class="profile-card">
+                <div class="profile-card-header">
+                    <i class="bi bi-person-badge-fill"></i>
+                    <div>
+                        <h5>Thông tin cá nhân</h5>
+                        <p>Xem thông tin tài khoản của bạn</p>
+                    </div>
+                    <button class="btn-edit ms-auto" onclick="switchTab('edit', null)">
+                        <i class="bi bi-pencil"></i> Chỉnh sửa
+                    </button>
+                </div>
+                <div class="profile-card-body">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-item-label"><i class="bi bi-person"></i> Họ và tên</div>
+                            <div class="info-item-value @(string.IsNullOrEmpty(Model.FullName) ? "empty" : "")">
+                                @(string.IsNullOrEmpty(Model.FullName) ? "Chưa cập nhật" : Model.FullName)
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-item-label"><i class="bi bi-envelope"></i> Email</div>
+                            <div class="info-item-value @(string.IsNullOrEmpty(Model.Email) ? "empty" : "")">
+                                @(string.IsNullOrEmpty(Model.Email) ? "Chưa cập nhật" : Model.Email)
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-item-label"><i class="bi bi-telephone"></i> Số điện thoại</div>
+                            <div class="info-item-value @(string.IsNullOrEmpty(Model.PhoneNumber) ? "empty" : "")">
+                                @(string.IsNullOrEmpty(Model.PhoneNumber) ? "Chưa cập nhật" : Model.PhoneNumber)
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-item-label"><i class="bi bi-gender-ambiguous"></i> Giới tính</div>
+                            <div class="info-item-value @(string.IsNullOrEmpty(Model.GioiTinh) ? "empty" : "")">
+                                @(string.IsNullOrEmpty(Model.GioiTinh) ? "Chưa cập nhật" : Model.GioiTinh)
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-item-label"><i class="bi bi-cake2"></i> Ngày sinh</div>
+                            <div class="info-item-value @(Model.NgaySinh == null ? "empty" : "")">
+                                @(Model.NgaySinh == null ? "Chưa cập nhật" : Model.NgaySinh.Value.ToString("dd/MM/yyyy"))
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-item-label"><i class="bi bi-geo-alt"></i> Địa chỉ</div>
+                            <div class="info-item-value @(string.IsNullOrEmpty(Model.DiaChi) ? "empty" : "")">
+                                @(string.IsNullOrEmpty(Model.DiaChi) ? "Chưa cập nhật" : Model.DiaChi)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: Chỉnh sửa -->
+        <div class="tab-panel @(activeTab == "edit" ? "active" : "")" id="tab-edit">
+            <div class="profile-card">
+                <div class="profile-card-header">
+                    <i class="bi bi-pencil-square"></i>
+                    <div>
+                        <h5>Chỉnh sửa thông tin</h5>
+                        <p>Cập nhật thông tin cá nhân của bạn</p>
+                    </div>
+                </div>
+                <div class="profile-card-body">
+                    <form asp-area="BenhNhan" asp-controller="Profile" asp-action="UpdateInfo" method="post">
+                        @Html.AntiForgeryToken()
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label><i class="bi bi-person"></i> Họ và tên</label>
+                                <input type="text" name="fullName" class="form-control"
+                                       value="@Model.FullName" placeholder="Nhập họ và tên" />
+                            </div>
+                            <div class="form-group">
+                                <label><i class="bi bi-envelope"></i> Email</label>
+                                <input type="email" name="email" class="form-control"
+                                       value="@Model.Email" placeholder="Nhập email" />
+                            </div>
+                            <div class="form-group">
+                                <label><i class="bi bi-telephone"></i> Số điện thoại</label>
+                                <input type="tel" name="phoneNumber" class="form-control"
+                                       value="@Model.PhoneNumber" placeholder="Nhập số điện thoại" />
+                            </div>
+                            <div class="form-group">
+                                <label><i class="bi bi-gender-ambiguous"></i> Giới tính</label>
+                                <select name="gioiTinh" class="form-control">
+                                    <option value="">-- Chọn giới tính --</option>
+                                    <option value="Nam" selected="@(Model.GioiTinh == "Nam" ? "selected" : "")" >Nam</option>
+                                    <option value="Nữ" selected="@(Model.GioiTinh == "Nữ" ? "selected" : "")">Nữ</option>
+                                    <option value="Khác"  selected="@(Model.GioiTinh == "Khác" ? "selected" : "")">Khác</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label><i class="bi bi-cake2"></i> Ngày sinh</label>
+                                <input type="date" name="ngaySinh" class="form-control"
+                                       value="@(Model.NgaySinh.HasValue ? Model.NgaySinh.Value.ToString("yyyy-MM-dd") : "")" />
+                            </div>
+                            <div class="form-group">
+                                <label><i class="bi bi-geo-alt"></i> Địa chỉ</label>
+                                <input type="text" name="diaChi" class="form-control"
+                                       value="@Model.DiaChi" placeholder="Nhập địa chỉ" />
+                            </div>
+                        </div>
+                        <div class="d-flex gap-3 mt-4 pt-3" style="border-top:1px solid #f1f5f9">
+                            <button type="submit" class="btn-save">
+                                <i class="bi bi-check-circle"></i> Lưu thay đổi
+                            </button>
+                            <button type="button" class="btn-cancel" onclick="switchTab('info', null)">
+                                Hủy bỏ
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: Lịch sử y tế -->
+        <div class="tab-panel @(activeTab == "medical" ? "active" : "")" id="tab-medical">
+            <div class="profile-card">
+                <div class="profile-card-header">
+                    <i class="bi bi-clipboard2-heart-fill"></i>
+                    <div>
+                        <h5>Lịch sử y tế</h5>
+                        <p>Thông tin tiền sử bệnh và dị ứng</p>
+                    </div>
+                </div>
+                <div class="profile-card-body">
+                    <form asp-area="BenhNhan" asp-controller="Profile" asp-action="UpdateInfo" method="post">
+                        @Html.AntiForgeryToken()
+                        <!-- Giữ các field khác để không bị reset -->
+                        <input type="hidden" name="fullName"    value="@Model.FullName" />
+                        <input type="hidden" name="email"       value="@Model.Email" />
+                        <input type="hidden" name="phoneNumber" value="@Model.PhoneNumber" />
+                        <input type="hidden" name="gioiTinh"   value="@Model.GioiTinh" />
+                        <input type="hidden" name="ngaySinh"   value="@(Model.NgaySinh.HasValue ? Model.NgaySinh.Value.ToString("yyyy-MM-dd") : "")" />
+                        <input type="hidden" name="diaChi"     value="@Model.DiaChi" />
+
+                        <div class="form-group">
+                            <label class="mb-2"><i class="bi bi-clipboard2-pulse text-primary me-1"></i> Tiền sử bệnh & lưu ý y tế</label>
+                            <textarea name="lichSuYTe" class="form-control" rows="8"
+                                      placeholder="Ví dụ: Dị ứng penicillin, tiểu đường type 2, huyết áp cao...&#10;Ghi rõ các bệnh nền, thuốc đang dùng, dị ứng thuốc nếu có.">@Model.LichSuYTe</textarea>
+                            <div class="mt-2" style="font-size:13px;color:#94a3b8">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Thông tin này giúp bác sĩ nắm rõ tình trạng sức khỏe của bạn trước khi khám.
+                            </div>
+                        </div>
+                        <div class="d-flex gap-3 mt-4 pt-3" style="border-top:1px solid #f1f5f9">
+                            <button type="submit" class="btn-save">
+                                <i class="bi bi-check-circle"></i> Lưu lịch sử y tế
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 4: Đổi mật khẩu -->
+        <div class="tab-panel @(activeTab == "password" ? "active" : "")" id="tab-password">
+            <div class="profile-card">
+                <div class="profile-card-header">
+                    <i class="bi bi-shield-lock-fill"></i>
+                    <div>
+                        <h5>Đổi mật khẩu</h5>
+                        <p>Đảm bảo tài khoản của bạn luôn an toàn</p>
+                    </div>
+                </div>
+                <div class="profile-card-body">
+
+                    @if (TempData["PwError"] != null)
+                    {
+                        <div class="alert alert-danger d-flex align-items-center gap-2 mb-4" style="border-radius:10px;font-size:14px">
+                            <i class="bi bi-exclamation-circle-fill"></i> @TempData["PwError"]
+                        </div>
+                    }
+                    @if (TempData["PwSuccess"] != null)
+                    {
+                        <div class="alert alert-success d-flex align-items-center gap-2 mb-4" style="border-radius:10px;font-size:14px">
+                            <i class="bi bi-check-circle-fill"></i> @TempData["PwSuccess"]
+                        </div>
+                    }
+
+                    <form asp-area="BenhNhan" asp-controller="Profile" asp-action="ChangePassword" method="post"
+                                  style="max-width:480px" id="changePasswordForm">
+                        @Html.AntiForgeryToken()
+
+                        <div class="form-group mb-4">
+                            <label><i class="bi bi-lock"></i> Mật khẩu hiện tại</label>
+                            <div class="pw-input-wrap">
+                                <input type="password" name="currentPassword" id="pw-current"
+                                       class="form-control" placeholder="Nhập mật khẩu hiện tại" required />
+                                <button type="button" class="pw-toggle" onclick="togglePw('pw-current', this)">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <label><i class="bi bi-lock-fill"></i> Mật khẩu mới</label>
+                            <div class="pw-input-wrap">
+                                <input type="password" name="newPassword" id="pw-new"
+                                       class="form-control" placeholder="Tối thiểu 6 ký tự"
+                                       oninput="checkStrength(this.value)" required />
+                                <button type="button" class="pw-toggle" onclick="togglePw('pw-new', this)">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                            <div class="pw-strength" id="pwStrength" style="display:none">
+                                <div class="pw-strength-bar">
+                                    <div class="pw-strength-fill" id="pwFill"></div>
+                                </div>
+                                <div class="pw-strength-text" id="pwText"></div>
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <label><i class="bi bi-lock-fill"></i> Xác nhận mật khẩu mới</label>
+                            <div class="pw-input-wrap">
+                                <input type="password" name="confirmPassword" id="pw-confirm"
+                                       class="form-control" placeholder="Nhập lại mật khẩu mới" required />
+                                <button type="button" class="pw-toggle" onclick="togglePw('pw-confirm', this)">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-warning d-flex align-items-center gap-2" style="border-radius:10px;font-size:13px">
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                            Sau khi đổi mật khẩu, bạn sẽ cần đăng nhập lại.
+                        </div>
+
+                                <button type="submit" class="btn-save mt-3" onclick="ConfirmChangePassword()">
+                            <i class="bi bi-shield-check"></i> Đổi mật khẩu
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function switchTab(name, clickedEl) {
+        document.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.remove('active'); });
+        document.querySelectorAll('.sidebar-item').forEach(function(i){ i.classList.remove('active'); });
+        document.getElementById('tab-' + name).classList.add('active');
+        if (clickedEl) clickedEl.classList.add('active');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function togglePw(inputId, btn) {
+        var input = document.getElementById(inputId);
+        var icon  = btn.querySelector('i');
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.className = 'bi bi-eye-slash';
+        } else {
+            input.type = 'password';
+            icon.className = 'bi bi-eye';
+        }
+    }
+
+    function checkStrength(val) {
+        var wrap = document.getElementById('pwStrength');
+        var fill = document.getElementById('pwFill');
+        var text = document.getElementById('pwText');
+        if (!val) { wrap.style.display = 'none'; return; }
+        wrap.style.display = 'block';
+        var score = 0;
+        if (val.length >= 6)  score++;
+        if (val.length >= 10) score++;
+        if (/[A-Z]/.test(val)) score++;
+        if (/[0-9]/.test(val)) score++;
+        if (/[^A-Za-z0-9]/.test(val)) score++;
+        var levels = [
+            { w:'20%', color:'#ef4444', label:'Rất yếu' },
+            { w:'40%', color:'#f97316', label:'Yếu' },
+            { w:'60%', color:'#eab308', label:'Trung bình' },
+            { w:'80%', color:'#22c55e', label:'Mạnh' },
+            { w:'100%',color:'#10b981', label:'Rất mạnh' }
+        ];
+        var lv = levels[Math.min(score - 1, 4)];
+        fill.style.width = lv.w;
+        fill.style.background = lv.color;
+        text.textContent = lv.label;
+        text.style.color = lv.color;
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const toast = document.getElementById('successToast');
+
+        if (toast) {
+            // Tự động đóng sau 4 giây
+            setTimeout(() => {
+                closeToast();
+            }, 2000);
+        }
+    });
+
+    function closeToast() {
+        const toast = document.getElementById('successToast');
+        if (toast) {
+            toast.classList.add('toast-out');
+            // Sau khi diễn xong animation (0.5s) thì xóa hẳn
+            setTimeout(() => {
+                toast.remove();
+            }, 500);
+        }
+    }
+</script>

@@ -1,0 +1,361 @@
+﻿@model List<web_phong_kham_tu_nhan.Models.Entities.LichHen>
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+@{
+    DateTime selectedDate = (DateTime)ViewBag.SelectedDate;
+    var doctor = ViewBag.Doctor as web_phong_kham_tu_nhan.Models.Entities.BacSi;
+}
+<link rel="stylesheet" href="~/css/BacSiHome/LichHen.css"/>
+
+<div class="bs-page">
+    <div class="container">
+        <div class="notification-container" id="toastContainer">
+            @if (TempData["Success"] != null)
+            {
+                <div class="custom-toast success" id="successToast">
+                    <span class="toast-icon"><i class="bi bi-check-circle-fill"></i></span>
+                    <div class="toast-content">
+                        <div class="toast-title">Thành công</div>
+                        <div class="toast-msg">@TempData["Success"]</div>
+                    </div>
+                    <button class="toast-close" onclick="closeToast('successToast')">
+                        <i class="bi bi-x"></i>
+                    </button>
+                </div>
+            }
+            @if (TempData["Error"] != null)
+            {
+                <div class="custom-toast error" id="errorToast">
+                    <span class="toast-icon"><i class="bi bi-x-circle-fill"></i></span>
+                    <div class="toast-content">
+                        <div class="toast-title">Lỗi</div>
+                        <div class="toast-msg">@TempData["Error"]</div>
+                    </div>
+                    <button class="toast-close" onclick="closeToast('errorToast')">
+                        <i class="bi bi-x"></i>
+                    </button>
+                </div>
+            }
+            <a asp-area="BacSi" asp-controller="Profile" asp-action="Index" class="detail-back">
+                <i class="bi bi-arrow-left"></i> Quay lại trang thông tin
+            </a>
+
+        </div>
+        <!-- Header-->
+        <div class="bs-header">
+            <div class="bs-header-left">
+                <h2><i class="bi bi-calendar-week me-2"></i>Lịch hẹn của tôi</h2>
+                <p>Quản lý lịch khám bệnh nhân theo ngày</p>
+            </div>
+            @if (doctor != null)
+            {
+                <div class="bs-doctor-badge">
+                    <img src="@(doctor.ImageUrl ?? "/Images/default-avatar.png")"
+                         onerror="this.src='/Images/default-avatar.png'" alt="" />
+                    <span>BS. @doctor.FullName</span>
+                </div>
+            }
+        </div>
+
+        <!-- DATE NAVIGATION -->
+        <div class="date-nav">
+            <a href="@Url.Action("Index", new { ngay = selectedDate.AddDays(-1).ToString("yyyy-MM-dd") })"
+               class="btn-date-nav">
+                <i class="bi bi-chevron-left"></i>
+            </a>
+
+            <div class="date-nav-center">
+                <div>
+                    <div class="date-label">
+                        @{
+                            string[] tenThu = { "Chủ nhật", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7" };
+                        }
+                        @tenThu[(int)selectedDate.DayOfWeek], @selectedDate.ToString("dd/MM/yyyy")
+                    </div>
+                    <div class="date-sub">
+                        @if (selectedDate.Date == DateTime.Today)
+                        {
+                            <span class="badge bg-primary">Hôm nay</span>
+                        }
+                        else if (selectedDate.Date == DateTime.Today.AddDays(1))
+                        {
+
+                            <span class="badge bg-secondary">Ngày mai</span>
+                        }
+                        else if (selectedDate.Date == DateTime.Today.AddDays(-1))
+                        {
+
+                            <span class="badge bg-secondary">Hôm qua</span>
+                        }
+                    </div>
+                </div>
+                <input type="date" id="datePickerInput"
+                       value="@selectedDate.ToString("yyyy-MM-dd")"
+                       class="form-control" style="width:160px;font-size:13px;border-radius:8px"
+                       onchange="goToDate(this.value)" />
+            </div>
+
+            <div class="d-flex align-items-center gap-8">
+                <a href="@Url.Action("Index", new { ngay = DateTime.Today.ToString("yyyy-MM-dd") })"
+                   class="btn-today @(selectedDate.Date == DateTime.Today ? "active" : "")">
+                    <i class="bi bi-calendar-day"></i> Hôm nay
+                </a>
+                <a href="@Url.Action("Index", new { ngay = selectedDate.AddDays(1).ToString("yyyy-MM-dd") })"
+                   class="btn-date-nav ms-2">
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- STATS -->
+        <div class="stats-row">
+            <div class="stat-box total">
+                <div class="stat-icon blue"><i class="bi bi-calendar2-check"></i></div>
+                <div>
+                    <div class="stat-num">@ViewBag.TongHomNay</div>
+                    <div class="stat-label">Tổng lịch hẹn</div>
+                </div>
+            </div>
+            <div class="stat-box wait">
+                <div class="stat-icon amber"><i class="bi bi-hourglass-split"></i></div>
+                <div>
+                    <div class="stat-num">@ViewBag.ChoXacNhan</div>
+                    <div class="stat-label">Chờ xác nhận</div>
+                </div>
+            </div>
+            <div class="stat-box done">
+                <div class="stat-icon green"><i class="bi bi-patch-check-fill"></i></div>
+                <div>
+                    <div class="stat-num">@ViewBag.HoanThanh</div>
+                    <div class="stat-label">Hoàn thành</div>
+                </div>
+            </div>
+            <div class="stat-box cancel">
+                <div class="stat-icon gray"><i class="bi bi-x-circle"></i></div>
+                <div>
+                    <div class="stat-num">@ViewBag.DaHuy</div>
+                    <div class="stat-label">Đã hủy</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- FILTER -->
+        <div class="filter-row">
+            <button class="filter-tab active" onclick="filterCards('all', this)">
+                Tất cả <span class="badge bg-secondary ms-1">@Model.Count</span>
+            </button>
+            <button class="filter-tab" onclick="filterCards('0', this)">
+                <i class="bi bi-hourglass-split me-1"></i>Chờ xác nhận
+                <span class="badge bg-warning text-dark ms-1">@Model.Count(a => a.TrangThai == 0)</span>
+            </button>
+            <button class="filter-tab" onclick="filterCards('1', this)">
+                <i class="bi bi-calendar-check me-1"></i>Đã xác nhận
+                <span class="badge bg-primary ms-1">@Model.Count(a => a.TrangThai == 1)</span>
+            </button>
+            <button class="filter-tab" onclick="filterCards('2', this)">
+                <i class="bi bi-patch-check me-1"></i>Hoàn thành
+                <span class="badge bg-success ms-1">@Model.Count(a => a.TrangThai == 2)</span>
+            </button>
+            <button class="filter-tab" onclick="filterCards('3', this)">
+                <i class="bi bi-x-circle me-1"></i>Đã hủy
+                <span class="badge bg-secondary ms-1">@Model.Count(a => a.TrangThai == 3)</span>
+            </button>
+        </div>
+
+        <!-- DANH SÁCH LỊCH HẸN -->
+        @if (!Model.Any())
+        {
+            <div class="empty-state">
+                <i class="bi bi-calendar-x"></i>
+                <h5>Không có lịch hẹn nào</h5>
+                <p>Ngày @selectedDate.ToString("dd/MM/yyyy") không có bệnh nhân đăng ký khám.</p>
+            </div>
+        }
+        else
+        {
+            <div class="appt-list" id="apptList">
+                @foreach (var item in Model)
+                {
+                    string ttClass = "status-" + item.TrangThai;
+                    string ttLabel = item.TrangThai == 0 ? "Chờ xác nhận"
+                    : item.TrangThai == 1 ? "Đã xác nhận"
+                    : item.TrangThai == 2 ? "Hoàn thành"
+                    : "Đã hủy";
+                    string ttIcon = item.TrangThai == 0 ? "bi-hourglass-split"
+                    : item.TrangThai == 1 ? "bi-calendar-check"
+                    : item.TrangThai == 2 ? "bi-patch-check-fill"
+                    : "bi-x-circle";
+
+                    string[] timeParts = (item.TimeSlot ?? "--:--").Split('-');
+                    string timeFrom = timeParts.Length > 0 ? timeParts[0].Trim() : "--";
+
+                    <div class="appt-card" data-status="@item.TrangThai" id="card-@item.Id">
+                        <div class="appt-card-body">
+
+                            <!-- KHUNG GIỜ -->
+                            <div class="time-box">
+                                <div class="time">@timeFrom</div>
+                                <div class="ampm">@(item.TimeSlot ?? "")</div>
+                            </div>
+
+                            <!-- THÔNG TIN -->
+                            <div class="appt-info">
+                                <div class="appt-name">
+                                    @(item.BenhNhan != null ? item.BenhNhan.FullName : "Bệnh nhân #" + item.BenhNhanId)
+                                </div>
+                                <div class="appt-meta">
+                                    <span class="appt-meta-item">
+                                        <i class="bi bi-hash"></i> LH-@item.Id.ToString("D4")
+                                    </span>
+                                    @if (item.BenhNhan != null && !string.IsNullOrEmpty(item.BenhNhan.PhoneNumber))
+                                    {
+                                        <span class="appt-meta-item">
+                                            <i class="bi bi-telephone"></i> @item.BenhNhan.PhoneNumber
+                                        </span>
+                                    }
+                                    @if (item.ChuyenKhoa != null)
+                                    {
+                                        <span class="appt-meta-item">
+                                            <i class="bi bi-hospital"></i> @item.ChuyenKhoa.Name
+                                        </span>
+                                    }
+                                </div>
+                                @if (!string.IsNullOrEmpty(item.LyDoKham))
+                                {
+                                    <div class="appt-reason">
+                                        <i class="bi bi-chat-text-fill"></i>
+                                        @item.LyDoKham
+                                    </div>
+                                }
+                            </div>
+
+                            <!-- ACTIONS -->
+                            <div class="appt-actions">
+                                <span class="status-badge @ttClass">
+                                    <i class="bi @ttIcon"></i> @ttLabel
+                                </span>
+
+                                <button class="btn-chitiet" onclick="xemChiTiet(@item.Id)">
+                                    <i class="bi bi-person-lines-fill"></i> Hồ sơ
+                                </button>
+
+                                @if (item.TrangThai == 0)
+                                {
+                                    <form asp-area="BacSi" asp-controller="LichHen" asp-action="XacNhan"
+                                          method="post" style="display:inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <input type="hidden" name="ngay" value="@selectedDate.ToString("yyyy-MM-dd")" />
+                                        <button type="submit" class="btn-xacnhan">
+                                            <i class="bi bi-check-circle"></i> Xác nhận
+                                        </button>
+                                    </form>
+                                }
+
+                                @if (item.TrangThai == 1)
+                                {
+                                    <form asp-area="BacSi" asp-controller="LichHen" asp-action="HoanThanh"
+                                          method="post" style="display:inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <input type="hidden" name="ngay" value="@selectedDate.ToString("yyyy-MM-dd")" />
+                                        <button type="submit" class="btn-hoanThanh">
+                                            <i class="bi bi-patch-check"></i> Hoàn thành
+                                        </button>
+                                    </form>
+                                }
+
+                                @if (item.TrangThai == 0 || item.TrangThai == 1)
+                                {
+                                    <form asp-area="BacSi" asp-controller="LichHen" asp-action="HuyLich"
+                                          method="post" style="display:inline"
+                                          onsubmit="return confirm('Bạn có chắc muốn hủy lịch hẹn này?')">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <input type="hidden" name="ngay" value="@selectedDate.ToString("yyyy-MM-dd")" />
+                                        <button type="submit" class="btn-huy">
+                                            <i class="bi bi-x-circle"></i> Hủy
+                                        </button>
+                                    </form>
+                                }
+                            </div>
+
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+<!--Bảng thông tin chi tiết hồ sơ bệnh án-->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h5><i class="bi bi-person-badge me-2"></i>Hồ sơ bệnh nhân</h5>
+            <button class="modal-close" onclick="closeModalBtn()">
+                <i class="bi bi-x"></i>
+            </button>
+        </div>
+        <div class="modal-body" id="modalBody">
+            <div class="text-center py-4">
+                <div class="spinner-border text-primary"></div>
+                <p class="mt-2 text-muted">Đang tải...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+        function goToDate(val) {
+        window.location.href = '@Url.Action("Index")' + '?ngay=' + val;
+    }
+
+    function filterCards(status, btn) {
+        document.querySelectorAll('.filter-tab').forEach(function(t){ t.classList.remove('active'); });
+        btn.classList.add('active');
+        document.querySelectorAll('.appt-card').forEach(function(c){
+            c.style.display = (status === 'all' || c.dataset.status === status) ? '' : 'none';
+        });
+    }
+
+    function xemChiTiet(lichHenId) {
+        document.getElementById('modalOverlay').classList.add('show');
+        document.getElementById('modalBody').innerHTML =
+            '<div class="text-center py-4"><div class="spinner-border text-primary"></div><p class="mt-2 text-muted">Đang tải...</p></div>';
+
+        fetch('/BacSi/LichHen/ChiTietBenhNhan?lichHenId=' + lichHenId)
+            .then(function(r){ return r.json(); })
+            .then(function(d){
+                var lydo = d.lyDoKham
+                    ? '<div class="lydo-block"><label><i class="bi bi-chat-text-fill"></i> Lý do khám</label><p>' + d.lyDoKham + '</p></div>'
+                    : '';
+                var lichSu = d.lichSuYTe
+                    ? '<div class="lydo-block" style="background:#f0fdf4;border-color:#bbf7d0"><label style="color:#15803d"><i class="bi bi-clipboard2-heart-fill"></i> Lịch sử y tế</label><p style="color:#166534">' + d.lichSuYTe + '</p></div>'
+                    : '';
+
+                document.getElementById('modalBody').innerHTML =
+                    '<div class="modal-row"><div class="modal-icon"><i class="bi bi-person"></i></div><div><div class="modal-row-lbl">Họ và tên</div><div class="modal-row-val">' + (d.hoTen || '<span class="empty">Chưa cập nhật</span>') + '</div></div></div>'
+                  + '<div class="modal-row"><div class="modal-icon"><i class="bi bi-telephone"></i></div><div><div class="modal-row-lbl">Số điện thoại</div><div class="modal-row-val">' + (d.phone || '<span class="empty">Chưa cập nhật</span>') + '</div></div></div>'
+                  + '<div class="modal-row"><div class="modal-icon"><i class="bi bi-envelope"></i></div><div><div class="modal-row-lbl">Email</div><div class="modal-row-val">' + (d.email || '<span class="empty">Chưa cập nhật</span>') + '</div></div></div>'
+                  + '<div class="modal-row"><div class="modal-icon"><i class="bi bi-cake2"></i></div><div><div class="modal-row-lbl">Ngày sinh</div><div class="modal-row-val">' + (d.ngaySinh || '<span class="empty">Chưa cập nhật</span>') + '</div></div></div>'
+                  + '<div class="modal-row"><div class="modal-icon"><i class="bi bi-gender-ambiguous"></i></div><div><div class="modal-row-lbl">Giới tính</div><div class="modal-row-val">' + (d.gioiTinh || '<span class="empty">Chưa cập nhật</span>') + '</div></div></div>'
+                  + '<div class="modal-row"><div class="modal-icon"><i class="bi bi-geo-alt"></i></div><div><div class="modal-row-lbl">Địa chỉ</div><div class="modal-row-val">' + (d.diaChi || '<span class="empty">Chưa cập nhật</span>') + '</div></div></div>'
+                  + lydo + lichSu;
+            })
+            .catch(function(){
+                document.getElementById('modalBody').innerHTML =
+                    '<div class="alert alert-danger">Không thể tải thông tin bệnh nhân.</div>';
+            });
+    }
+
+    function closeModal(e) {
+        if (e.target === document.getElementById('modalOverlay'))
+            document.getElementById('modalOverlay').classList.remove('show');
+    }
+
+    function closeModalBtn() {
+        document.getElementById('modalOverlay').classList.remove('show');
+    }
+</script>

@@ -1,0 +1,126 @@
+﻿@using X.PagedList.Mvc.Core
+@using X.PagedList
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+@model X.PagedList.IPagedList<web_phong_kham_tu_nhan.Models.Entities.BenhNhan>
+<div class="main-content">
+    <div class="page-header">
+        <h1>QUẢN LÝ BỆNH NHÂN</h1>
+        <p>Quản lý hồ sơ và thông tin bệnh nhân</p>
+    </div>
+    <div class="row mb-4">
+        @{
+            var trangthai = Context.Request.Query["TrangThai"].ToString();
+        }
+        <div class="col-md-4" >
+            <a asp-action="Index" class="text-decoration-none">
+                <div class="card stat-card @(string.IsNullOrEmpty(trangthai) ? "active" : "")">
+                    <div class="card-body">
+                        <p>TẤT CẢ BỆNH NHÂN</p>
+                        <h3 style="color:aqua;">@ViewBag.AllPatients</h3>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-md-4">
+            <a asp-action="Index" asp-route-TrangThai="1" class="text-decoration-none">
+                <div class="card stat-card @(trangthai == "1" ? "active" : "")">
+                    <div class="card-body">
+                        <p>ĐANG NẰM VIỆN</p>
+                        <h3 class="text-success">@ViewBag.ActivePatients</h3>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-md-4" >
+            <a asp-action="Index" asp-route-TrangThai="0" class="text-decoration-none">
+                <div class="card stat-card @(trangthai == "0"? "active" : "")">
+                    <div class="card-body">
+                        <p>ĐÃ XUẤT VIỆN</p>
+                        <h3 class="text-danger">@ViewBag.InactivePatients</h3>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+    </div>
+
+    <div class="card-box">
+
+        <div class="card-header">
+            <h5>Tất cả bệnh nhân</h5>
+            <div class="header-actions">
+                <input type="search" id="searchInput" placeholder="Nhập bệnh nhân cần tìm" class="form-control search-box" />
+                <a asp-action="Create" class="btn btn-primary">Thêm bệnh nhân mới</a>
+            </div>
+        </div>
+
+        <table id="pateintTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Tên bệnh nhân</th>
+                    <th>Ngày sinh</th>
+                    <th>Email</th>
+                    <th>Số điện thoại</th>
+                    <th>Giới tính</th>
+                    <th>Trạng thái</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Count > 0)
+                {
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>#@item.Id</td>
+                            <td class="fw-bold">@item.FullName</td>
+                            <td>@item.NgaySinh?.ToString("dd/MM/yyy")</td>
+                            <td>@item.Email</td>
+                            <td>@item.PhoneNumber</td>
+                            <td>@item.GioiTinh</td>
+
+                            <td>
+                                @if (item.TrangThai == 1)
+                                {
+                                    <span class="status-badge status-active">
+                                        Đang nằm viện
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="status-badge status-inactive">
+                                        Đã xuất viện
+                                    </span>
+                                }
+                            </td>
+                            <td>
+                                <a asp-action="Detail" asp-route-id="@item.Id" class="btn btn-sm btn-info me-1">👁</a>
+                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning me-1">✏</a>
+                                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger btn-delete">🗑</a>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="7" class="text-center text-muted">
+                            Không có dữ liệu bệnh nhân nào. Vui lòng thêm bệnh nhân mới.
+                        </td>
+                    </tr>
+                }
+
+            </tbody>
+            
+        </table>
+        @Html.PagedListPager(Model, page => Url.Action("Index", new { page }))
+        <p class="text-muted text-center mt-2">
+            Hiển thị @Model.FirstItemOnPage - @Model.LastItemOnPage trong tổng số @Model.TotalItemCount bệnh nhân
+        </p>
+    </div>
+</div>

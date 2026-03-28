@@ -1,0 +1,348 @@
+﻿/* HEADER */
+.page-hd {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+/*.page-hd h4 {
+    margin: 0;
+    font-weight: 700;
+    font-size: 20px;
+    color: #1e293b;
+}*/
+    .page-hd h1 {
+        font-weight: 700;
+        background: linear-gradient( 120deg, #2c7be5 40%, #ffffff 50%, #2c7be5 60% );
+        background-size: 200%;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: shine 4s infinite linear;
+    }
+
+/* TOOLBAR */
+.toolbar {
+    background: white;
+    border-radius: 12px;
+    padding: 16px 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.05);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.view-switch {
+    display: flex;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+    .view-switch a {
+        padding: 7px 16px;
+        font-size: 13px;
+        font-weight: 500;
+        color: #64748b;
+        text-decoration: none;
+        transition: .2s;
+    }
+
+        .view-switch a.active {
+            background: #0d6efd;
+            color: white;
+        }
+
+        .view-switch a:hover:not(.active) {
+            background: #f8fafc;
+        }
+
+/* NAV TUẦN */
+.week-nav {
+    background: white;
+    border-radius: 12px;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 8px rgba(0,0,0,.05);
+    margin-bottom: 14px;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.week-label {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.btn-nav {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1.5px solid #e2e8f0;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+    cursor: pointer;
+    transition: .2s;
+    text-decoration: none;
+}
+
+    .btn-nav:hover {
+        border-color: #0d6efd;
+        color: #0d6efd;
+        background: #eff6ff;
+    }
+
+/* BẢNG LỊCH */
+.week-table {
+    background: white;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,.05);
+}
+
+    .week-table table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .week-table thead th {
+        padding: 10px 8px;
+        text-align: center;
+        font-size: 12px;
+        font-weight: 600;
+        color: #64748b;
+        border-bottom: 2px solid #f1f5f9;
+        background: #fafbfc;
+    }
+
+        .week-table thead th.today-col {
+            background: #eff6ff;
+            color: #0d6efd;
+        }
+
+.th-date {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1e293b;
+    display: block;
+    line-height: 1.1;
+}
+
+    .th-date.today {
+        color: #0d6efd;
+    }
+
+.week-table tbody td {
+    padding: 6px;
+    vertical-align: top;
+    min-height: 70px;
+    border-right: 1px solid #f1f5f9;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+    .week-table tbody td:first-child {
+        padding: 10px 12px;
+        font-size: 11px;
+        font-weight: 700;
+        color: #64748b;
+        background: #fafbfc;
+        width: 70px;
+        text-align: center;
+        border-right: 2px solid #f1f5f9;
+    }
+
+    .week-table tbody td.today-col {
+        background: #f8fbff;
+    }
+
+/* CELL */
+.lich-cell {
+    border-radius: 7px;
+    padding: 7px 9px;
+    margin-bottom: 4px;
+    font-size: 11px;
+    position: relative;
+    cursor: default;
+}
+
+.lich-cell-0 {
+    background: #eff6ff;
+    border-left: 3px solid #0d6efd;
+}
+
+.lich-cell-1 {
+    background: #fffbeb;
+    border-left: 3px solid #f59e0b;
+}
+
+.lich-cell-2 {
+    background: #fef2f2;
+    border-left: 3px solid #ef4444;
+}
+
+.lich-cell-3 {
+    background: #fef9c3;
+    border-left: 3px solid #eab308;
+}
+
+.lich-cell-name {
+    font-weight: 700;
+    font-size: 11px;
+    color: #1e293b;
+    margin-bottom: 2px;
+}
+
+.lich-cell-sub {
+    color: #6b7280;
+    font-size: 10px;
+}
+
+.lich-cell-0 .lich-cell-name {
+    color: #1e40af;
+}
+
+.lich-cell-1 .lich-cell-name {
+    color: #d97706;
+}
+
+.lich-cell-2 .lich-cell-name {
+    color: #dc2626;
+}
+
+.lich-cell-3 .lich-cell-name {
+    color: #854d0e;
+}
+
+.btn-del-cell {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: rgba(239,68,68,.1);
+    border: none;
+    color: #ef4444;
+    font-size: 9px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: .2s;
+}
+
+    .btn-del-cell:hover {
+        background: #ef4444;
+        color: white;
+    }
+
+.empty-cell {
+    color: #e2e8f0;
+    font-size: 18px;
+    text-align: center;
+    padding: 16px 0;
+}
+
+/* BADGE ĐÃ XIN NGHỈ */
+.badge-choDuyet {
+    display: inline-block;
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 100px;
+    background: #fef9c3;
+    color: #854d0e;
+    font-weight: 700;
+    margin-top: 2px;
+}
+
+/* FORM TẠO LỊCH */
+.create-card {
+    background: white;
+    border-radius: 14px;
+    padding: 24px 28px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.05);
+    margin-bottom: 20px;
+}
+
+    .create-card h6 {
+        font-weight: 700;
+        font-size: 15px;
+        color: #1e293b;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(3,1fr) auto;
+    gap: 14px;
+    align-items: end;
+}
+
+.form-group label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #475569;
+    margin-bottom: 5px;
+    display: block;
+}
+
+/* ĐƠNN XIN NGHỈ BADGE */
+.don-count {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 14px;
+    background: #fef9c3;
+    border-radius: 8px;
+    font-size: 13px;
+    color: #854d0e;
+    font-weight: 600;
+}
+
+/* LEGEND */
+.legend {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    font-size: 12px;
+    margin-bottom: 14px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+}
+
+@@media(max-width:768px) {
+    .form-row {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .week-table {
+        overflow-x: auto;
+    }
+
+        .week-table table {
+            min-width: 700px;
+        }
+}

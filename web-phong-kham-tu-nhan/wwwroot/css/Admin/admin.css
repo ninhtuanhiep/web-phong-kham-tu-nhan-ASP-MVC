@@ -1,0 +1,678 @@
+﻿body {
+    background-color: #f4f6f9;
+    font-family: 'Segoe UI', sans-serif;
+    margin:0px;
+}
+
+.admin-wrapper {
+    display: flex;
+}
+
+.content-area{
+    flex:1;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 270px;
+    background: white;
+    padding: 20px;
+    height: 100vh;
+    border-right: 1px solid #ddd;
+}
+
+.logo, .page-header h1 {
+    font-weight: 700;
+    background: linear-gradient( 120deg, #2c7be5 40%, #ffffff 50%, #2c7be5 60% );
+    background-size: 200%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shine 4s infinite linear;
+}
+
+@keyframes shine{
+    0%{
+        background-position: -200%;
+    }100%{
+         background-position:200%;
+     }
+}
+
+    .sidebar ul {
+        list-style: none;
+        padding: 0;
+    }
+
+    .sidebar li {
+        padding: 10px;
+        border-radius: 6px;
+    }
+
+    .sidebar li:hover{
+        background-color:#e7e7e7;
+    }
+    .sidebar li.active{
+        background-color:#b7cdf1;
+        color:white;
+    }
+
+    .sidebar li.active a{
+        color:white;
+    }
+
+    .sidebar a {
+        text-decoration: none;
+        color: #333;
+    }
+
+/* ===== MAIN CONTENT ===== */
+
+.main-content {
+    flex: 1;
+    padding: 35px;
+    width:100%;
+    min-height:100vh;
+    background-color:#eef0f3;
+}
+
+
+/* ===== PAGE HEADER ===== */
+.page-header{
+    margin-bottom:30px;
+}
+
+.page-title {
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.page-subtitle {
+    color: #6b7280;
+    margin-bottom: 25px;
+}
+
+
+/* ===== CARD ===== */
+
+.card {
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+}
+
+
+/* ===== CARD HEADER ===== */
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 30px;
+    height:75px;
+    margin: 0 15px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+    .card-header h3 {
+        font-size: 18px;
+        font-weight: 600;
+    }
+
+.card-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.header-actions {
+    display:flex;
+    padding:0 0 0 200px;
+    gap:12px;
+    align-content:center;
+}
+
+
+/* ===== SEARCH ===== */
+
+.search-box {
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    padding: 8px 12px;
+    width: 200px;
+}
+
+
+/* ===== BUTTON ===== */
+
+.btn.btn-primary{
+    width:350px;
+}
+.btn-primary {
+    background: #3b82f6;
+    border: none;
+    color: white;
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+    .btn-primary:hover {
+        background: #2563eb;
+    }
+
+
+/* ===== TABLE ===== */
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+thead {
+    background: #f9fafb;
+}
+
+th {
+    text-align: left;
+    padding: 14px 7px;
+    font-size: 13px;
+    color: #6b7280;
+    text-transform: uppercase;
+}
+
+td {
+    padding: 20px 2px !important;
+    border-top: 1px solid #f1f1f1;
+}
+tbody tr:hover {
+    background: #fafafa;
+}
+
+/*===== Toàn bộ bảng ========*/
+
+.card-box {
+    background: #ffffff;
+    border-radius: 5px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    padding: 0;
+    overflow: hidden;
+    width:100%;
+}
+
+/* ===== ACTION BUTTONS ===== */
+
+.action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-edit {
+    background: #fde68a;
+}
+
+.btn-delete {
+    background: #fecaca;
+    margin-left: 6px;
+}
+
+/*=========Create form==============*/
+.create-wrapper{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    min-height:100vh;
+}
+.create-container {
+    background: white;
+    padding: 30px;
+    border-radius: 8px;
+    width: 500px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.create-title {
+    margin-bottom: 20px;
+    font-weight: 600;
+}
+
+/*===============Edit form ==================*/
+.edit-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.form-container {
+    width: 500px;
+    margin: 80px auto;
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+/*==================Thông báo xác nhận sau khi thực hiện CRUD==================*/
+.toast-success {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #28a745;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    transition: all 0.5s ease;
+}
+
+.toast-hide {
+    opacity: 0;
+    transform: translateY(-20px);
+}
+/*========================Bác Sĩ====================*/
+.status-badge {
+    padding: 6px 14px;
+    border-radius: 30px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.status-active {
+    background: #fff2c4;
+    color: #fed826;
+}
+
+.status-inactive-doctor {
+    background: #fbfcaa;
+    color: #ede450;
+}
+
+.status-onLeave {
+    background: #fdecea;
+    color: #e75b5b
+}
+/*========================Bệnh Nhân====================*/
+.stat-card {
+    border-radius: 10px;
+    transition: 0.2s;
+    cursor: pointer;
+}
+
+    .stat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+    }
+    .stat-card.active {
+        border: 2px solid #0d6efd;
+        background: #f8fbff;
+    }
+
+/*==========Giao diện create cho bệnh nhân=============*/
+.container-fluid{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+.form-card {
+    background: #fff;
+    border-radius: 10px;
+    padding: 25px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    max-width: 900px;
+}
+
+.form-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.close-btn {
+    text-decoration: none;
+    font-size: 20px;
+    color: #666;
+}
+
+.form-actions {
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    justify-content:center;
+    gap: 10px;
+}
+
+.form-control {
+    border-radius: 6px;
+}
+/*==================== css phân trang ======================*/
+/* Container pagination */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 25px;
+    gap: 6px;
+}
+
+    /* Item */
+    .pagination li {
+        list-style: none;
+    }
+
+        /* Link */
+        .pagination li a,
+        .pagination li span {
+            display: block;
+            padding: 8px 14px;
+            font-size: 14px;
+            color: #555;
+            border: 1px solid #e3e6f0;
+            border-radius: 8px;
+            background: #fff;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+            /* Hover */
+            .pagination li a:hover {
+                background: #f0f4ff;
+                border-color: #0d6efd;
+                color: #0d6efd;
+                transform: translateY(-1px);
+            }
+
+        /* Active page */
+        .pagination li.active span {
+            background: #0d6efd;
+            color: #fff;
+            border-color: #0d6efd;
+            font-weight: 600;
+        }
+
+        /* Disabled */
+        .pagination li.disabled span {
+            color: #aaa;
+            background: #f5f5f5;
+            border-color: #e5e5e5;
+        }
+
+        /* Previous - Next */
+        .pagination li:first-child a,
+        .pagination li:last-child a {
+            font-weight: 500;
+        }
+
+/*============= css detail=============*/
+/* ===== Container ===== */
+.patient-details-container {
+    max-width: 900px;
+    margin: 30px auto;
+}
+
+/* ===== Card tổng ===== */
+.patient-details-card {
+    border: none;
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    padding: 25px;
+}
+
+/* ===== Header ===== */
+.patient-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 15px;
+    margin-bottom: 25px;
+}
+
+    .patient-header h2 {
+        font-weight: 600;
+        color: #2c3e50;
+    }
+
+/* ===== Badge trạng thái ===== */
+.status-badge {
+    padding: 6px 14px;
+    border-radius: 30px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.status-active {
+    background: #e6f7ef;
+    color: #27ae60;
+}
+
+.status-inactive {
+    background: #fdecea;
+    color: #e74c3c;
+}
+
+/* ===== Section ===== */
+.detail-section {
+    margin-bottom: 25px;
+}
+
+/* Tiêu đề section */
+.section-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: #34495e;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* ===== Box thông tin ===== */
+.detail-box {
+    background: #f8f9fc;
+    border-radius: 10px;
+    padding: 18px;
+    border: 1px solid #eef1f6;
+}
+
+/* Grid thông tin */
+.detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+}
+
+/* Label */
+.detail-label {
+    font-size: 13px;
+    color: #888;
+    margin-bottom: 2px;
+}
+
+/* Value */
+.detail-value {
+    font-size: 15px;
+    font-weight: 500;
+    color: #2c3e50;
+}
+
+/* ===== Hover hiệu ứng nhẹ ===== */
+.detail-box:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    transform: translateY(-1px);
+    transition: all 0.2s ease;
+}
+
+/* ===== Nút quay lại ===== */
+.btn-back {
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 14px;
+}
+
+/*======================index lịch khám ======================*/
+
+.status-completed{
+    background:#d6dce7;
+    color:#e5ebf7;
+}
+/*================detail lịch hẹn=============================*/
+/* Container */
+.detail-container {
+    max-width: 1100px;
+    margin: auto;
+}
+
+/* Card chính */
+.detail-card {
+    border: none;
+    border-radius: 14px;
+    overflow: hidden;
+    background: #ffffff;
+    box-shadow: 0 10px 35px rgba(0,0,0,0.08);
+}
+
+/* Header */
+.detail-header {
+    background: linear-gradient(135deg,#3a7bd5,#00d2ff);
+    margin-top:15px;
+}
+
+    .detail-header h3 {
+        font-weight: 600;
+        margin: 0;
+        color:white;
+    }
+
+/* Body */
+.detail-body {
+    padding: 35px;
+}
+
+/* Info box */
+.info-box {
+    background: #f9fbfd;
+    border-radius: 10px;
+    padding: 20px;
+    border-left: 5px solid #3a7bd5;
+    transition: 0.3s;
+}
+
+    .info-box:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+    }
+
+/* Title */
+.info-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: #2d3748;
+}
+
+/* Text */
+.info-box p {
+    margin: 6px 0;
+    color: #4a5568;
+    font-size: 14.5px;
+}
+
+/* Status badge */
+.status-badge {
+    display: inline-block;
+    padding: 8px 20px;
+    border-radius: 30px;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+/* Pending */
+.status-pending {
+    background: #fff7db;
+    color: #9a6b00;
+}
+
+/* Approved */
+.status-approved {
+    background: #e6f9ee;
+    color: #1c7c45;
+}
+
+/* Completed */
+.status-completed {
+    background: #e8f4ff;
+    color: #1b5fa7;
+}
+
+/* Button group */
+.detail-buttons {
+    margin-top: 30px;
+    display: flex;
+    gap: 12px;
+}
+
+/* Buttons */
+.btn-edit {
+    background: #ffc107;
+    border: none;
+    color: #000;
+    font-weight: 500;
+}
+
+    .btn-edit:hover {
+        background: #e0a800;
+    }
+
+.btn-back {
+    background: #6c757d;
+    border: none;
+}
+
+    .btn-back:hover {
+        background: #545b62;
+    }
+/*=================Quản lý người dùng====================*/
+/* Badge chung */
+.role-badge {
+    padding: 6px 14px;
+    border-radius: 30px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    display: inline-block;
+    transition: all 0.25s ease;
+}
+
+/* Admin */
+.role-admin {
+    color: #fff;
+    background: linear-gradient(135deg,#ff4b5c,#c82333);
+    box-shadow: 0 2px 8px rgba(255,75,92,0.3);
+}
+
+/* Bác sĩ */
+.role-bacsi {
+    color: #fff;
+    background: linear-gradient(135deg,#3a8ef6,#0d6efd);
+    box-shadow: 0 2px 8px rgba(13,110,253,0.3);
+}
+
+/* Bệnh nhân */
+.role-benhnhan {
+    color: #fff;
+    background: linear-gradient(135deg,#34c38f,#198754);
+    box-shadow: 0 2px 8px rgba(25,135,84,0.3);
+}
+
+/* Hover effect */
+.role-badge:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px rgba(0,0,0,0.15);
+}

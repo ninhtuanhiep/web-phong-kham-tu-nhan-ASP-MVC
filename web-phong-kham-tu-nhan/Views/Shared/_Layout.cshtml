@@ -1,0 +1,258 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - web_phong_kham_tu_nhan</title>
+    <script type="importmap"></script>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/Home/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/web_phong_kham_tu_nhan.styles.css" asp-append-version="true" />
+    <link rel="stylesheet"
+href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        .swal2-confirm {
+            background-color: #dc3545 !important;
+            color: white !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- HEADER -->
+    <header class="shadow-sm bg-white fixed-top">
+        <div class="container">
+            <nav class="navbar navbar-expand-lg navbar-light">
+
+                <!-- Logo -->
+                <a class="navbar-brand fw-bold"
+                asp-area=""
+                   asp-controller="Home"
+                   asp-action="Index"
+                   asp-route-area="">
+                    Phòng Khám
+                </a>
+
+                <!-- Mobile button -->
+                <button class="navbar-toggler"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#navbarMenu">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- Menu -->
+                <div class="collapse navbar-collapse" id="navbarMenu">
+
+                    <ul class="navbar-nav me-auto">
+
+                        <li class="nav-item">
+                            <a class="nav-link" asp-area=""
+                               asp-controller="Home"
+                               asp-action="Index"
+                                asp-route-area="">
+                                Trang chủ
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link" asp-area=""
+                               asp-controller="Home"
+                               asp-action="About">
+                                Về chúng tôi
+                            </a>
+                        </li>
+
+
+                        <li class="nav-item">
+                            <a class="nav-link" asp-area=""
+                               asp-controller="Doctor"
+                               asp-action="Index">
+                                Đội ngũ bác sĩ
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link" asp-area="BenhNhan"
+                               asp-controller="LichHen"
+                               asp-action="Create">
+                                Đặt lịch ngay
+                            </a>
+                        </li>
+
+
+
+                    </ul>
+
+                    <!-- Login / Logout -->
+
+
+                    @if (User.Identity.IsAuthenticated)
+                    {
+                        <ul class="navbar-nav align-items-center" style="display:flex; gap:90px;">
+                            <li class="nav-item">
+                                @if(User.IsInRole("Bệnh nhân"))
+                                {
+                                    <a class="nav-link username" asp-area="BenhNhan" asp-controller="Profile" asp-action="Index">
+                                        Xin chào, @User.Identity.Name
+                                    </a>
+                                }
+                                else if(User.IsInRole("Bác sĩ"))
+                                {
+                                    <a class="nav-link username" asp-area="BacSi" asp-controller="Profile" asp-action="Index">
+                                        Xin chào, @User.Identity.Name
+                                    </a>
+                                }
+
+                            </li>
+                             
+                            <li class="nav-item">
+                                <form id="logoutForm" asp-area="" asp-controller="Account"
+                                      asp-action="Dangxuat"
+                                      method="post">
+
+                                    @Html.AntiForgeryToken()
+
+                                    <button type="button" class="btn btn-logout btn-outline-secondary" onclick="confirmLogout()">
+                                        <i class="bi bi-box-arrow-right"></i> Logout
+                                    </button>
+
+                                </form>
+                            </li>
+                        </ul>
+                    }
+                    else
+                    {
+                        <ul class="navbar-nav align-items-center">
+                            <li class="nav-item">
+                                <a class="btn btn-outline-secondary me-2"
+                                asp-area=""
+                                   asp-controller="Account"
+                                   asp-action="DangKy">
+                                    Đăng ký
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="btn btn-outline-secondary"
+                                asp-area=""
+                                   asp-controller="Account"
+                                   asp-action="DangNhap">
+                                    Đăng nhập
+                                </a>
+                            </li>
+                        </ul>
+                    }
+                </div>
+            </nav>
+        </div>
+    </header>
+
+
+    <!-- CONTENT -->
+    <div class="container" style="margin-top:90px">
+        <main role="main">
+            @RenderBody()
+        </main>
+    </div>
+
+
+    <!-- FOOTER -->
+    <footer class="bg-dark text-white mt-5">
+        <div class="container py-4">
+
+            <div class="row">
+
+                <div class="col-md-4">
+                    <h5>Thông tin liên hệ</h5>
+                    <p>235 Hoàng Quốc Việt</p>
+                    <p>Hotline: 0123 456 789</p>
+                    <p>Email: contact@example.com</p>
+                </div>
+
+                <div class="col-md-4">
+                    <h5>Liên kết</h5>
+
+                    <ul class="list-unstyled">
+
+                        <li>
+                            <a asp-controller="Home"
+                               asp-action="Index"
+                               class="text-white">
+                                Trang chủ
+                            </a>
+                        </li>
+
+                        <li>
+                            <a asp-controller="Home"
+                               asp-action="GioiThieu"
+                               class="text-white">
+                                Giới thiệu
+                            </a>
+                        </li>
+
+                        <li>
+                            <a asp-controller="Home"
+                               asp-action="LienHe"
+                               class="text-white">
+                                Liên hệ
+                            </a>
+                        </li>
+
+                    </ul>
+                </div>
+
+                <div class="col-md-4">
+                    <h5>Đăng ký nhận tin</h5>
+
+                    <input type="email"
+                           class="form-control mb-2"
+                           placeholder="Email của bạn">
+
+                    <button class="btn btn-primary">
+                        Đăng ký
+                    </button>
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="text-center py-2 bg-secondary">
+            © 2024 Phòng khám tư nhân
+        </div>
+    </footer>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        function confirmLogout() {
+            Swal.fire({
+                title: 'Bạn có chắc chắn?',
+                text: "Bạn sẽ đăng xuất khỏi hệ thống!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Đăng xuất',
+                cancelButtonText: 'Hủy',
+                // confirmButtonColor: '#dc3545',
+                // cancelButtonColor: '#3085d6'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('logoutForm').submit();
+                }
+            });
+        }
+    </script>
+    <script>
+        // Tự động ẩn thông báo sau 3 giây
+        $(document).ready(function () {
+            setTimeout(function () {
+                $(".alert").fadeOut('slow');
+            }, 3000);
+        });
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+
+</body>
+</html>

@@ -1,0 +1,239 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var chuyenKhoaList = ViewBag.ChuyenKhoas as List<web_phong_kham_tu_nhan.Models.Entities.ChuyenKhoa>
+                                                    ?? new List<web_phong_kham_tu_nhan.Models.Entities.ChuyenKhoa>();
+}
+<link rel="stylesheet" href="~/css/BenhNhanHome/Create.css"/>
+<div class="booking-page">
+    <div class="container">
+        @if (TempData["Error"] != null){
+            <div>
+                <div class="alert alert-danger d-flex align-items-center gap-2 mx-auto mb-4" role="alert" style="max-width:760px;border-radius:10px">
+                    <i class="bi bi-exclamation-circle-fill"></i> @TempData["Error"]
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="stepper">
+        <div class="step active" id="s1"><div class="step-circle">1</div><div class="step-label">Chuyên khoa</div></div>
+        <div class="step-line" id="l1"></div>
+        <div class="step" id="s2"><div class="step-circle">2</div><div class="step-label">Bác sĩ</div></div>
+        <div class="step-line" id="l2"></div>
+        <div class="step" id="s3"><div class="step-circle">3</div><div class="step-label">Ngày &amp; Giờ</div></div>
+        <div class="step-line" id="l3"></div>
+        <div class="step" id="s4"><div class="step-circle">4</div><div class="step-label">Xác nhận</div></div>
+    </div>
+
+    <div class="booking-card">
+        <div class="booking-card-header">
+            <h4 id="card-title">Bước 1 — Chọn chuyên khoa</h4>
+            <p id="card-desc">Chọn chuyên khoa phù hợp với tình trạng của bạn</p>
+        </div>
+        <div class="booking-card-body">
+
+            <!-- BUOC 1 -->
+            <div class="step-panel active" id="panel1">
+                <div class="specialty-grid">
+                    @foreach (var ck in chuyenKhoaList)
+                    {
+                        <div class="specialty-item" data-id="@ck.Id" data-name="@ck.Name" onclick="selectSpecialty(this)">
+                            <i class="bi bi-heart-pulse"></i>
+                            <span>@ck.Name</span>
+                        </div>
+                    }
+                </div>
+                <div class="step-nav">
+                    <div></div>
+                    <button class="btn-next" id="btn1" onclick="goStep(2)" disabled>
+                        Tiếp theo <i class="bi bi-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- BUOC 2 -->
+            <div class="step-panel" id="panel2">
+                <div class="loading-box" id="loadingBox">
+                    <div class="spinner-border text-primary"></div>
+                    <p class="mt-2">Đang tải danh sách bác sĩ...</p>
+                </div>
+                <div class="doctor-list" id="doctorList"></div>
+                <div class="step-nav">
+                    <button class="btn-back" onclick="goStep(1)"><i class="bi bi-arrow-left"></i> Quay lại</button>
+                    <button class="btn-next" id="btn2" onclick="goStep(3)" disabled>Tiếp theo <i class="bi bi-arrow-right"></i></button>
+                </div>
+            </div>
+
+            <!-- BUOC 3 -->
+            <div class="step-panel" id="panel3">
+                <div class="mb-4">
+                    <label class="form-label fw-semibold"><i class="bi bi-calendar3 text-primary me-1"></i> Chọn ngày khám</label>
+                    <div class="date-wrap">
+                        <i class="bi bi-calendar-event"></i>
+                        <input type="date" id="appointmentDate" class="form-control form-control-lg"
+                               min="@DateTime.Today.ToString("yyyy-MM-dd")" onchange="loadSlots()" />
+                    </div>
+                </div>
+                <div id="slotWrap" style="display:none">
+                    <label class="form-label fw-semibold"><i class="bi bi-clock text-primary me-1"></i> Chọn khung giờ</label>
+                    <div class="slot-grid" id="slotGrid"></div>
+                    <div class="slot-legend">
+                        <span><span class="dot-a"></span> Còn trống</span>
+                        <span><span class="dot-s"></span> Đang chọn</span>
+                        <span><span class="dot-b"></span> Đã đặt</span>
+                    </div>
+                </div>
+                <div class="mb-3 mt-4">
+                    <label class="form-label fw-semibold">
+                        <i class="bi bi-chat-text text-primary me-1"></i> Lý do khám
+                        <span class="text-muted fw-normal">(không bắt buộc)</span>
+                    </label>
+                    <textarea id="lyDoKham" class="form-control" rows="3" placeholder="Mô tả triệu chứng..."></textarea>
+                </div>
+                <div class="step-nav">
+                    <button class="btn-back" onclick="goStep(2)"><i class="bi bi-arrow-left"></i> Quay lại</button>
+                    <button class="btn-next" id="btn3" onclick="goStep(4)" disabled>Tiếp theo <i class="bi bi-arrow-right"></i></button>
+                </div>
+            </div>
+
+            <!-- BUOC 4 -->
+            <div class="step-panel" id="panel4">
+                <div class="confirm-doctor" id="cfDoctor"></div>
+                <div class="confirm-rows">
+                    <div class="confirm-row"><i class="bi bi-hospital"></i><div><div class="confirm-row-lbl">Chuyên khoa</div><div class="confirm-row-val" id="cf-khoa">—</div></div></div>
+                    <div class="confirm-row"><i class="bi bi-calendar-check"></i><div><div class="confirm-row-lbl">Ngày khám</div><div class="confirm-row-val" id="cf-ngay">—</div></div></div>
+                    <div class="confirm-row"><i class="bi bi-clock"></i><div><div class="confirm-row-lbl">Khung giờ</div><div class="confirm-row-val" id="cf-gio">—</div></div></div>
+                    <div class="confirm-row"><i class="bi bi-chat-text"></i><div><div class="confirm-row-lbl">Lý do khám</div><div class="confirm-row-val" id="cf-lydo">—</div></div></div>
+                </div>
+                <div class="alert alert-info d-flex align-items-center gap-2" style="border-radius:10px;font-size:14px">
+                    <i class="bi bi-info-circle-fill fs-5"></i>
+                    Chúng tôi sẽ gọi xác nhận trong vòng <strong>30 phút</strong> sau khi nhận lịch.
+                </div>
+                <form asp-area="BenhNhan" asp-controller="LichHen" asp-action="Create" method="post" id="bookingForm">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="ChuyenKhoaId" id="hKhoa" />
+                    <input type="hidden" name="BacSiId" id="hBacSi" />
+                    <input type="hidden" name="AppointmentDate" id="hDate" />
+                    <input type="hidden" name="TimeSlot" id="hSlot" />
+                    <input type="hidden" name="LyDoKham" id="hLyDo" />
+                </form>
+                <div class="step-nav">
+                    <button class="btn-back" onclick="goStep(3)"><i class="bi bi-arrow-left"></i> Quay lại</button>
+                    <button class="btn-next" onclick="submitForm()"><i class="bi bi-check-circle"></i> Xác nhận đặt lịch</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    var st = { khoa:null, khoaName:'', bs:null, bsName:'', bsImg:'', bsBio:'', date:null, slot:null };
+    var SLOTS = ['07:30-08:00','08:00-08:30','08:30-09:00','09:00-09:30','09:30-10:00','10:00-10:30','10:30-11:00','11:00-11:30','13:00-13:30','13:30-14:00','14:00-14:30','14:30-15:00','15:00-15:30','15:30-16:00','16:00-16:30','16:30-17:00'];
+    var TITLES = ['','Bước 1 — Chọn chuyên khoa','Bước 2 — Chọn bác sĩ','Bước 3 — Chọn ngày & giờ','Bước 4 — Xác nhận thông tin'];
+    var DESCS  = ['','Chọn chuyên khoa phù hợp','Chọn bác sĩ bạn muốn khám','Chọn ngày và khung giờ','Kiểm tra lại thông tin'];
+
+    function goStep(n) {
+        for (var i = 1; i <= 4; i++) {
+            document.getElementById('panel'+i).classList.remove('active');
+            var s = document.getElementById('s'+i);
+            s.classList.remove('active','done');
+            if (i < n)  { s.classList.add('done');   s.querySelector('.step-circle').innerHTML = '<i class="bi bi-check2"></i>'; }
+            if (i === n) { s.classList.add('active'); s.querySelector('.step-circle').textContent = i; }
+            if (i > n)   { s.querySelector('.step-circle').textContent = i; }
+            if (i < 4)   document.getElementById('l'+i).classList.toggle('done', i < n);
+        }
+        document.getElementById('panel'+n).classList.add('active');
+        document.getElementById('card-title').textContent = TITLES[n];
+        document.getElementById('card-desc').textContent  = DESCS[n];
+        if (n === 2) loadDoctors();
+        if (n === 4) fillConfirm();
+        window.scrollTo({ top: document.querySelector('.booking-card').offsetTop - 20, behavior:'smooth' });
+    }
+
+    function selectSpecialty(el) {
+        document.querySelectorAll('.specialty-item').forEach(function(e){ e.classList.remove('selected'); });
+        el.classList.add('selected');
+        st.khoa = el.dataset.id; st.khoaName = el.dataset.name; st.bs = null;
+        document.getElementById('btn1').disabled = false;
+    }
+
+    function loadDoctors() {
+        var list = document.getElementById('doctorList');
+        var box  = document.getElementById('loadingBox');
+        list.innerHTML = ''; box.style.display = 'block';
+        fetch('/BenhNhan/LichHen/GetDoctorsBySpecialty?specialtyId=' + st.khoa)
+            .then(function(r){ return r.json(); })
+            .then(function(docs){
+                box.style.display = 'none';
+                if (!docs.length) { list.innerHTML = '<div class="text-center text-muted py-4"><i class="bi bi-person-x fs-1 d-block mb-2"></i>Không có bác sĩ khả dụng.</div>'; return; }
+                docs.forEach(function(d){
+                    list.innerHTML += '<div class="doctor-item" data-id="'+d.id+'" data-name="'+d.fullName+'" data-img="'+d.imageUrl+'" data-bio="'+d.tieuSu+'" onclick="selectDoctor(this)">'
+                        + '<img src="'+d.imageUrl+'" onerror="this.src=\'/Images/default-avatar.png\'" alt="'+d.fullName+'">'
+                        + '<div class="doctor-item-info"><strong>'+d.fullName+'</strong><span>'+d.tieuSu+'</span></div>'
+                        + '<div class="doctor-item-check"></div></div>';
+                });
+            })
+            .catch(function(){ box.style.display='none'; list.innerHTML='<div class="alert alert-danger">Lỗi tải dữ liệu.</div>'; });
+    }
+
+    function selectDoctor(el) {
+        document.querySelectorAll('.doctor-item').forEach(function(e){ e.classList.remove('selected'); e.querySelector('.doctor-item-check').innerHTML=''; });
+        el.classList.add('selected');
+        el.querySelector('.doctor-item-check').innerHTML = '<i class="bi bi-check2" style="color:#0d6efd"></i>';
+        st.bs = el.dataset.id; st.bsName = el.dataset.name; st.bsImg = el.dataset.img; st.bsBio = el.dataset.bio;
+        document.getElementById('btn2').disabled = false;
+    }
+
+    function loadSlots() {
+        var d = document.getElementById('appointmentDate').value;
+        if (!d) return;
+        st.date = d; st.slot = null;
+        document.getElementById('btn3').disabled = true;
+        var wrap = document.getElementById('slotWrap');
+        var grid = document.getElementById('slotGrid');
+        wrap.style.display = 'block';
+        grid.innerHTML = '<div class="text-muted py-2" style="grid-column:1/-1"><span class="spinner-border spinner-border-sm text-primary me-2"></span>Đang tải...</div>';
+        fetch('/BenhNhan/LichHen/GetBookedSlots?doctorId='+st.bs+'&date='+d)
+            .then(function(r){ return r.json(); })
+            .then(function(booked){
+                grid.innerHTML = '';
+                SLOTS.forEach(function(s){
+                    var isB = booked.indexOf(s) >= 0;
+                    grid.innerHTML += '<button type="button" class="slot-btn'+(isB?' booked':'')+'" data-slot="'+s+'" '+(isB?'disabled':'')+' onclick="'+(isB?'':'selectSlot(this)')+'">'+s+'</button>';
+                });
+            });
+    }
+
+    function selectSlot(el) {
+        document.querySelectorAll('.slot-btn').forEach(function(b){ b.classList.remove('selected'); });
+        el.classList.add('selected');
+        st.slot = el.dataset.slot;
+        document.getElementById('btn3').disabled = false;
+    }
+
+    function fillConfirm() {
+        document.getElementById('cfDoctor').innerHTML = '<img src="'+st.bsImg+'" onerror="this.src=\'/Images/default-avatar.png\'" alt="">'
+            + '<div><div style="font-weight:700;color:#1e293b;font-size:16px">'+st.bsName+'</div>'
+            + '<div style="font-size:13px;color:#0d6efd;font-weight:600">'+st.khoaName+'</div>'
+            + '<div style="font-size:13px;color:#6b7280">'+st.bsBio+'</div></div>';
+        var dObj = new Date(st.date + 'T00:00:00');
+        var days = ['Chủ nhật','Thứ 2','Thứ 3','Thứ 4','Thứ 5','Thứ 6','Thứ 7'];
+        var dd = String(dObj.getDate()).padStart(2,'0');
+        var mm = String(dObj.getMonth()+1).padStart(2,'0');
+        var yyyy = dObj.getFullYear();
+        document.getElementById('cf-khoa').textContent = st.khoaName;
+        document.getElementById('cf-ngay').textContent = days[dObj.getDay()] + ', ' + dd+'/'+mm+'/'+yyyy;
+        document.getElementById('cf-gio').textContent  = st.slot;
+        var lydo = document.getElementById('lyDoKham').value.trim();
+        document.getElementById('cf-lydo').textContent = lydo || 'Không có';
+        document.getElementById('hKhoa').value  = st.khoa;
+        document.getElementById('hBacSi').value = st.bs;
+        document.getElementById('hDate').value  = st.date;
+        document.getElementById('hSlot').value  = st.slot;
+        document.getElementById('hLyDo').value  = lydo;
+    }
+
+    function submitForm() { document.getElementById('bookingForm').submit(); }
+</script>

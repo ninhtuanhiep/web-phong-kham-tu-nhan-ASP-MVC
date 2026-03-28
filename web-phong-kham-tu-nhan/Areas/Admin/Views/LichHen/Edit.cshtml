@@ -1,0 +1,259 @@
+﻿@*@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+@model web_phong_kham_tu_nhan.Models.Entities.LichHen
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<div class="container mt-5">
+    <div class="card appointment-card shadow-lg">
+
+        <div class="card-header appointment-header">
+            <h3>📅 Sửa thông tin lịch hẹn</h3>
+        </div>
+
+        <div class="card-body">
+
+            <form asp-action="Edit" method="post">
+                <input type="hidden" asp-for="Id" />
+                <div class="row">
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Bệnh nhân</label>
+                        <select asp-for="BenhNhanId" class="form-control select2" asp-items="ViewBag.Patients">
+                            <option value="">-- Select Patient --</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Chuyên khoa</label>
+                        <select asp-for="ChuyenKhoaId" class="form-control select2" asp-items="ViewBag.Specialties" id="chuyenKhoaSelect">
+                            <option value="">--Chọn chuyên khoa--</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Bác sĩ</label>
+                        <select asp-for="BacSiId" class="form-control select2" asp-items="ViewBag.Doctors" id="doctorSelect" disabled>
+                            <option value="">--Chọn bác sĩ--</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Ngày khám</label>
+                        <input asp-for="AppointmentDate" type="date" class="form-control" />
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Thời gian khám</label>
+                        <input asp-for="TimeSlot" type="time" class="form-control" />
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Trạng thái</label>
+                        <select asp-for="TrangThai" class="form-control">
+
+                            <option value="0">Chưa giải quyết</option>
+                            <option value="1">Đã phê duyệt</option>
+                            <option value="2">Đã khám</option>
+
+                        </select>
+                    </div>
+
+                </div>
+
+                <div class="form-buttons mt-4">
+
+                    <button type="submit" class="btn btn-success">
+                        Lưu lịch khám
+                    </button>
+
+                    <a asp-action="Index" class="btn btn-secondary">
+                        ← Quay lại
+                    </a>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+</div>
+
+@* 
+<script>
+    $(document).ready(function () {
+        $('.select2').select2({
+            placeholder: "Vui lòng chọn chuyên khoa trước",
+            allowClear: true,
+            width: '100%'
+        });
+    });
+
+
+    $(document).ready(function () {
+
+        $('#chuyenKhoaSelect').change(function () {
+
+            var specialtyId = $(this).val();
+
+            if (specialtyId) {
+
+                $.get('/Admin/LichHen/GetDoctorsBySpecialty', { specialtyId: specialtyId }, function (data) {
+
+                    var doctorSelect = $('#doctorSelect');
+
+                    doctorSelect.empty();
+
+                    doctorSelect.append('<option value="">--Chọn bác sĩ--</option>');
+
+                    $.each(data, function (index, doctor) {
+                        doctorSelect.append('<option value="' + doctor.id + '">' + doctor.name + '</option>');
+                    });
+
+                    doctorSelect.prop('disabled', false);
+
+                });
+
+            } else {
+
+                $('#doctorSelect').prop('disabled', true);
+            }
+        });
+
+    });
+</script> *@
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+@model web_phong_kham_tu_nhan.Models.Entities.LichHen
+
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+<div class="container mt-5">
+    <div class="card appointment-card shadow-lg">
+        <div class="card-header appointment-header">
+            <h3>📅 Sửa thông tin lịch hẹn</h3>
+        </div>
+        <div class="card-body">
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert alert-danger">
+                    <ul>
+                        @foreach (var error in ViewData.ModelState
+                                            .Where(x => x.Value.Errors.Count > 0))
+                        {
+                            foreach (var e in error.Value.Errors)
+                            {
+                                <li><strong>@error.Key:</strong> @e.ErrorMessage</li>
+                            }
+                        }
+                    </ul>
+                </div>
+            }
+            <form asp-action="Edit" method="post">
+                <input type="hidden" asp-for="Id" />
+                <div class="row">
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Bệnh nhân</label>
+                        <select asp-for="BenhNhanId" class="form-control select2-patient"
+                                asp-items="ViewBag.Patients">
+                            <option value="">-- Chọn bệnh nhân --</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Chuyên khoa</label>
+                        <select asp-for="ChuyenKhoaId" class="form-control select2-specialty"
+                                asp-items="ViewBag.Specialties" id="chuyenKhoaSelect">
+                            <option value="">-- Chọn chuyên khoa --</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Bác sĩ</label>
+                        <select asp-for="BacSiId" class="form-control select2-doctor"
+                                asp-items="ViewBag.Doctors" id="doctorSelect">
+                            <option value="">-- Chọn bác sĩ --</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Ngày khám</label>
+                        <input asp-for="AppointmentDate" type="date" class="form-control" />
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Thời gian khám</label>
+                        <select asp-for="TimeSlot" class="form-control">
+                            <option value="">-- Chọn khung giờ --</option>
+                            <option value="07:30 - 08:00">07:30 - 08:00</option>
+                            <option value="08:00 - 08:30">08:00 - 08:30</option>
+                            <option value="08:30 - 09:00">08:30 - 09:00</option>
+                            <option value="09:00 - 09:30">09:00 - 09:30</option>
+                            <option value="09:30 - 10:00">09:30 - 10:00</option>
+                            <option value="10:00 - 10:30">10:00 - 10:30</option>
+                            <option value="13:00 - 13:30">13:00 - 13:30</option>
+                            <option value="13:30 - 14:00">13:30 - 14:00</option>
+                            <option value="14:00 - 14:30">14:00 - 14:30</option>
+                            <option value="14:30 - 15:00">14:30 - 15:00</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Trạng thái</label>
+                        <select asp-for="TrangThai" class="form-control">
+                            <option value="0">Chưa giải quyết</option>
+                            <option value="1">Đã phê duyệt</option>
+                            <option value="2">Đã khám</option>
+                        </select>
+                    </div>
+
+                </div>
+
+                <div class="form-buttons mt-4">
+                    <button type="submit" class="btn btn-success">Lưu lịch khám</button>
+                    <a asp-action="Index" class="btn btn-secondary">← Quay lại</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+    $(document).ready(function () {
+
+        // Khởi tạo select2 riêng cho từng ô, KHÔNG dùng chung placeholder
+        $('.select2-patient').select2({ allowClear: true, width: '100%', placeholder: '-- Chọn bệnh nhân --' });
+        $('.select2-specialty').select2({ allowClear: true, width: '100%', placeholder: '-- Chọn chuyên khoa --' });
+        $('.select2-doctor').select2({ allowClear: true, width: '100%', placeholder: '-- Chọn bác sĩ --' });
+
+        // Khi đổi chuyên khoa -> load bác sĩ
+        $('#chuyenKhoaSelect').on('change', function () {
+            var specialtyId = $(this).val();
+
+            if (specialtyId) {
+                $.get('/Admin/LichHen/GetDoctorsBySpecialty', { specialtyId: specialtyId }, function (data) {
+                    var doctorSelect = $('#doctorSelect');
+                    doctorSelect.empty().append('<option value="">-- Chọn bác sĩ --</option>');
+
+                    $.each(data, function (index, doctor) {
+                        doctorSelect.append('<option value="' + doctor.id + '">' + doctor.name + '</option>');
+                    });
+
+                    doctorSelect.prop('disabled', false).trigger('change.select2');
+                });
+            } else {
+                $('#doctorSelect').val(null).trigger('change.select2').prop('disabled', true);
+            }
+        });
+
+    });
+</script>

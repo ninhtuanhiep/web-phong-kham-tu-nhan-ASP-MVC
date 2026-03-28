@@ -1,0 +1,143 @@
+﻿@using X.PagedList.Mvc.Core
+@using X.PagedList
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+@model X.PagedList.IPagedList<web_phong_kham_tu_nhan.Models.Entities.LichHen>
+<div class="main-content">
+    <div class="page-header">
+        <h1>QUẢN LÝ LỊCH HẸN</h1>
+        <p>Xem và quản lý tất cả các cuộc hẹn khám bệnh</p>
+    </div>
+    <div class="row mb-4">
+        @{
+            var trangthai = Context.Request.Query["TrangThai"].ToString();
+        }
+        <div class="col-md-3">
+            <a asp-action="Index" class="text-decoration-none">
+                <div class="card stat-card @(string.IsNullOrEmpty(trangthai) ? "active" : "")">
+                    <div class="card-body">
+                        <p>TẤT CẢ LỊCH HẸN</p>
+                        <h3 style="color:aqua;">@ViewBag.AllAppointments</h3>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-md-3">
+            <a asp-action="Index" asp-route-TrangThai="0" class="text-decoration-none">
+                <div class="card stat-card @(trangthai == "0" ? "active" : "")">
+                    <div class="card-body">
+                        <p>CHỜ DUYỆT</p>
+                        <h3 class="text-danger">@ViewBag.Pending</h3>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-md-3">
+            <a asp-action="Index" asp-route-TrangThai="1" class="text-decoration-none">
+                <div class="card stat-card @(trangthai == "1" ? "active" : "")">
+                    <div class="card-body">
+                        <p>ĐÃ PHÊ DUYỆT</p>
+                        <h3 class="text-success">@ViewBag.Approved</h3>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-md-3">
+            <a asp-action="Index" asp-route-TrangThai="2" class="text-decoration-none">
+                <div class="card stat-card @(trangthai == "2" ? "active" : "")">
+                    <div class="card-body">
+                        <p>ĐÃ KHÁM</p>
+                        <h3 class="text-success">@ViewBag.Completed</h3>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+    </div>
+
+    <div class="card-box">
+
+        <div class="card-header">
+            <h5>Tất cả lịch hẹn</h5>
+            <div class="header-actions">
+                <input type="search" id="searchInput" placeholder="Nhập lịch hẹn cần tìm" class="form-control search-box" />
+                <a asp-action="Create" class="btn btn-primary">Thêm lịch hẹn mới</a>
+            </div>
+        </div>
+
+        <table id="appointmentTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Bệnh nhân</th>
+                    <th>Bác sĩ</th>
+                    <th>Chuyên khoa</th>
+                    <th>Ngày khám</th>
+                    <th>Thời gian</th>
+                    <th>Trạng thái</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Count > 0)
+                {
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>#@item.Id</td>
+                            <td class="fw-bold">@item.BenhNhan?.FullName</td>
+                            <td>@item.BacSi?.FullName</td>
+                            <td>@item.ChuyenKhoa?.Name</td>
+                            <td>@item.AppointmentDate.ToString("dd/MM/yyyy")</td>
+                            <td>@item.TimeSlot</td>
+
+                            <td>
+                                @if (item.TrangThai == 0)
+                                {
+                                    <span class="status-badge status-inactive">
+                                        Chờ duyệt
+                                    </span>
+                                }
+                                else if(item.TrangThai == 1)
+                                {
+                                    <span class="status-badge status-active">
+                                        Đã phê duyệt
+                                    </span>
+                                }
+                                else if(item.TrangThai == 2)
+                                {
+                                    <span class="status-badge status-completed">
+                                        Đã khám
+                                    </span>
+                                }
+                            </td>
+                            <td>
+                                <a asp-action="Detail" asp-route-id="@item.Id" class="btn btn-sm btn-info me-1">👁</a>
+                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning me-1">✏</a>
+                                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger btn-delete">🗑</a>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="7" class="text-center text-muted">
+                            Không có dữ liệu lịch khám nào. Vui lòng thêm lịch khám mới.
+                        </td>
+                    </tr>
+                }
+
+            </tbody>
+
+        </table>
+        @Html.PagedListPager(Model, page => Url.Action("Index", new { page }))
+        <p class="text-muted text-center mt-2">
+            Hiển thị @Model.FirstItemOnPage - @Model.LastItemOnPage trong tổng số @Model.TotalItemCount lịch khám
+        </p>
+    </div>
+</div>

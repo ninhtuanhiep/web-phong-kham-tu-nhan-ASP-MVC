@@ -1,0 +1,91 @@
+﻿@model web_phong_kham_tu_nhan.Models.Entities.BenhNhan
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid">
+
+    <div class="form-card">
+
+        <div class="form-header">
+            <h3>Sửa thông tin bệnh nhân</h3>
+            <a asp-action="Index" class="close-btn">✕</a>
+        </div>
+
+        <form asp-action="Edit" method="post">
+            <input type="hidden" asp-for="Id"/>
+
+            <div class="row">
+
+                <div class="col-md-12 mb-3">
+                    <label>Họ và tên *</label>
+                    <input asp-for="FullName" class="form-control" placeholder="Nhập họ và tên">
+                    <span asp-validation-for="FullName" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label>Email *</label>
+                    <input asp-for="Email" class="form-control" placeholder="abc@email.com">
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label>Số điện thoại *</label>
+                    <input asp-for="PhoneNumber" class="form-control" placeholder="(+84) 123-4567">
+                    <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label>Ngày sinh *</label>
+                    <input asp-for="NgaySinh" type="date" class="form-control">
+                    <span asp-validation-for="NgaySinh" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label>Giới tính *</label>
+                    <select asp-for="GioiTinh" class="form-control">
+                        <option value="Nam">Nam</option>
+                        <option value="Nữ">Nữ</option>
+                    </select>
+                    <span asp-validation-for="GioiTinh" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-12 mb-3">
+                    <label>Địa chỉ *</label>
+                    <input asp-for="DiaChi" class="form-control" placeholder="Nhập địa chỉ">
+                    <span asp-validation-for="DiaChi" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-12 mb-3">
+                    <label>Lịch sử y tế</label>
+                    <textarea asp-for="LichSuYTe" class="form-control" rows="4"
+                              placeholder="Vui lòng ghi rõ tiền sử bệnh lý, dị ứng hoặc các bệnh lý liên quan..."></textarea>
+                    <span asp-validation-for="LichSuYTe" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-12 mb-3">
+                    <label>Trạng thái *</label>
+                    <select asp-for="TrangThai" class="form-control">
+                        <option value="1"> Đang nằm viện</option>
+                        <option value="0"> Đã xuất viện</option>
+                    </select>
+                </div>
+
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">
+                    Lưu thông tin
+                </button>
+
+                <a asp-action="Index" class="btn btn-secondary">
+                    Hủy
+                </a>
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
