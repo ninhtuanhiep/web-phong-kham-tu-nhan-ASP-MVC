@@ -126,9 +126,14 @@ namespace web_phong_kham_tu_nhan.Areas.Admin.Controllers
                 soNgayTao++;
             }
 
-            _context.SaveChanges();
-            TempData["Success"] = "Đã tạo " + soNgayTao + " lịch làm việc thành công.";
-            return RedirectToAction("Index");
+        // ── CHI TIẾT ĐƠN XIN NGHỈ ──
+        public IActionResult ChiTietDon(int id)
+        {
+            var lich = _context.LichLamViecBacSis
+                .Include(l => l.BacSi)
+                .FirstOrDefault(l => l.Id == id);
+            if (lich == null) return NotFound();
+            return View(lich);
         }
 
         // ── DUYỆT / TỪ CHỐI ĐƠN XIN NGHỈ ──
