@@ -292,6 +292,23 @@
         cursor: not-allowed;
         text-decoration: line-through
     }
+    .slot-btn.no-schedule {
+        background: #f1f5f9;
+        color: #cbd5e1;
+        cursor: not-allowed;
+        text-decoration: line-through;
+        border-color: #e2e8f0;
+        position: relative;
+    }
+
+        .slot-btn.no-schedule::after {
+            content: '✕';
+            position: absolute;
+            top: 2px;
+            right: 3px;
+            font-size: 8px;
+            color: #94a3b8;
+        }
 
 .slot-legend {
     display: flex;

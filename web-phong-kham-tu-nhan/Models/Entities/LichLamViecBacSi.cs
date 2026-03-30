@@ -23,7 +23,13 @@ namespace web_phong_kham_tu_nhan.Models.Entities
 
         public int SoBenhNhanToiDa { get; set; } = 20;
 
+        // Ghi chú hiện tại (có thể bị ghi đè khi xin nghỉ)
         public string? GhiChu { get; set; }
+        // Backup ghi chú gốc trước khi xin nghỉ — để restore khi hủy đơn
+        public string? GhiChuGoc { get; set; }
+
+        // Lý do xin nghỉ (riêng biệt, không trộn vào GhiChu)
+        public string? LyDoXinNghi { get; set; }
 
         public DateTime ThoiGianTao { get; set; } = DateTime.Now;
 

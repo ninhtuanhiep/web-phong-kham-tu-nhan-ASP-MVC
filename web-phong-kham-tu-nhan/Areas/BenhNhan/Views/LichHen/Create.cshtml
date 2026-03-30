@@ -194,17 +194,45 @@
         var wrap = document.getElementById('slotWrap');
         var grid = document.getElementById('slotGrid');
         wrap.style.display = 'block';
-        grid.innerHTML = '<div class="text-muted py-2" style="grid-column:1/-1"><span class="spinner-border spinner-border-sm text-primary me-2"></span>Đang tải...</div>';
-        fetch('/BenhNhan/LichHen/GetBookedSlots?doctorId='+st.bs+'&date='+d)
-            .then(function(r){ return r.json(); })
-            .then(function(booked){
+        grid.innerHTML = '<div class="text-muted py-2" style="grid-column:1/-1">'
+            + '<span class="spinner-border spinner-border-sm text-primary me-2"></span>Đang tải...</div>';
+
+        fetch('/BenhNhan/LichHen/GetBookedSlots?doctorId=' + st.bs + '&date=' + d)
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
                 grid.innerHTML = '';
-                SLOTS.forEach(function(s){
-                    var isB = booked.indexOf(s) >= 0;
-                    grid.innerHTML += '<button type="button" class="slot-btn'+(isB?' booked':'')+'" data-slot="'+s+'" '+(isB?'disabled':'')+' onclick="'+(isB?'':'selectSlot(this)')+'">'+s+'</button>';
+                var booked     = data.booked     || [];
+                var noSchedule = data.noSchedule || [];
+
+                SLOTS.forEach(function(s) {
+                    var isBooked     = booked.indexOf(s) >= 0;
+                    var isNoSchedule = noSchedule.indexOf(s) >= 0;
+                    var isDisabled   = isBooked || isNoSchedule;
+
+                    var cls   = 'slot-btn';
+                    var title = '';
+                    if (isBooked)     { cls += ' booked';      title = 'Đã có người đặt'; }
+                    if (isNoSchedule) { cls += ' no-schedule'; title = 'Bác sĩ không làm ca này'; }
+
+                    grid.innerHTML += '<button type="button" class="' + cls + '" '
+                        + 'data-slot="' + s + '" '
+                        + (title ? 'title="' + title + '" ' : '')
+                        + (isDisabled ? 'disabled ' : '')
+                        + 'onclick="' + (isDisabled ? '' : 'selectSlot(this)') + '">'
+                        + s + '</button>';
                 });
+
+                // Thông báo nếu toàn bộ ngày không có lịch làm
+                if (noSchedule.length === SLOTS.length) {
+                    grid.innerHTML = '<div class="alert alert-warning d-flex align-items-center gap-2 mt-2" '
+                        + 'style="grid-column:1/-1;border-radius:8px;font-size:13px">'
+                        + '<i class="bi bi-calendar-x-fill fs-5"></i>'
+                        + '<div><strong>Bác sĩ không làm việc ngày này.</strong><br>'
+                        + '<span style="font-size:12px">Vui lòng chọn ngày khác.</span></div></div>';
+                }
             });
     }
+
 
     function selectSlot(el) {
         document.querySelectorAll('.slot-btn').forEach(function(b){ b.classList.remove('selected'); });

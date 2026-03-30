@@ -8,6 +8,7 @@
     string viewMode = ViewBag.ViewMode as string ?? "tuan";
     int? bacSiId = ViewBag.BacSiId as int?;
     string[] tenThuFull = { "CN", "T2", "T3", "T4", "T5", "T6", "T7" };
+    int donChoDuyet = (int)(ViewBag.DonChoDuyet ?? 0);
 }
 <link rel="stylesheet" href="~/css/Admin/LichLamViecBacSi.css"/>
 <div>
@@ -41,6 +42,7 @@
                 </div>
             }
         </div>
+
     </div>
 
     <!-- FORM TẠO LỊCH NHANH -->
@@ -141,12 +143,9 @@
     </div>
 
     <!-- Đơn xin nghỉ -->
-    @{
-        int donChoDuyet = _context.LichLamViecBacSis.Count(l => l.TrangThai == 3);
-    }
     @if (donChoDuyet > 0)
     {
-            <a asp-area="Admin" asp-controller="LichLamViecBacSi" asp-action="DonXinNghi"
+        <a asp-area="Admin" asp-controller="LichLamViecBacSi" asp-action="DonXinNghi"
            class="don-count text-decoration-none">
             <i class="bi bi-bell-fill"></i>
             @donChoDuyet đơn xin nghỉ chờ duyệt
@@ -193,9 +192,11 @@
         <div class="legend-item"><div class="legend-dot" style="background:#fffbeb;border:1.5px solid #f59e0b"></div> Nghỉ phép</div>
         <div class="legend-item"><div class="legend-dot" style="background:#fef2f2;border:1.5px solid #ef4444"></div> Nghỉ bệnh</div>
         <div class="legend-item"><div class="legend-dot" style="background:#fef9c3;border:1.5px solid #eab308"></div> Chờ duyệt</div>
+        <div class="legend-item"><span class="cell-taoboi taoboi-admin">A</span>Admin tạo</div>
+        <div class="legend-item"><span class="cell-taoboi taoboi-bacsi">BS</span>Bác sĩ tự đăng ký</div>
     </div>
 
-    <!-- BẢNG LỊCH -->
+    @*<!-- BẢNG LỊCH -->
     <div class="week-table">
         <table>
             <thead>
@@ -274,6 +275,124 @@
                                                   onsubmit="return confirm('Xóa lịch này?')">
                                                 @Html.AntiForgeryToken()
                                                 <input type="hidden" name="id" value="@l.Id" />
+                                                <button type="submit" class="btn-del-cell" title="Xóa">
+                                                    <i class="bi bi-trash3"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+
+                                    }
+                                }
+                            </td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>*@
+
+    <!-- BẢNG LỊCH -->
+    <div class="week-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Ca</th>
+                    @for (int i = 0; i < 7; i++)
+                    {
+                        DateTime ngay = startOfWeek.AddDays(i);
+                        bool isToday = ngay.Date == DateTime.Today;
+                        <th class="@(isToday ? "today-col" : "")">
+                            <div class="th-date @(isToday ? "today" : "")">@ngay.Day</div>
+                            <div style="font-size:10px;color:#94a3b8">@tenThuFull[(int)ngay.DayOfWeek]</div>
+                        </th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    string[] cacas = { "Sang", "Chieu", "CaNgay" };
+                    string[] caLabels = { "Sáng", "Chiều", "Cả ngày" };
+                }
+                @for (int caIdx = 0; caIdx < cacas.Length; caIdx++)
+                {
+                    string ca = cacas[caIdx];
+                    <tr>
+                        <td>@caLabels[caIdx]</td>
+                        @for (int i = 0; i < 7; i++)
+                        {
+                            DateTime ngay = startOfWeek.AddDays(i);
+                            bool isToday = ngay.Date == DateTime.Today;
+                            var cells = Model.Where(l => l.Ngay.Date == ngay.Date && l.CaLam == ca).ToList();
+                            <td class="@(isToday ? "today-col" : "")">
+                                @if (!cells.Any())
+                                {
+                                    <div class="empty-cell">+</div>
+                                }
+                                else
+                                {
+                                    foreach (var l in cells)
+                                    {
+                                        string ttLabel = l.TrangThai == 0 ? "Làm việc"
+                                        : l.TrangThai == 1 ? "Nghỉ phép"
+                                        : l.TrangThai == 2 ? "Nghỉ bệnh"
+                                        : "Chờ duyệt";
+                                        <div class="lich-cell lich-cell-@l.TrangThai">
+                                            <div class="cell-name">
+                                                BS. @(l.BacSi != null ? l.BacSi.FullName : "")
+                                            </div>
+                                            <div class="cell-sub">@ttLabel · @l.SoBenhNhanToiDa BN</div>
+
+                                            @* HIỂN THỊ GHI CHÚ *@
+                                            @if (!string.IsNullOrEmpty(l.GhiChu))
+                                            {
+                                                <div class="cell-note">
+                                                    <i class="bi bi-chat-text" style="font-size:9px"></i>
+                                                    @l.GhiChu
+                                                </div>
+                                            }
+
+                                            @* AI TẠO *@
+                                            @if (!string.IsNullOrEmpty(l.TaoLichBoi))
+                                            {
+                                                <span class="cell-taoboi @(l.TaoLichBoi == "Admin" ? "taoboi-admin" : "taoboi-bacsi")">
+                                                    @(l.TaoLichBoi == "Admin" ? "Admin" : "Bác sĩ")
+                                                </span>
+                                            }
+
+                                            @* NÚT DUYỆT KHI CHỜ *@
+                                            @if (l.TrangThai == 3)
+                                            {
+                                                <div class="mt-1" style="display:flex;gap:3px;flex-wrap:wrap">
+                                                    <form asp-area="Admin" asp-controller="LichLamViecBacSi"
+                                                          asp-action="DuyetNghi" method="post" style="display:inline">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="id" value="@l.Id" />
+                                                        <input type="hidden" name="chaphuan" value="true" />
+                                                        <input type="hidden" name="redirect" value="index" />
+                                                        <button type="submit" class="btn btn-success btn-duyet-sm">✓</button>
+                                                    </form>
+                                                    <form asp-area="Admin" asp-controller="LichLamViecBacSi"
+                                                          asp-action="DuyetNghi" method="post" style="display:inline">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="id" value="@l.Id" />
+                                                        <input type="hidden" name="chaphuan" value="false" />
+                                                        <input type="hidden" name="redirect" value="index" />
+                                                        <button type="submit" class="btn btn-outline-danger btn-duyet-sm">✗</button>
+                                                    </form>
+                                                    <a asp-area="Admin" asp-controller="LichLamViecBacSi"
+                                                       asp-action="ChiTietDon" asp-route-id="@l.Id"
+                                                       class="btn btn-outline-secondary btn-duyet-sm">
+                                                        <i class="bi bi-eye" style="font-size:9px"></i>
+                                                    </a>
+                                                </div>
+                                            }
+
+                                            <form asp-area="Admin" asp-controller="LichLamViecBacSi"
+                                                  asp-action="Delete" method="post" style="display:inline"
+                                                  onsubmit="return confirm('Xóa lịch này?')">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@l.Id" />
+                                                <input type="hidden" name="tuan" value="@startOfWeek.ToString("yyyy-MM-dd")" />
                                                 <button type="submit" class="btn-del-cell" title="Xóa">
                                                     <i class="bi bi-trash3"></i>
                                                 </button>

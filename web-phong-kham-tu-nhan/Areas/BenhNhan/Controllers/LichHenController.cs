@@ -24,65 +24,126 @@ namespace web_phong_kham_tu_nhan.Areas.BenhNhan.Controllers
             return _context.Patients.FirstOrDefault(p => p.UserId == userId);
         }
 
-        // GET: Trang dat lich
+        // ── Helper: kiểm tra bác sĩ có lịch làm việc trong ngày + ca không ──
+        private bool BacSiCoLichLam(int bacSiId, DateTime ngay, string timeSlot)
+        {
+            // Xác định ca dựa vào time slot
+            // Sáng: 07:30 - 11:30 | Chiều: 13:00 - 17:00
+            string ca = XacDinhCa(timeSlot);
+
+            return _context.LichLamViecBacSis.Any(l =>
+                l.BacSiId == bacSiId &&
+                l.Ngay.Date == ngay.Date &&
+                l.TrangThai == 0 && // Đang làm việc (không phải nghỉ)
+                (l.CaLam == ca || l.CaLam == "CaNgay"));
+        }
+
+        private string XacDinhCa(string timeSlot)
+        {
+            if (string.IsNullOrEmpty(timeSlot)) return "Sang";
+            // Lấy giờ bắt đầu từ slot "07:30-08:00"
+            string[] parts = timeSlot.Split('-');
+            if (parts.Length == 0) return "Sang";
+            string gioStr = parts[0].Trim().Split(':')[0];
+            int gio;
+            if (!int.TryParse(gioStr, out gio)) return "Sang";
+            return gio < 12 ? "Sang" : "Chieu";
+        }
+
+        // ── TRANG ĐẶT LỊCH ──
         public IActionResult Create()
         {
             ViewBag.ChuyenKhoas = _context.Specialties.ToList();
             return View();
         }
 
-        // AJAX: Lay bac si theo chuyen khoa
+        // ── AJAX: Lấy bác sĩ theo chuyên khoa (chỉ bác sĩ đang làm việc) ──
         public IActionResult GetDoctorsBySpecialty(int specialtyId)
         {
             var doctors = _context.Doctors
                 .Where(d => d.ChuyenKhoaId == specialtyId && d.TrangThai == 1)
-                .Select(d => new
-                {
+                .Select(d => new {
                     id = d.Id,
                     fullName = d.FullName,
                     imageUrl = d.ImageUrl != null ? d.ImageUrl : "/Images/default-avatar.png",
-                    tieuSu = d.tieuSu != null ? d.tieuSu : "Bac si chuyen khoa"
+                    tieuSu = d.tieuSu != null ? d.tieuSu : "Bác sĩ chuyên khoa"
                 })
                 .ToList();
             return Json(doctors);
         }
 
-        // AJAX: Lay slot da dat
+        // ── AJAX: Lấy slot đã đặt + slot không có lịch làm việc ──
         public IActionResult GetBookedSlots(int doctorId, string date)
         {
             DateTime parsedDate;
             if (!DateTime.TryParse(date, out parsedDate))
-                return Json(new List<string>());
+                return Json(new { booked = new List<string>(), noSchedule = new List<string>() });
 
+            // Slot đã có người đặt
             var booked = _context.Appointments
                 .Where(a => a.BacSiId == doctorId
                          && a.AppointmentDate.Date == parsedDate.Date
                          && a.TrangThai != 3)
                 .Select(a => a.TimeSlot)
                 .ToList();
-            return Json(booked);
+
+            // Kiểm tra bác sĩ có lịch làm việc trong ngày không
+            bool coLichSang = _context.LichLamViecBacSis.Any(l =>
+                l.BacSiId == doctorId && l.Ngay.Date == parsedDate.Date
+                && l.TrangThai == 0 && (l.CaLam == "Sang" || l.CaLam == "CaNgay"));
+            bool coLichChieu = _context.LichLamViecBacSis.Any(l =>
+                l.BacSiId == doctorId && l.Ngay.Date == parsedDate.Date
+                && l.TrangThai == 0 && (l.CaLam == "Chieu" || l.CaLam == "CaNgay"));
+
+            // Danh sách tất cả slots
+            string[] allSlots = {
+                "07:30-08:00","08:00-08:30","08:30-09:00","09:00-09:30",
+                "09:30-10:00","10:00-10:30","10:30-11:00","11:00-11:30",
+                "13:00-13:30","13:30-14:00","14:00-14:30","14:30-15:00",
+                "15:00-15:30","15:30-16:00","16:00-16:30","16:30-17:00"
+            };
+
+            // Slot bị khóa do không có lịch làm
+            var noSchedule = new List<string>();
+            foreach (string slot in allSlots)
+            {
+                string ca = XacDinhCa(slot);
+                bool coLich = ca == "Sang" ? coLichSang : coLichChieu;
+                if (!coLich) noSchedule.Add(slot);
+            }
+
+            return Json(new { booked, noSchedule });
         }
 
-        // POST: Luu lich hen
+        // ── POST: Lưu lịch hẹn ──
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Create(LichHen model)
         {
             var patient = GetCurrentPatient();
             if (patient == null)
-                return RedirectToAction("DangNhap", "Account", new { area = "" });
+                return RedirectToAction("Dangnhap", "Account", new { area = "" });
 
             model.BenhNhanId = patient.Id;
-            model.TrangThai = 1;
+            model.TrangThai = 0;
             model.CreatedAt = DateTime.Now;
 
+            // Kiểm tra bác sĩ còn làm việc
             var doctor = _context.Doctors.Find(model.BacSiId);
             if (doctor == null || doctor.TrangThai != 1)
             {
-                TempData["Error"] = "Bác sĩ hiện không làm việc, vui lòng chọn bác sĩ khác";
+                TempData["Error"] = "Bác sĩ hiện không làm việc, vui lòng chọn bác sĩ khác.";
                 return RedirectToAction("Create");
             }
 
+            // RÀNG BUỘC: kiểm tra bác sĩ có lịch làm việc trong ngày + ca đó không
+            if (!BacSiCoLichLam(model.BacSiId, model.AppointmentDate, model.TimeSlot))
+            {
+                TempData["Error"] = "Bác sĩ không có lịch làm việc trong khung giờ này. Vui lòng chọn ngày hoặc giờ khác.";
+                return RedirectToAction("Create");
+            }
+
+            // Kiểm tra slot đã đặt chưa
             bool slotTaken = _context.Appointments.Any(a =>
                 a.BacSiId == model.BacSiId &&
                 a.AppointmentDate.Date == model.AppointmentDate.Date &&
@@ -91,23 +152,23 @@ namespace web_phong_kham_tu_nhan.Areas.BenhNhan.Controllers
 
             if (slotTaken)
             {
-                TempData["Error"] = "Khung giờ này đã có người đặt, vui lòng chọn khung giờ khác.";
+                TempData["Error"] = "Khung giờ này đã có người đặt, vui lòng chọn giờ khác.";
                 return RedirectToAction("Create");
             }
 
             _context.Appointments.Add(model);
             _context.SaveChanges();
 
-            TempData["Success"] = "Đặt lịch thành công, chúng tôi sẽ liên hệ với bạn trong thời gian sớm nhất.";
+            TempData["Success"] = "Đặt lịch thành công! Chúng tôi sẽ liên hệ xác nhận sớm nhất.";
             return RedirectToAction("MyAppointment");
         }
 
-        // GET: Danh sach lich hen
+        // ── DANH SÁCH LỊCH HẸN ──
         public IActionResult MyAppointment()
         {
             var patient = GetCurrentPatient();
             if (patient == null)
-                return RedirectToAction("DangNhap", "Account", new { area = "" });
+                return RedirectToAction("Dangnhap", "Account", new { area = "" });
 
             var data = _context.Appointments
                 .Where(a => a.BenhNhanId == patient.Id)
@@ -118,12 +179,12 @@ namespace web_phong_kham_tu_nhan.Areas.BenhNhan.Controllers
             return View(data);
         }
 
-        // GET: Chi tiet lich hen
+        // ── CHI TIẾT ──
         public IActionResult Detail(int id)
         {
             var patient = GetCurrentPatient();
             if (patient == null)
-                return RedirectToAction("DangNhap", "Account", new { area = "" });
+                return RedirectToAction("Dangnhap", "Account", new { area = "" });
 
             var lich = _context.Appointments
                 .Include(a => a.BacSi)
@@ -134,7 +195,7 @@ namespace web_phong_kham_tu_nhan.Areas.BenhNhan.Controllers
             return View(lich);
         }
 
-        // POST: Huy lich hen
+        // ── HỦY LỊCH HẸN ──
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Cancel(int id)
@@ -144,12 +205,11 @@ namespace web_phong_kham_tu_nhan.Areas.BenhNhan.Controllers
 
             var lich = _context.Appointments
                 .FirstOrDefault(a => a.Id == id && a.BenhNhanId == patient.Id);
-
             if (lich == null) return NotFound();
 
             if (lich.TrangThai == 2)
             {
-                TempData["Error"] = "Lịch hẹn đã hoàn thành không thể hủy.";
+                TempData["Error"] = "Lịch hẹn đã hoàn thành, không thể hủy.";
                 return RedirectToAction("MyAppointment");
             }
 
@@ -159,7 +219,7 @@ namespace web_phong_kham_tu_nhan.Areas.BenhNhan.Controllers
             return RedirectToAction("MyAppointment");
         }
 
-        // GET: Form doi lich
+        // ── ĐỔI LỊCH ──
         public IActionResult Reschedule(int id)
         {
             var patient = GetCurrentPatient();
@@ -181,18 +241,24 @@ namespace web_phong_kham_tu_nhan.Areas.BenhNhan.Controllers
             return View(lich);
         }
 
-        // POST: Luu doi lich
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Reschedule(int id, DateTime appointmentDate, string timeSlot, string lyDoKham)
+        public IActionResult Reschedule(int id, DateTime appointmentDate,
+                                         string timeSlot, string lyDoKham)
         {
             var patient = GetCurrentPatient();
             if (patient == null) return Unauthorized();
 
             var lich = _context.Appointments
                 .FirstOrDefault(a => a.Id == id && a.BenhNhanId == patient.Id);
-
             if (lich == null) return NotFound();
+
+            // RÀNG BUỘC: kiểm tra lịch làm việc cho ngày/giờ mới
+            if (!BacSiCoLichLam(lich.BacSiId, appointmentDate, timeSlot))
+            {
+                TempData["Error"] = "Bác sĩ không có lịch làm việc trong khung giờ này.";
+                return RedirectToAction("Reschedule", new { id });
+            }
 
             bool slotTaken = _context.Appointments.Any(a =>
                 a.Id != id &&
@@ -203,7 +269,7 @@ namespace web_phong_kham_tu_nhan.Areas.BenhNhan.Controllers
 
             if (slotTaken)
             {
-                TempData["Error"] = "Khung giờ này đã có người đặt, vui lòng chọn khung giờ khác.";
+                TempData["Error"] = "Khung giờ này đã có người đặt.";
                 return RedirectToAction("Reschedule", new { id });
             }
 
@@ -213,7 +279,7 @@ namespace web_phong_kham_tu_nhan.Areas.BenhNhan.Controllers
             lich.TrangThai = 0;
             _context.SaveChanges();
 
-            TempData["Success"] = "Đổi lịch thành công, chúng tôi sẽ xác nhận lại trong thời gian sớm nhất.";
+            TempData["Success"] = "Đổi lịch thành công!";
             return RedirectToAction("MyAppointment");
         }
     }

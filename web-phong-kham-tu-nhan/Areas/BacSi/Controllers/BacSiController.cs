@@ -18,7 +18,7 @@ namespace web_phong_kham_tu_nhan.Areas.BacSis.Controllers
             _context = context;
         }
 
-        private BacSi GetCurrentDoctor()
+        private Models.Entities.BacSi GetCurrentDoctor()
         {
             int userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
             return _context.Doctors.FirstOrDefault(d => d.UserId == userId);

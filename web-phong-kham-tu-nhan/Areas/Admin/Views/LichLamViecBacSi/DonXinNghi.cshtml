@@ -1,0 +1,226 @@
+﻿@model List<web_phong_kham_tu_nhan.Models.Entities.LichLamViecBacSi>
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Đơn xin nghỉ";
+}
+<link rel="stylesheet" href="~/css/Admin/DonXinNghi.css"/>
+<div class="container">
+    <div class="page-hd">
+        <h4><i class="bi bi-bell-fill me-2 text-warning"></i>Đơn xin nghỉ chờ duyệt</h4>
+        <a asp-area="Admin" asp-controller="LichLamViecBacSi" asp-action="Index"
+           class="btn btn-outline-secondary btn-sm" style="border-radius:8px">
+            <i class="bi bi-arrow-left me-1"></i>Quay lại lịch làm việc
+        </a>
+    </div>
+
+    <div class="notification-container" id="toastContainer">
+        @if (TempData["Success"] != null)
+        {
+            <div class="custom-toast success" id="successToast">
+                <span class="toast-icon"><i class="bi bi-check-circle-fill"></i></span>
+                <div class="toast-content">
+                    <div class="toast-title">Thành công</div>
+                    <div class="toast-msg">@TempData["Success"]</div>
+                </div>
+                <button class="toast-close" onclick="closeToast('successToast')">
+                    <i class="bi bi-x"></i>
+                </button>
+            </div>
+        }
+    </div>
+    @if (!Model.Any())
+    {
+        <div class="empty-box">
+            <i class="bi bi-check2-circle"></i>
+            <h5>Không có đơn xin nghỉ nào</h5>
+            <p class="text-muted" style="font-size:14px">Tất cả đơn đã được xử lý.</p>
+        </div>
+    }
+    else
+    {
+        <p style="font-size:13px;color:#64748b;margin-bottom:14px">
+            Có <strong class="text-warning">@Model.Count</strong> đơn đang chờ xét duyệt —
+            bấm vào từng đơn để xem chi tiết và duyệt.
+        </p>
+
+        @foreach (var item in Model)
+        {
+            string caLabel = item.CaLam == "Sang" ? "Ca sáng"
+            : item.CaLam == "Chieu" ? "Ca chiều" : "Cả ngày";
+            string caColor = item.CaLam == "Sang" ? "#0d6efd"
+            : item.CaLam == "Chieu" ? "#f59e0b" : "#10b981";
+            string[] t = { "Chủ nhật", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7" };
+            string tenBacSi = item.BacSi != null ? item.BacSi.FullName : "Không rõ";
+            string ngayStr = item.Ngay.ToString("dd/MM/yyyy");
+            string thuStr = t[(int)item.Ngay.DayOfWeek];
+            string tgStr = item.ThoiGianTao.ToString("dd/MM/yyyy HH:mm");
+            string lyDoStr = (item.LyDoXinNghi ?? "").Replace("'", "&#39;");
+            string ghichuStr = (item.GhiChuGoc ?? "").Replace("'", "&#39;");
+
+            <div class="don-card"
+                 onclick="openModal(@item.Id,'@tenBacSi','@ngayStr','@thuStr','@caLabel','@item.SoBenhNhanToiDa','@tgStr','@lyDoStr','@ghichuStr')">
+                <div class="don-card-accent"></div>
+                <div class="don-body">
+                    <div>
+                        <!-- Thay .don-name hiện tại bằng -->
+                        <div class="don-header">
+                            <div class="don-avatar">@tenBacSi.Substring(0, 1)</div>
+                            <div>
+                                <div class="don-name">BS. @tenBacSi</div>
+                                <div class="don-sub">Đang chờ xét duyệt</div>
+                            </div>
+                        </div>
+                        <div class="don-meta">
+                            <span class="don-meta-item">
+                                <i class="bi bi-calendar-event"></i>
+                                @thuStr, @ngayStr
+                            </span>
+                            <span class="badge-ca"
+                                  style="background:@(caColor)1a;color:@caColor;border:1px solid @(caColor)40">
+                                @caLabel
+                            </span>
+                            <span class="don-meta-item">
+                                <i class="bi bi-clock"></i> Nộp @tgStr
+                            </span>
+                        </div>
+                        @if (!string.IsNullOrEmpty(item.LyDoXinNghi))
+                        {
+                            <div class="don-lydo">
+                                <i class="bi bi-chat-text-fill"></i> @item.LyDoXinNghi
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="don-lydo empty">
+                                <i class="bi bi-chat-text"></i> Không có lý do
+                            </div>
+                        }
+                    </div>
+                    <div class="don-actions">
+                        <button class="btn-xemchitiet"
+                                onclick="event.stopPropagation();openModal(@item.Id,'@tenBacSi','@ngayStr','@thuStr','@caLabel','@item.SoBenhNhanToiDa','@tgStr','@lyDoStr','@ghichuStr')">
+                            <i class="bi bi-eye"></i> Xem &amp; Duyệt
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+
+</div>
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+    <div class="modal-box">
+        <div class="modal-hd">
+            <h5><i class="bi bi-file-earmark-text me-2"></i>Chi tiết đơn xin nghỉ</h5>
+            <button class="modal-cl" onclick="closeModalBtn()"><i class="bi bi-x"></i></button>
+        </div>
+        <div class="modal-bd">
+            <div class="info-row">
+                <div class="info-icon"><i class="bi bi-person-badge"></i></div>
+                <div><div class="info-lbl">Bác sĩ</div><div class="info-val" id="m-bacsi">—</div></div>
+            </div>
+            <div class="info-row">
+                <div class="info-icon"><i class="bi bi-calendar-event"></i></div>
+                <div><div class="info-lbl">Ngày xin nghỉ</div><div class="info-val" id="m-ngay">—</div></div>
+            </div>
+            <div class="info-row">
+                <div class="info-icon"><i class="bi bi-sun"></i></div>
+                <div><div class="info-lbl">Ca làm việc</div><div class="info-val" id="m-ca">—</div></div>
+            </div>
+            <div class="info-row">
+                <div class="info-icon"><i class="bi bi-people-fill"></i></div>
+                <div><div class="info-lbl">Số BN tối đa</div><div class="info-val" id="m-sobn">—</div></div>
+            </div>
+            <div class="info-row">
+                <div class="info-icon"><i class="bi bi-clock"></i></div>
+                <div><div class="info-lbl">Thời gian nộp</div><div class="info-val" id="m-thoigian">—</div></div>
+            </div>
+
+            <div class="lydo-block" id="m-lydo-block">
+                <label><i class="bi bi-chat-text-fill"></i> Lý do xin nghỉ</label>
+                <p id="m-lydo"></p>
+            </div>
+
+            <div class="ghichu-block" id="m-ghichu-block" style="display:none">
+                <label><i class="bi bi-sticky-fill"></i> Ghi chú lịch gốc</label>
+                <p id="m-ghichu"></p>
+            </div>
+
+            <div class="modal-actions">
+                <form asp-area="Admin" asp-controller="LichLamViecBacSi"
+                      asp-action="DuyetNghi" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" id="m-id" />
+                    <input type="hidden" name="chaphuan" value="true" />
+                    <button type="submit" class="btn-duyet">
+                        <i class="bi bi-check-circle-fill"></i> Duyệt cho nghỉ
+                    </button>
+                </form>
+                <form asp-area="Admin" asp-controller="LichLamViecBacSi"
+                      asp-action="DuyetNghi" method="post"
+                      onsubmit="return confirm('Từ chối đơn? Lịch sẽ giữ nguyên.')">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" id="m-id2" />
+                    <input type="hidden" name="chaphuan" value="false" />
+                    <button type="submit" class="btn-tuchoi">
+                        <i class="bi bi-x-circle"></i> Từ chối
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    function openModal(id, bacsi, ngay, thu, ca, sobn, thoigian, lydo, ghichu) {
+        document.getElementById('m-id').value  = id;
+        document.getElementById('m-id2').value = id;
+        document.getElementById('m-bacsi').textContent    = 'BS. ' + bacsi;
+        document.getElementById('m-ngay').textContent     = thu + ', ' + ngay;
+        document.getElementById('m-ca').textContent       = ca;
+        document.getElementById('m-sobn').textContent     = sobn + ' bệnh nhân';
+        document.getElementById('m-thoigian').textContent = thoigian;
+
+        var lyDoEl    = document.getElementById('m-lydo');
+        var lyDoBlock = document.getElementById('m-lydo-block');
+        if (lydo && lydo.trim()) {
+            lyDoEl.textContent = lydo;
+            lyDoBlock.classList.remove('empty');
+        } else {
+            lyDoEl.textContent = 'Không có lý do';
+            lyDoBlock.classList.add('empty');
+        }
+
+        var ghichuEl    = document.getElementById('m-ghichu');
+        var ghichuBlock = document.getElementById('m-ghichu-block');
+        if (ghichu && ghichu.trim()) {
+            ghichuEl.textContent      = ghichu;
+            ghichuBlock.style.display = 'block';
+        } else {
+            ghichuBlock.style.display = 'none';
+        }
+
+        document.getElementById('modalOverlay').classList.add('show');
+    }
+
+    function closeModal(e) {
+        if (e.target === document.getElementById('modalOverlay'))
+            document.getElementById('modalOverlay').classList.remove('show');
+    }
+
+    function closeModalBtn() {
+        document.getElementById('modalOverlay').classList.remove('show');
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        var toast = document.getElementById('successToast');
+        if (toast) {
+            setTimeout(function() {
+                toast.style.transition = 'opacity .4s';
+                toast.style.opacity = '0';
+                setTimeout(function() { toast.remove(); }, 400);
+            }, 3000);
+        }
+    });
+</script>   
