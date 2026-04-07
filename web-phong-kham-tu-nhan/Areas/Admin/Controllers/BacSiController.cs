@@ -1,11 +1,13 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 using System.IO;
 using System.Reflection.Metadata.Ecma335;
 using web_phong_kham_tu_nhan.Data;
 using web_phong_kham_tu_nhan.Models.Entities;
 using web_phong_kham_tu_nhan.Services.Giao_diện;
+using X.PagedList.Extensions;
 
 namespace web_phong_kham_tu_nhan.Area.Admin.Controllers
 {
@@ -23,10 +25,30 @@ namespace web_phong_kham_tu_nhan.Area.Admin.Controllers
             _env = env;
             _context = context;
         }
-        public IActionResult Index()
+        public IActionResult Index(int? TrangThai, int? page)
         {
-            var data = _service.GetAll();
-            return View(data);
+            int pageSize = 10;
+            int pageNumber = page ?? 1;
+
+            var doctor = _context.Doctors
+                .Include(d => d.ChuyenKhoa)
+                .Include(d => d.LichHens)
+                .AsQueryable();
+            ViewBag.AllDoctor = doctor.Count();
+            ViewBag.ActiveDoctor = doctor.Count(p => p.TrangThai == 1);
+            ViewBag.InactiveDoctor = doctor.Count(p => p.TrangThai == 0);
+            ViewBag.OnLeaveDoctor = doctor.Count(p => p.TrangThai == 2);
+
+            if (TrangThai != null)
+            {
+                doctor = doctor.Where(p => p.TrangThai == TrangThai);
+            }
+
+            var pagedDoctor = doctor
+                .OrderBy(x => x.Id)
+                .ToPagedList(pageNumber, pageSize);
+
+            return View(pagedDoctor);
         }
 
         public IActionResult Create()
