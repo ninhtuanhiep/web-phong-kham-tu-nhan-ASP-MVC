@@ -26,5 +26,6 @@ namespace web_phong_kham_tu_nhan.Models.Entities
         [ForeignKey("ChuyenKhoaId")]
         public ChuyenKhoa? ChuyenKhoa { get; set; }
         public List<LichHen>? LichHens { get; set; }
+        public HoSoBacSi? HoSoBacSi { get; set; }
     }
 }

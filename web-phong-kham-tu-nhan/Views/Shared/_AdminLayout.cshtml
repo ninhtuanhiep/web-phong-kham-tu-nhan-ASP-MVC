@@ -1,8 +1,9 @@
-﻿<!DOCTYPE html>
+﻿@using web_phong_kham_tu_nhan.Data
+<!DOCTYPE html>
 
 <html>
 <head>
-    <meta name="viewport" content="width=device-width" charset="utf-8"/>
+    <meta name="viewport" content="width=device-width" charset="utf-8" />
     <title>Bảng quản trị</title>
     <link rel="stylesheet" href="~/css/Admin/admin.css" />
     <link rel="stylesheet" href="~/css/Admin/dashboard.css" />
@@ -11,36 +12,122 @@
 </head>
 <body>
     <div class="admin-wrapper">
-        @{  
+        @{
             var controller = ViewContext.RouteData.Values["controller"]?.ToString();
         }
+
         @*SideBar*@
         <div class="sidebar">
             <h3 class="logo" style="margin-bottom:40px;">BẢNG QUẢN TRỊ</h3>
             <ul>
-                <li class="@(controller == "DashBoard" ? "active" : "")"><a asp-area="Admin" asp-controller="DashBoard" asp-action="Index">DashBoard</a></li>
-                <li class="@(controller == "ChuyenKhoa" ? "active" : "")"><a asp-area="Admin" asp-controller="ChuyenKhoa" asp-action="Index" style="padding-right:90px;">Chuyên Khoa</a></li>
-                <li class="@(controller == "BacSi" ? "active" : "")"><a asp-area="Admin" asp-controller="BacSi" asp-action="Index" style="padding-right:145px;">Bác Sĩ</a></li>
-                <li class="@(controller == "BenhNhan" ? "active" : "")"><a asp-area="Admin" asp-controller="BenhNhan" asp-action="Index" style="padding-right:100px;">Bệnh Nhân</a></li>
-                <li class="@(controller == "LichLamViecBacSi" ? "active" : "")"><a asp-area="Admin" asp-controller="LichLamViecBacSi" asp-action="Index">Lịch Làm Việc Của Bác Sĩ</a></li>
-                <li class="@(controller == "LichHen" ? "active" : "")"><a asp-area="Admin" asp-controller="LichHen" asp-action="Index" style="padding-right:100px;">Lịch Hẹn</a></li>
-                <li class="@(controller == "User" ? "active" : "")"><a asp-area="Admin" asp-controller="User" asp-action="Index" style="padding-right:100px;">Người dùng</a></li>
+                <li class="@(controller == "DashBoard" ? "active" : "")">
+                    <a asp-area="Admin" asp-controller="DashBoard" asp-action="Index" style="padding-right:100px">DashBoard</a>
+                </li>
+                <li class="@(controller == "ChuyenKhoa" ? "active" : "")">
+                    <a asp-area="Admin" asp-controller="ChuyenKhoa" asp-action="Index" style="padding-right:90px;">Chuyên Khoa</a>
+                </li>
+                <li class="@(controller == "BacSi" ? "active" : "")">
+                    <a asp-area="Admin" asp-controller="BacSi" asp-action="Index" style="padding-right:145px;">Bác Sĩ</a>
+                </li>
+
+                @{
+                    int donYeuCau = 0;
+                    try
+                    {
+                        donYeuCau = Context.RequestServices
+                        .GetService<ApplicationDbContext>()
+                        .YeuCauCapNhats.Count(y => y.TrangThai == 0);
+                    }
+                    catch { }
+                }
+                <li class="@(controller == "YeuCauCapNhat" ? "active" : "")">
+                    <a asp-area="Admin" asp-controller="YeuCauCapNhat" asp-action="Index"
+                       asp-route-trangThai="0" style="padding-right:100px">
+                        Yêu cầu hồ sơ
+                        @if (donYeuCau > 0)
+                        {
+                            <span class="badge bg-warning text-dark rounded-circle d-inline-flex align-items-center justify-content-center"
+                                  style="width:25px;height:25px;margin-left:10px">
+                                @donYeuCau
+                            </span>
+                        }
+                    </a>
+                </li>
+
+                <li class="@(controller == "BenhNhan" ? "active" : "")">
+                    <a asp-area="Admin" asp-controller="BenhNhan" asp-action="Index" style="padding-right:100px;">Bệnh Nhân</a>
+                </li>
+                <li class="@(controller == "LichLamViecBacSi" ? "active" : "")">
+                    <a asp-area="Admin" asp-controller="LichLamViecBacSi" asp-action="Index" style="padding-right:100px">Lịch Làm Việc</a>
+                </li>
+                <li class="@(controller == "LichHen" ? "active" : "")">
+                    <a asp-area="Admin" asp-controller="LichHen" asp-action="Index" style="padding-right:100px;">Lịch Hẹn</a>
+                </li>
+                <li class="@(controller == "User" ? "active" : "")">
+                    <a asp-area="Admin" asp-controller="User" asp-action="Index" style="padding-right:100px;">Người dùng</a>
+                </li>
             </ul>
         </div>
-
 
         @*Content*@
         <div class="content-area">
             @RenderBody()
         </div>
-        @if (TempData["success"] != null)
-        {
-            <div class="toast-success" id="toastMessage">
-                @TempData["success"]
-            </div>
-        }
+
+        @* ── NOTIFICATION TOAST CONTAINER ── *@
+        <div class="notification-container" id="toastContainer">
+            @if (TempData["Success"] != null)
+            {
+                <div class="custom-toast success" id="successToast">
+                    <span class="toast-icon"><i class="bi bi-check-circle-fill"></i></span>
+                    <div class="toast-content">
+                        <div class="toast-title">Thành công</div>
+                        <div class="toast-msg">@TempData["Success"]</div>
+                    </div>
+                    <button class="toast-close" onclick="closeToast('successToast')" aria-label="Đóng">
+                        <i class="bi bi-x"></i>
+                    </button>
+                </div>
+            }
+            @if (TempData["Error"] != null)
+            {
+                <div class="custom-toast error" id="errorToast">
+                    <span class="toast-icon"><i class="bi bi-x-circle-fill"></i></span>
+                    <div class="toast-content">
+                        <div class="toast-title">Lỗi</div>
+                        <div class="toast-msg">@TempData["Error"]</div>
+                    </div>
+                    <button class="toast-close" onclick="closeToast('errorToast')" aria-label="Đóng">
+                        <i class="bi bi-x"></i>
+                    </button>
+                </div>
+            }
+        </div>
     </div>
 
     <script src="~/js/admin.js"></script>
+    <script>
+        // ── Đóng 1 toast theo id ──
+        function closeToast(id) {
+            var toast = document.getElementById(id);
+            if (!toast) return;
+            toast.classList.add('toast-out');
+            setTimeout(function () { toast.remove(); }, 400);
+        }
+
+        // ── Tự động đóng sau timeout ──
+        document.addEventListener('DOMContentLoaded', function () {
+            // Success: tự đóng sau 5 giây
+            var successToast = document.getElementById('successToast');
+            if (successToast) {
+                setTimeout(function () { closeToast('successToast'); }, 5000);
+            }
+
+            // Error: KHÔNG tự đóng — user phải tự bấm X để đọc kỹ lỗi
+            // Nếu muốn tự đóng sau 8 giây, bỏ comment dòng dưới:
+            // var errorToast = document.getElementById('errorToast');
+            // if (errorToast) { setTimeout(function () { closeToast('errorToast'); }, 8000); }
+        });
+    </script>
 </body>
 </html>

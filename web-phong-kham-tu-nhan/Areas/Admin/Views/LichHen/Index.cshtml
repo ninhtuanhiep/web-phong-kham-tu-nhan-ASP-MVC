@@ -4,11 +4,13 @@
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 @model X.PagedList.IPagedList<web_phong_kham_tu_nhan.Models.Entities.LichHen>
+
 <div class="main-content">
     <div class="page-header">
         <h1>QUẢN LÝ LỊCH HẸN</h1>
         <p>Xem và quản lý tất cả các cuộc hẹn khám bệnh</p>
     </div>
+
     <div class="row mb-4">
         @{
             var trangthai = Context.Request.Query["TrangThai"].ToString();
@@ -23,7 +25,6 @@
                 </div>
             </a>
         </div>
-
         <div class="col-md-3">
             <a asp-action="Index" asp-route-TrangThai="0" class="text-decoration-none">
                 <div class="card stat-card @(trangthai == "0" ? "active" : "")">
@@ -34,7 +35,6 @@
                 </div>
             </a>
         </div>
-
         <div class="col-md-3">
             <a asp-action="Index" asp-route-TrangThai="1" class="text-decoration-none">
                 <div class="card stat-card @(trangthai == "1" ? "active" : "")">
@@ -45,7 +45,6 @@
                 </div>
             </a>
         </div>
-
         <div class="col-md-3">
             <a asp-action="Index" asp-route-TrangThai="2" class="text-decoration-none">
                 <div class="card stat-card @(trangthai == "2" ? "active" : "")">
@@ -56,11 +55,9 @@
                 </div>
             </a>
         </div>
-
     </div>
 
     <div class="card-box">
-
         <div class="card-header">
             <h5>Tất cả lịch hẹn</h5>
             <div class="header-actions">
@@ -94,31 +91,35 @@
                             <td>@item.ChuyenKhoa?.Name</td>
                             <td>@item.AppointmentDate.ToString("dd/MM/yyyy")</td>
                             <td>@item.TimeSlot</td>
-
                             <td>
                                 @if (item.TrangThai == 0)
                                 {
-                                    <span class="status-badge status-inactive">
-                                        Chờ duyệt
-                                    </span>
+                                    <span class="status-badge status-inactive">Chờ duyệt</span>
                                 }
-                                else if(item.TrangThai == 1)
+                                else if (item.TrangThai == 1)
                                 {
-                                    <span class="status-badge status-active">
-                                        Đã phê duyệt
-                                    </span>
+                                    <span class="status-badge status-active">Đã phê duyệt</span>
                                 }
-                                else if(item.TrangThai == 2)
+                                else if (item.TrangThai == 2)
                                 {
-                                    <span class="status-badge status-completed">
-                                        Đã khám
-                                    </span>
+                                    <span class="status-badge status-completed">Đã khám</span>
+                                }
+                                else if (item.TrangThai == 3)
+                                {
+                                    <span class="status-badge status-inactive">Đã hủy</span>
                                 }
                             </td>
                             <td>
                                 <a asp-action="Detail" asp-route-id="@item.Id" class="btn btn-sm btn-info me-1">👁</a>
                                 <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning me-1">✏</a>
-                                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger btn-delete">🗑</a>
+
+                                @* ✅ POST form thay vì GET link *@
+                                <form asp-area="Admin" asp-controller="LichHen" asp-action="Delete"
+                                      asp-route-id="@item.Id" method="post" style="display:inline"
+                                      onsubmit="return confirm('Xóa lịch hẹn #@item.Id của @item.BenhNhan?.FullName?')">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-danger btn-delete" title="Xóa">🗑</button>
+                                </form>
                             </td>
                         </tr>
                     }
@@ -126,16 +127,15 @@
                 else
                 {
                     <tr>
-                        <td colspan="7" class="text-center text-muted">
-                            Không có dữ liệu lịch khám nào. Vui lòng thêm lịch khám mới.
+                        <td colspan="8" class="text-center text-muted">
+                            Không có dữ liệu lịch khám nào.
                         </td>
                     </tr>
                 }
-
             </tbody>
-
         </table>
-        @Html.PagedListPager(Model, page => Url.Action("Index", new { page }))
+
+        @Html.PagedListPager(Model, page => Url.Action("Index", new { page, TrangThai = trangthai }))
         <p class="text-muted text-center mt-2">
             Hiển thị @Model.FirstItemOnPage - @Model.LastItemOnPage trong tổng số @Model.TotalItemCount lịch khám
         </p>

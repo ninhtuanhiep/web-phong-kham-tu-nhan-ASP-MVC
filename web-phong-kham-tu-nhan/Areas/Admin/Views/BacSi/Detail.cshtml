@@ -1,0 +1,689 @@
+﻿@model web_phong_kham_tu_nhan.Models.Entities.BacSi
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Hồ sơ bác sĩ";
+    var hoSo    = Model.HoSoBacSi;
+    var yeuCaus = ViewBag.YeuCaus as List<web_phong_kham_tu_nhan.Models.Entities.YeuCauCapNhat>
+                  ?? new List<web_phong_kham_tu_nhan.Models.Entities.YeuCauCapNhat>();
+    string activeTab = TempData["ActiveTab"] as string ?? "xem";
+
+    var fieldNames = new Dictionary<string,string> {
+        {"HocVi","Học vị"}, {"HocHam","Học hàm"}, {"SoCCHN","Số CCHN"},
+        {"PhamViHanhNghe","Phạm vi HN"}, {"KinhNghiem","Kinh nghiệm"},
+        {"TruongDaoTao","Trường đào tạo"}, {"ChuyenMonSau","Chuyên môn sâu"},
+        {"GiaiThuong","Giải thưởng"}, {"NgonNgu","Ngôn ngữ"},
+        {"NamKinhNghiem","Số năm KN"}
+    };
+    string tenHienThi(string k) => fieldNames.ContainsKey(k) ? fieldNames[k] : k;
+}
+
+<link rel="stylesheet" href="~/css/Admin/BacSi/Detail.css"/>
+
+
+<div style="margin:16px">
+    <a asp-area="Admin" asp-controller="BacSi" asp-action="Index"
+       style="display:inline-flex;align-items:center;gap:7px;color:#64748b;
+              text-decoration:none;font-size:14px;font-weight:500;transition:.2s"
+       onmouseover="this.style.color='#0d6efd'" onmouseout="this.style.color='#64748b'">
+        <i class="bi bi-arrow-left"></i> Quay lại danh sách
+    </a>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success d-flex align-items-center gap-2 mb-3" style="border-radius:10px">
+        <i class="bi bi-check-circle-fill fs-5"></i> @TempData["Success"]
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger d-flex align-items-center gap-2 mb-3" style="border-radius:10px">
+        <i class="bi bi-exclamation-circle-fill fs-5"></i> @TempData["Error"]
+    </div>
+}
+
+<div class="detail-layout">
+        <!-- SIDEBAR -->
+        <aside class="detail-sidebar">
+            <div class="ds-hero">
+                @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                {
+                    <img src="@Model.ImageUrl" class="ds-img"
+                         onerror="this.src='/Images/default-avatar.png'" />
+                }
+                else
+                {
+                    <div class="ds-img-placeholder"><i class="bi bi-person-fill"></i></div>
+                }
+                <div class="ds-name">@Model.FullName</div>
+                <div class="ds-spec">@(Model.ChuyenKhoa?.Name ?? "Chưa phân khoa")</div>
+                @if (hoSo != null && !string.IsNullOrEmpty(hoSo.HocVi))
+                {
+                    <div class="ds-hocvi"><i class="bi bi-award-fill"></i> @hoSo.HocVi</div>
+                }
+                @{
+                    string statusClass = Model.TrangThai == 1 ? "ds-status-1"
+                    : Model.TrangThai == 0 ? "ds-status-0" : "ds-status-3";
+                    string statusText = Model.TrangThai == 1 ? "● Đang làm việc"
+                    : Model.TrangThai == 0 ? "● Chưa kích hoạt" : "● Đã nghỉ việc";
+                }
+                <div class="ds-status-badge @statusClass">@statusText</div>
+            </div>
+
+            <nav class="ds-nav">
+                <div class="ds-item @(activeTab == "xem" ? "active" : "")" onclick="switchTab('xem',this)">
+                    <i class="bi bi-person-badge-fill"></i> Thông tin cá nhân
+                </div>
+                <div class="ds-item @(activeTab == "hoso" ? "active" : "")" onclick="switchTab('hoso',this)">
+                    <i class="bi bi-mortarboard-fill"></i> Hồ sơ chuyên môn
+                </div>
+                <div class="ds-item @(activeTab == "edit" ? "active" : "")" onclick="switchTab('edit',this)">
+                    <i class="bi bi-pencil-square"></i> Chỉnh sửa thông tin
+                </div>
+                <div class="ds-item @(activeTab == "edithoso" ? "active" : "")" onclick="switchTab('edithoso',this)">
+                    <i class="bi bi-clipboard2-pulse-fill"></i> Sửa hồ sơ chuyên môn
+                </div>
+                <div class="ds-divider"></div>
+                @{
+                    int ycCho = yeuCaus.Count(y => y.TrangThai == 0);
+                }
+                <div class="ds-item @(activeTab == "yc" ? "active" : "")" onclick="switchTab('yc',this)">
+                    <i class="bi bi-arrow-repeat"></i> Yêu cầu cập nhật
+                    @if (ycCho > 0)
+                    {
+                        <span class="badge bg-warning text-dark ms-auto" style="font-size:10px">@ycCho</span>
+                    }
+                </div>
+                <div class="ds-divider"></div>
+                <div class="ds-item @(activeTab == "taikhoan" ? "active" : "")" onclick="switchTab('taikhoan',this)">
+                    <i class="bi bi-shield-lock-fill"></i> Tài khoản
+                </div>
+            </nav>
+        </aside>
+
+
+    <!-- CONTENT -->
+    <div>
+
+        <!-- ── TAB: XEM THÔNG TIN ── -->
+        <div class="tab-panel @(activeTab=="xem" ? "active" : "")" id="tab-xem">
+            <div class="qa-row">
+                <a class="qa-btn qa-edit" onclick="switchTab('edit',null)">
+                    <i class="bi bi-pencil"></i> Chỉnh sửa
+                </a>
+                <a class="qa-btn qa-hoso" onclick="switchTab('edithoso',null)">
+                    <i class="bi bi-clipboard2-pulse"></i> Sửa hồ sơ CM
+                </a>
+                <a class="qa-btn qa-pw" onclick="switchTab('taikhoan',null)">
+                    <i class="bi bi-key"></i> Reset mật khẩu
+                </a>
+                <form asp-area="Admin" asp-controller="BacSi" asp-action="Delete"
+                      method="post" style="display:inline"
+                      onsubmit="return confirm('Vô hiệu hóa tài khoản BS. @Model.FullName?')">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <button type="submit" class="qa-btn qa-disable">
+                        <i class="bi bi-person-x"></i> Vô hiệu hóa
+                    </button>
+                </form>
+            </div>
+
+            <div class="info-card">
+                <div class="ic-hd">
+                    <i class="bi bi-person-fill"></i>
+                    <div><h5>Thông tin cá nhân</h5></div>
+                </div>
+                <div class="ic-body">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-lbl"><i class="bi bi-person"></i> Họ và tên</div>
+                            <div class="info-val">@(Model.FullName ?? "—")</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-lbl"><i class="bi bi-hospital"></i> Chuyên khoa</div>
+                            <div class="info-val">@(Model.ChuyenKhoa?.Name ?? "—")</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-lbl"><i class="bi bi-envelope"></i> Email</div>
+                            <div class="info-val @(string.IsNullOrEmpty(Model.Email) ? "empty" : "")">
+                                @(Model.Email ?? "Chưa cập nhật")
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-lbl"><i class="bi bi-telephone"></i> Số điện thoại</div>
+                            <div class="info-val @(string.IsNullOrEmpty(Model.DienThoai) ? "empty" : "")">
+                                @(Model.DienThoai ?? "Chưa cập nhật")
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-lbl"><i class="bi bi-gender-ambiguous"></i> Giới tính</div>
+                            <div class="info-val @(string.IsNullOrEmpty(Model.gioiTinh) ? "empty" : "")">
+                                @(Model.gioiTinh ?? "Chưa cập nhật")
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-lbl"><i class="bi bi-cake2"></i> Ngày sinh</div>
+                            <div class="info-val @(Model.ngaySinh == null ? "empty" : "")">
+                                @(Model.ngaySinh.HasValue ? Model.ngaySinh.Value.ToString("dd/MM/yyyy") : "Chưa cập nhật")
+                            </div>
+                        </div>
+                        @if (!string.IsNullOrEmpty(Model.tieuSu))
+                        {
+                            <div class="info-item info-full">
+                                <div class="info-lbl"><i class="bi bi-file-person"></i> Tiểu sử</div>
+                                <div class="info-val pre">@Model.tieuSu</div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-card">
+                <div class="ic-hd">
+                    <i class="bi bi-bar-chart-fill"></i>
+                    <div><h5>Thống kê</h5></div>
+                </div>
+                <div class="ic-body">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-lbl"><i class="bi bi-calendar-check"></i> Tổng lịch hẹn</div>
+                            <div class="info-val" style="font-size:22px;color:#0d6efd">
+                                @(Model.LichHens?.Count ?? 0)
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-lbl"><i class="bi bi-patch-check-fill"></i> Đã hoàn thành</div>
+                            <div class="info-val" style="font-size:22px;color:#10b981">
+                                @(Model.LichHens?.Count(l => l.TrangThai == 2) ?? 0)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── TAB: HỒ SƠ CHUYÊN MÔN (XEM) ── -->
+        <div class="tab-panel @(activeTab=="hoso" ? "active" : "")" id="tab-hoso">
+            <div class="info-card">
+                <div class="ic-hd">
+                    <i class="bi bi-mortarboard-fill"></i>
+                    <div><h5>Hồ sơ chuyên môn</h5></div>
+                    <button class="btn-save ms-auto" style="padding:7px 16px;font-size:13px"
+                            onclick="switchTab('edithoso',null)">
+                         Chỉnh sửa
+                    </button>
+                </div>
+                <div class="ic-body">
+                    @if (hoSo == null)
+                    {
+                        <div class="text-center py-4 text-muted">
+                            <i class="bi bi-folder2-open fs-1 d-block mb-2"></i>
+                            Chưa có hồ sơ chuyên môn.
+                            <button class="btn btn-primary btn-sm mt-2 d-block mx-auto"
+                                    onclick="switchTab('edithoso',null)">
+                                Tạo hồ sơ ngay
+                            </button>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <div class="info-lbl"><i class="bi bi-award"></i> Học vị</div>
+                                <div class="info-val @(string.IsNullOrEmpty(hoSo.HocVi) ? "empty" : "")">
+                                    @(hoSo.HocVi ?? "Chưa cập nhật")
+                                </div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-lbl"><i class="bi bi-person-badge"></i> Học hàm</div>
+                                <div class="info-val @(string.IsNullOrEmpty(hoSo.HocHam) ? "empty" : "")">
+                                    @(hoSo.HocHam ?? "Không có")
+                                </div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-lbl"><i class="bi bi-upc-scan"></i> Số CCHN</div>
+                                <div class="info-val @(string.IsNullOrEmpty(hoSo.SoCCHN) ? "empty" : "")">
+                                    @(hoSo.SoCCHN ?? "Chưa cập nhật")
+                                </div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-lbl"><i class="bi bi-diagram-3"></i> Phạm vi HN</div>
+                                <div class="info-val @(string.IsNullOrEmpty(hoSo.PhamViHanhNghe) ? "empty" : "")">
+                                    @(hoSo.PhamViHanhNghe ?? "Chưa cập nhật")
+                                </div>
+                            </div>
+                            @if (hoSo.NgayCapCCHN.HasValue)
+                            {
+                                <div class="info-item">
+                                    <div class="info-lbl"><i class="bi bi-calendar-check"></i> Ngày cấp CCHN</div>
+                                    <div class="info-val">@hoSo.NgayCapCCHN.Value.ToString("dd/MM/yyyy")</div>
+                                </div>
+                            }
+                            @if (hoSo.NgayHetHanCCHN.HasValue)
+                            {
+                                int days = (hoSo.NgayHetHanCCHN.Value - DateTime.Today).Days;
+                                string cls  = days < 0 ? "cchn-expired" : days < 90 ? "cchn-expiring" : "cchn-valid";
+                                string txt  = days < 0 ? "Đã hết hạn" : days < 90 ? $"Còn {days} ngày" : "Còn hiệu lực";
+                                <div class="info-item">
+                                    <div class="info-lbl"><i class="bi bi-calendar-x"></i> Hết hạn CCHN</div>
+                                    <div class="info-val">@hoSo.NgayHetHanCCHN.Value.ToString("dd/MM/yyyy")</div>
+                                    <span class="cchn-status @cls">@txt</span>
+                                </div>
+                            }
+                            <div class="info-item">
+                                <div class="info-lbl"><i class="bi bi-clock-history"></i> Năm kinh nghiệm</div>
+                                <div class="info-val @(hoSo.NamKinhNghiem == 0 ? "empty" : "")">
+                                    @(hoSo.NamKinhNghiem == 0 ? "Chưa cập nhật" : hoSo.NamKinhNghiem + " năm")
+                                </div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-lbl"><i class="bi bi-building-fill"></i> Trường đào tạo</div>
+                                <div class="info-val @(string.IsNullOrEmpty(hoSo.TruongDaoTao) ? "empty" : "")">
+                                    @(hoSo.TruongDaoTao ?? "Chưa cập nhật")
+                                </div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-lbl"><i class="bi bi-translate"></i> Ngôn ngữ</div>
+                                <div class="info-val @(string.IsNullOrEmpty(hoSo.NgonNgu) ? "empty" : "")">
+                                    @(hoSo.NgonNgu ?? "Chưa cập nhật")
+                                </div>
+                            </div>
+                            @if (!string.IsNullOrEmpty(hoSo.ChuyenMonSau))
+                            {
+                                <div class="info-item info-full">
+                                    <div class="info-lbl"><i class="bi bi-star-fill"></i> Chuyên môn sâu</div>
+                                    <div class="info-val">@hoSo.ChuyenMonSau</div>
+                                </div>
+                            }
+                            @if (!string.IsNullOrEmpty(hoSo.KinhNghiem))
+                            {
+                                <div class="info-item info-full">
+                                    <div class="info-lbl"><i class="bi bi-briefcase-fill"></i> Kinh nghiệm làm việc</div>
+                                    <div class="info-val pre">@hoSo.KinhNghiem</div>
+                                </div>
+                            }
+                            @if (!string.IsNullOrEmpty(hoSo.GiaiThuong))
+                            {
+                                <div class="info-item info-full">
+                                    <div class="info-lbl"><i class="bi bi-trophy-fill"></i> Giải thưởng</div>
+                                    <div class="info-val">@hoSo.GiaiThuong</div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- ── TAB: CHỈNH SỬA THÔNG TIN CƠ BẢN ── -->
+        <div class="tab-panel @(activeTab=="edit" ? "active" : "")" id="tab-edit">
+            <div class="info-card">
+                <div class="ic-hd">
+                    <i class="bi bi-pencil-square"></i>
+                    <div><h5>Chỉnh sửa thông tin cá nhân</h5></div>
+                </div>
+                <div class="ic-body">
+                    <form asp-area="Admin" asp-controller="BacSi" asp-action="Edit"
+                          method="post" enctype="multipart/form-data">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Id" />
+
+                        <!-- Ảnh -->
+                        <div class="mb-4">
+                            <label style="font-size:12px;font-weight:600;color:#475569;
+                                          margin-bottom:8px;display:block">
+                                <i class="bi bi-image" style="color:#0d6efd"></i> Ảnh đại diện
+                            </label>
+                            <div class="avatar-wrap">
+                                <img id="avatarPreview"
+                                     src="@(Model.ImageUrl ?? "/Images/default-avatar.png")"
+                                     class="avatar-preview"
+                                     onerror="this.src='/Images/default-avatar.png'" />
+                                <div>
+                                    <label class="avatar-btn" for="imageFileEdit">
+                                        <i class="bi bi-upload"></i> Thay ảnh
+                                    </label>
+                                    <input type="file" name="imageFile" id="imageFileEdit"
+                                           accept="image/*" style="display:none"
+                                           onchange="previewAvatar(this,'avatarPreview')" />
+                                    <div style="font-size:11px;color:#94a3b8;margin-top:5px">
+                                        JPG, PNG. Ảnh chân dung nền trắng.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label><i class="bi bi-person"></i> Họ và tên</label>
+                                <input type="text" name="fullName" class="fc"
+                                       value="@Model.FullName" required />
+                            </div>
+                            <div class="form-group">
+                                <label><i class="bi bi-hospital"></i> Chuyên khoa</label>
+                                <select name="chuyenKhoaId" class="fc">
+                                    @foreach (SelectListItem item in (IEnumerable<SelectListItem>)ViewBag.ChuyenKhoas)
+                                    {
+                                        <option value="@item.Value"
+                                                selected="@(item.Value == Model.ChuyenKhoaId.ToString() ? "selected" : "")">
+                                            @item.Text
+                                        </option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label><i class="bi bi-envelope"></i> Email</label>
+                                <input type="email" name="email" class="fc" value="@Model.Email" />
+                            </div>
+                            <div class="form-group">
+                                <label><i class="bi bi-telephone"></i> Số điện thoại</label>
+                                <input type="tel" name="dienThoai" class="fc" value="@Model.DienThoai" />
+                            </div>
+                            <div class="form-group">
+                                <label><i class="bi bi-gender-ambiguous"></i> Giới tính</label>
+                                <select name="gioiTinh" class="fc">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="Nam" selected="@(Model.gioiTinh == "Nam" ? "selected" : "")">Nam</option>
+                                    <option value="Nữ" selected="@(Model.gioiTinh == "Nữ" ? "selected" : "")">Nữ</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label><i class="bi bi-cake2"></i> Ngày sinh</label>
+                                <input type="date" name="ngaySinh" class="fc"
+                                       value="@(Model.ngaySinh.HasValue ? Model.ngaySinh.Value.ToString("yyyy-MM-dd") : "")" />
+                            </div>
+                            <div class="form-group">
+                                <label><i class="bi bi-activity"></i> Trạng thái</label>
+                                <select name="trangThai" class="fc">
+                                    <option value="1" selected="@(Model.TrangThai == 1 ? "selected" : "")">Đang làm việc</option>
+                                    <option value="0" selected="@(Model.TrangThai == 0 ? "selected" : "")">Chưa kích hoạt</option>
+                                    <option value="3" selected="@(Model.TrangThai == 3 ? "selected" : "")">Đã nghỉ việc</option>
+                                </select>
+                            </div>
+                            <div class="form-group form-full">
+                                <label><i class="bi bi-file-person"></i> Tiểu sử</label>
+                                <textarea name="tieuSu" class="fc" rows="4">@Model.tieuSu</textarea>
+                            </div>
+                        </div>
+                        <div class="save-bar">
+                            <button type="submit" class="btn-save">
+                                <i class="bi bi-check-circle"></i> Lưu thay đổi
+                            </button>
+                            <button type="button" class="btn-cancel-form" onclick="switchTab('xem',null)">
+                                Hủy bỏ
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── TAB: SỬA HỒ SƠ CHUYÊN MÔN ── -->
+        <div class="tab-panel @(activeTab=="edithoso" ? "active" : "")" id="tab-edithoso">
+            <div class="info-card">
+                <div class="ic-hd">
+                    <i class="bi bi-clipboard2-pulse-fill"></i>
+                    <div><h5>Chỉnh sửa hồ sơ chuyên môn</h5></div>
+                </div>
+                <div class="ic-body">
+                    <form asp-area="Admin" asp-controller="BacSi" asp-action="EditHoSo" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="bacSiId" value="@Model.Id" />
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label><i class="bi bi-award"></i> Học vị</label>
+                                <select name="hocVi" class="fc">
+                                    <option value="">-- Chọn --</option>
+                                    @foreach (var hv in new[]{"Bác sĩ đa khoa","Bác sĩ CKI","Bác sĩ CKII","Thạc sĩ","Tiến sĩ","Bác sĩ nội trú"})
+                                    {
+                                        <option value="@hv" selected="@(hoSo?.HocVi == hv ? "selected" : "")">@hv</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label><i class="bi bi-person-badge"></i> Học hàm</label>
+                                <select name="hocHam" class="fc">
+                                    <option value="">-- Không có --</option>
+                                    <option value="Giáo sư"      selected="@(hoSo?.HocHam == "Giáo sư" ? "selected" : "")">Giáo sư (GS)</option>
+                                    <option value="Phó Giáo sư"  selected="@(hoSo?.HocHam == "Phó Giáo sư" ? "selected" : "")">Phó Giáo sư (PGS)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label><i class="bi bi-upc-scan"></i> Số CCHN</label>
+                                <input type="text" name="soCCHN" class="fc"
+                                       value="@hoSo?.SoCCHN" placeholder="VD: 054-12345/BYT" />
+                            </div>
+                            <div class="form-group">
+                                <label><i class="bi bi-diagram-3"></i> Phạm vi hành nghề</label>
+                                <input type="text" name="phamViHanhNghe" class="fc"
+                                       value="@hoSo?.PhamViHanhNghe" placeholder="VD: Nội, Ngoại, Nhi..." />
+                            </div>
+                            <div class="form-group">
+                                <label><i class="bi bi-calendar-check"></i> Ngày cấp CCHN</label>
+                                <input type="date" name="ngayCapCCHN" class="fc"
+                                       value="@(hoSo?.NgayCapCCHN.HasValue == true ? hoSo.NgayCapCCHN.Value.ToString("yyyy-MM-dd") : "")" />
+                            </div>
+                            <div class="form-group">
+                                <label><i class="bi bi-calendar-x"></i> Ngày hết hạn CCHN</label>
+                                <input type="date" name="ngayHetHanCCHN" class="fc"
+                                       value="@(hoSo?.NgayHetHanCCHN.HasValue == true ? hoSo.NgayHetHanCCHN.Value.ToString("yyyy-MM-dd") : "")" />
+                            </div>
+                            <div class="form-group">
+                                <label><i class="bi bi-clock-history"></i> Số năm kinh nghiệm</label>
+                                <input type="number" name="namKinhNghiem" class="fc"
+                                       value="@(hoSo?.NamKinhNghiem ?? 0)" min="0" max="60" />
+                            </div>
+                            <div class="form-group">
+                                <label><i class="bi bi-building-fill"></i> Trường đào tạo</label>
+                                <input type="text" name="truongDaoTao" class="fc"
+                                       value="@hoSo?.TruongDaoTao"
+                                       placeholder="VD: ĐH Y Hà Nội" />
+                            </div>
+                            <div class="form-group">
+                                <label><i class="bi bi-translate"></i> Ngôn ngữ khám</label>
+                                <input type="text" name="ngonNgu" class="fc"
+                                       value="@hoSo?.NgonNgu"
+                                       placeholder="VD: Tiếng Việt, Tiếng Anh" />
+                            </div>
+                            <div class="form-group">
+                                <label><i class="bi bi-trophy"></i> Giải thưởng / Danh hiệu</label>
+                                <input type="text" name="giaiThuong" class="fc"
+                                       value="@hoSo?.GiaiThuong"
+                                       placeholder="VD: Thầy thuốc ưu tú..." />
+                            </div>
+                            <div class="form-group form-full">
+                                <label><i class="bi bi-star-fill"></i> Chuyên môn sâu</label>
+                                <input type="text" name="chuyenMonSau" class="fc"
+                                       value="@hoSo?.ChuyenMonSau"
+                                       placeholder="VD: Phẫu thuật nội soi, Điều trị ung thư..." />
+                            </div>
+                            <div class="form-group form-full">
+                                <label><i class="bi bi-briefcase-fill"></i> Kinh nghiệm làm việc</label>
+                                <textarea name="kinhNghiem" class="fc" rows="5"
+                                          placeholder="Mô tả các nơi đã làm việc, vị trí đảm nhiệm...">@hoSo?.KinhNghiem</textarea>
+                            </div>
+                        </div>
+                        <div class="save-bar">
+                            <button type="submit" class="btn-save">
+                                <i class="bi bi-check-circle"></i> Lưu hồ sơ chuyên môn
+                            </button>
+                            <button type="button" class="btn-cancel-form" onclick="switchTab('hoso',null)">
+                                Hủy bỏ
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── TAB: YÊU CẦU CẬP NHẬT ── -->
+        <div class="tab-panel @(activeTab=="yc" ? "active" : "")" id="tab-yc">
+            <div class="info-card">
+                <div class="ic-hd">
+                    <i class="bi bi-arrow-repeat"></i>
+                    <div>
+                        <h5>Yêu cầu cập nhật của bác sĩ</h5>
+                        <p>Xem xét và duyệt các thay đổi bác sĩ đề xuất</p>
+                    </div>
+                    <a asp-area="Admin" asp-controller="YeuCauCapNhat" asp-action="Index"
+                       class="btn-save ms-auto" style="padding:7px 16px;font-size:13px;text-decoration:none">
+                        Xem tất cả
+                    </a>
+                </div>
+                <div class="ic-body">
+                    @if (!yeuCaus.Any())
+                    {
+                        <div class="text-center py-4 text-muted">
+                            <i class="bi bi-check-circle fs-2 d-block mb-2 text-success"></i>
+                            Không có yêu cầu nào.
+                        </div>
+                    }
+                    else
+                    {
+                        @foreach (var yc in yeuCaus)
+                        {
+                            string ycBadge = yc.TrangThai == 0 ? "yc-s0"
+                                           : yc.TrangThai == 1 ? "yc-s1" : "yc-s2";
+                            string ycLabel = yc.TrangThai == 0 ? "Chờ duyệt"
+                                           : yc.TrangThai == 1 ? "Đã duyệt" : "Từ chối";
+                            <div class="yc-item">
+                                <div class="yc-hd">
+                                    <div class="yc-field">
+                                        <i class="bi bi-tag-fill"></i> @tenHienThi(yc.TenTruong)
+                                    </div>
+                                    <span class="yc-badge @ycBadge">@ycLabel</span>
+                                </div>
+                                <div class="yc-change">
+                                    @if (!string.IsNullOrEmpty(yc.GiaTriCu))
+                                    {
+                                        <span class="yc-old">@yc.GiaTriCu</span>
+                                        <i class="bi bi-arrow-right mx-1" style="font-size:10px;color:#94a3b8"></i>
+                                    }
+                                    <span class="yc-new">@yc.GiaTriMoi</span>
+                                </div>
+                                @if (!string.IsNullOrEmpty(yc.LyDo))
+                                {
+                                    <div style="font-size:12px;color:#92400e;background:#fef9c3;
+                                               border-radius:5px;padding:3px 8px;margin-top:4px;
+                                               display:inline-block">
+                                        <i class="bi bi-chat-text-fill me-1"></i>@yc.LyDo
+                                    </div>
+                                }
+                                @if (!string.IsNullOrEmpty(yc.LyDoTuChoi))
+                                {
+                                    <div class="yc-lydo-reject">
+                                        <i class="bi bi-x-circle-fill me-1"></i>@yc.LyDoTuChoi
+                                    </div>
+                                }
+                                <div class="yc-time">@yc.TaoLuc.ToString("dd/MM/yyyy HH:mm")</div>
+
+                                @if (yc.TrangThai == 0)
+                                {
+                                    <div class="d-flex gap-2 mt-2">
+                                        <form asp-area="Admin" asp-controller="YeuCauCapNhat"
+                                              asp-action="Duyet" method="post" style="display:inline">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id"       value="@yc.Id" />
+                                            <input type="hidden" name="chapNhan" value="true" />
+                                            <button type="submit" class="btn btn-success btn-sm"
+                                                    style="border-radius:7px;font-size:12px">
+                                                <i class="bi bi-check2"></i> Duyệt
+                                            </button>
+                                        </form>
+                                        <button type="button" class="btn btn-outline-danger btn-sm"
+                                                style="border-radius:7px;font-size:12px"
+                                                onclick="showTuChoiInline(@yc.Id)">
+                                            <i class="bi bi-x"></i> Từ chối
+                                        </button>
+                                    </div>
+                                    <div id="tuchoi-@yc.Id" style="display:none;margin-top:8px">
+                                        <form asp-area="Admin" asp-controller="YeuCauCapNhat"
+                                              asp-action="Duyet" method="post">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id"       value="@yc.Id" />
+                                            <input type="hidden" name="chapNhan" value="false" />
+                                            <div class="d-flex gap-2">
+                                                <input type="text" name="lyDoTuChoi"
+                                                       class="fc" style="flex:1;padding:7px 10px"
+                                                       placeholder="Lý do từ chối..." required />
+                                                <button type="submit" class="btn btn-danger btn-sm"
+                                                        style="border-radius:7px;white-space:nowrap">
+                                                    Xác nhận
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- ── TAB: TÀI KHOẢN ── -->
+        <div class="tab-panel @(activeTab=="taikhoan" ? "active" : "")" id="tab-taikhoan">
+            <div class="info-card">
+                <div class="ic-hd">
+                    <i class="bi bi-shield-lock-fill"></i>
+                    <div><h5>Quản lý tài khoản</h5></div>
+                </div>
+                <div class="ic-body">
+                    <div class="info-grid mb-4">
+                        <div class="info-item">
+                            <div class="info-lbl"><i class="bi bi-envelope"></i> Email đăng nhập</div>
+                            <div class="info-val">@(Model.Email ?? "—")</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-lbl"><i class="bi bi-person-check"></i> Trạng thái tài khoản</div>
+                            <div class="info-val" style="color:@(Model.TrangThai == 1 ? "#10b981" : "#ef4444")">
+                                @(Model.TrangThai == 1 ? "Đang hoạt động" : "Không hoạt động")
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="background:#fffbeb;border-radius:10px;padding:14px 18px;
+                                border-left:4px solid #f59e0b;margin-bottom:20px;font-size:13px;color:#92400e">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <strong>Reset mật khẩu:</strong> Hệ thống sẽ tạo mật khẩu ngẫu nhiên mới
+                        và gửi qua email của bác sĩ.
+                    </div>
+
+                    <form asp-area="Admin" asp-controller="BacSi" asp-action="ResetMatKhau"
+                          method="post" onsubmit="return confirm('Reset mật khẩu cho BS. @Model.FullName?')">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <button type="submit" class="btn-save" style="background:linear-gradient(135deg,#f59e0b,#fbbf24)">
+                            <i class="bi bi-key-fill"></i> Reset mật khẩu & Gửi email
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+function switchTab(name, el) {
+    document.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.remove('active'); });
+    document.querySelectorAll('.ds-item').forEach(function(i){ i.classList.remove('active'); });
+    var panel = document.getElementById('tab-' + name);
+    if (panel) panel.classList.add('active');
+    if (el) el.classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function previewAvatar(input, previewId) {
+    if (input.files && input.files[0]) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById(previewId).src = e.target.result;
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+function showTuChoiInline(id) {
+    var el = document.getElementById('tuchoi-' + id);
+    if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+</script>

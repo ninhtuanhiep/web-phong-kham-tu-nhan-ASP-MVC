@@ -137,6 +137,64 @@ namespace web_phong_kham_tu_nhan.Migrations
                     b.ToTable("Specialties");
                 });
 
+            modelBuilder.Entity("web_phong_kham_tu_nhan.Models.Entities.HoSoBacSi", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BacSiId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CapNhatLuc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ChuyenMonSau")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("GiaiThuong")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("HocHam")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("HocVi")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("KinhNghiem")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("NamKinhNghiem")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("NgayCapCCHN")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("NgayHetHanCCHN")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("NgonNgu")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PhamViHanhNghe")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SoCCHN")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TruongDaoTao")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BacSiId")
+                        .IsUnique();
+
+                    b.ToTable("HoSoBacSis");
+                });
+
             modelBuilder.Entity("web_phong_kham_tu_nhan.Models.Entities.LichHen", b =>
                 {
                     b.Property<int>("Id")
@@ -260,6 +318,53 @@ namespace web_phong_kham_tu_nhan.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("web_phong_kham_tu_nhan.Models.Entities.YeuCauCapNhat", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BacSiId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("DuyetBoi")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("DuyetLuc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("GiaTriCu")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("GiaTriMoi")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LyDo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LyDoTuChoi")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("TaoLuc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("TenTruong")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("TrangThai")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BacSiId");
+
+                    b.ToTable("YeuCauCapNhats");
+                });
+
             modelBuilder.Entity("web_phong_kham_tu_nhan.Models.Entities.BacSi", b =>
                 {
                     b.HasOne("web_phong_kham_tu_nhan.Models.Entities.ChuyenKhoa", "ChuyenKhoa")
@@ -278,6 +383,17 @@ namespace web_phong_kham_tu_nhan.Migrations
                         .HasForeignKey("ChuyenKhoaId");
 
                     b.Navigation("ChuyenKhoa");
+                });
+
+            modelBuilder.Entity("web_phong_kham_tu_nhan.Models.Entities.HoSoBacSi", b =>
+                {
+                    b.HasOne("web_phong_kham_tu_nhan.Models.Entities.BacSi", "BacSi")
+                        .WithOne("HoSoBacSi")
+                        .HasForeignKey("web_phong_kham_tu_nhan.Models.Entities.HoSoBacSi", "BacSiId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BacSi");
                 });
 
             modelBuilder.Entity("web_phong_kham_tu_nhan.Models.Entities.LichHen", b =>
@@ -318,8 +434,21 @@ namespace web_phong_kham_tu_nhan.Migrations
                     b.Navigation("BacSi");
                 });
 
+            modelBuilder.Entity("web_phong_kham_tu_nhan.Models.Entities.YeuCauCapNhat", b =>
+                {
+                    b.HasOne("web_phong_kham_tu_nhan.Models.Entities.BacSi", "BacSi")
+                        .WithMany()
+                        .HasForeignKey("BacSiId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BacSi");
+                });
+
             modelBuilder.Entity("web_phong_kham_tu_nhan.Models.Entities.BacSi", b =>
                 {
+                    b.Navigation("HoSoBacSi");
+
                     b.Navigation("LichHens");
                 });
 

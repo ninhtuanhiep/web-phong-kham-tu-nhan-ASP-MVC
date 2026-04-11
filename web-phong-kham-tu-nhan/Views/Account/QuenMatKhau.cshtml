@@ -1,0 +1,268 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Quên mật khẩu";
+}
+
+<style>
+    .forgot-page {
+        min-height: 80vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f5f8fc;
+        padding: 40px 20px;
+    }
+
+    .forgot-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 8px 40px rgba(0,0,0,.10);
+        overflow: hidden;
+        width: 100%;
+        max-width: 460px;
+    }
+
+    .forgot-header {
+        background: linear-gradient(135deg, #0d6efd, #4dabf7);
+        padding: 36px 40px 28px;
+        text-align: center;
+    }
+
+    .forgot-icon {
+        width: 64px;
+        height: 64px;
+        background: rgba(255,255,255,.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        color: white;
+        margin: 0 auto 16px;
+        border: 2px solid rgba(255,255,255,.4);
+    }
+
+    .forgot-header h4 {
+        color: white;
+        margin: 0;
+        font-weight: 700;
+        font-size: 22px;
+    }
+
+    .forgot-header p {
+        color: rgba(255,255,255,.8);
+        margin: 6px 0 0;
+        font-size: 14px;
+    }
+
+    .forgot-body {
+        padding: 32px 36px;
+    }
+
+    .form-group label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #475569;
+        margin-bottom: 6px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+        .form-group label i {
+            color: #0d6efd;
+            font-size: 14px;
+        }
+
+    .form-control {
+        border: 1.5px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 11px 14px;
+        font-size: 15px;
+        width: 100%;
+        transition: .2s;
+    }
+
+        .form-control:focus {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 3px rgba(13,110,253,.1);
+            outline: none;
+        }
+
+    .btn-submit {
+        background: linear-gradient(135deg, #0d6efd, #3a8bfd);
+        color: white;
+        border: none;
+        padding: 13px;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 15px;
+        cursor: pointer;
+        transition: .3s;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(13,110,253,.3);
+        }
+
+        .btn-submit:disabled {
+            opacity: .7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+    .back-login {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        margin-top: 20px;
+        font-size: 14px;
+        color: #64748b;
+        text-decoration: none;
+        transition: .2s;
+    }
+
+        .back-login:hover {
+            color: #0d6efd;
+        }
+
+    /* SUCCESS STATE */
+    .success-state {
+        text-align: center;
+        padding: 10px 0 20px;
+    }
+
+    .success-icon {
+        width: 72px;
+        height: 72px;
+        background: linear-gradient(135deg, #10b981, #34d399);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 32px;
+        color: white;
+        margin: 0 auto 20px;
+        box-shadow: 0 8px 24px rgba(16,185,129,.25);
+    }
+
+    .success-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 10px;
+    }
+
+    .success-msg {
+        font-size: 14px;
+        color: #475569;
+        line-height: 1.6;
+    }
+
+    .success-steps {
+        background: #f0fdf4;
+        border-radius: 10px;
+        padding: 14px 18px;
+        margin: 16px 0;
+        border-left: 4px solid #10b981;
+        text-align: left;
+    }
+
+        .success-steps p {
+            margin: 0;
+            font-size: 13px;
+            color: #166534;
+            line-height: 1.8;
+        }
+</style>
+
+<div class="forgot-page">
+    <div class="forgot-card">
+
+        <div class="forgot-header">
+            <div class="forgot-icon"><i class="bi bi-key-fill"></i></div>
+            <h4>Quên mật khẩu?</h4>
+            <p>Nhập email để nhận mật khẩu mới</p>
+        </div>
+
+        <div class="forgot-body">
+
+            @if (ViewBag.Success != null)
+            {
+                <!-- TRẠNG THÁI THÀNH CÔNG -->
+                <div class="success-state">
+                    <div class="success-icon"><i class="bi bi-envelope-check-fill"></i></div>
+                    <div class="success-title">Email đã được gửi!</div>
+                    <div class="success-msg">@Html.Raw(ViewBag.Success)</div>
+                    <div class="success-steps">
+                        <p>
+                            <strong>Các bước tiếp theo:</strong><br>
+                            1. Mở email và tìm thư từ Phòng Khám An Khang<br>
+                            2. Sao chép mật khẩu mới trong email<br>
+                            3. Đăng nhập và đổi mật khẩu ngay
+                        </p>
+                    </div>
+                </div>
+                <a asp-controller="Account" asp-action="Dangnhap" asp-area=""
+                   class="btn-submit text-decoration-none">
+                    <i class="bi bi-box-arrow-in-right"></i> Đăng nhập ngay
+                </a>
+            }
+            else
+            {
+                <!-- FORM NHẬP EMAIL -->
+                @if (ViewBag.Error != null)
+                {
+                    <div class="alert alert-danger d-flex align-items-center gap-2 mb-4"
+                         style="border-radius:10px;font-size:14px">
+                        <i class="bi bi-exclamation-circle-fill fs-5"></i> @ViewBag.Error
+                    </div>
+                }
+
+                <p style="font-size:14px;color:#64748b;margin-bottom:24px;line-height:1.6">
+                    Nhập địa chỉ email đã đăng ký. Chúng tôi sẽ gửi mật khẩu mới ngay lập tức.
+                </p>
+
+                <form asp-controller="Account" asp-action="QuenMatKhau" asp-area=""
+                      method="post" id="forgotForm">
+                    @Html.AntiForgeryToken()
+
+                    <div class="form-group mb-4">
+                        <label><i class="bi bi-envelope-fill"></i> Địa chỉ email</label>
+                        <input type="email" name="email" id="emailInput"
+                               class="form-control" placeholder="email@example.com"
+                               autofocus required />
+                    </div>
+
+                    <button type="submit" class="btn-submit" id="btnSubmit">
+                        <i class="bi bi-send-fill"></i>
+                        <span id="btnText">Gửi mật khẩu mới</span>
+                    </button>
+                </form>
+
+                <a asp-controller="Account" asp-action="Dangnhap" asp-area=""
+                   class="back-login">
+                    <i class="bi bi-arrow-left"></i> Quay lại đăng nhập
+                </a>
+            }
+
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('forgotForm')?.addEventListener('submit', function() {
+        var btn  = document.getElementById('btnSubmit');
+        var text = document.getElementById('btnText');
+        btn.disabled  = true;
+        text.textContent = 'Đang gửi...';
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang gửi...';
+    });
+</script>

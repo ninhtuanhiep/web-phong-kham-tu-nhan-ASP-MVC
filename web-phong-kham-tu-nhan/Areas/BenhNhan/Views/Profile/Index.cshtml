@@ -377,25 +377,19 @@
         text.style.color = lv.color;
     }
 
-    document.addEventListener("DOMContentLoaded", function () {
-        const toast = document.getElementById('successToast');
-
-        if (toast) {
-            // Tự động đóng sau 4 giây
-            setTimeout(() => {
-                closeToast();
-            }, 2000);
-        }
-    });
-
-    function closeToast() {
-        const toast = document.getElementById('successToast');
-        if (toast) {
-            toast.classList.add('toast-out');
-            // Sau khi diễn xong animation (0.5s) thì xóa hẳn
-            setTimeout(() => {
-                toast.remove();
-            }, 500);
-        }
+        // ── Toast: success tự đóng 5s, error không tự đóng ──
+    function closeToast(id) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        el.style.animation = 'toast-out 0.4s ease-in forwards';
+        setTimeout(function () { el.remove(); }, 400);
     }
+
+    document.addEventListener('DOMContentLoaded', function () {
+            // Success: tự đóng sau 5 giây
+        if (document.getElementById('successToast'))
+        setTimeout(function () { closeToast('successToast'); }, 5000);
+
+            // Error: không tự đóng (user phải bấm X)
+    });
 </script>

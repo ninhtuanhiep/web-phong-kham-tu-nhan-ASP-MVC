@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using web_phong_kham_tu_nhan.Data;
+using web_phong_kham_tu_nhan.Helpers;
 using web_phong_kham_tu_nhan.Models.Entities;
 
 namespace web_phong_kham_tu_nhan.Areas.BenhNhans.Controllers
@@ -23,12 +24,13 @@ namespace web_phong_kham_tu_nhan.Areas.BenhNhans.Controllers
         private int GetUserId()
         {
             var claim = User.FindFirst(ClaimTypes.NameIdentifier);
-            return claim != null ? int.Parse(claim.Value) : 0;
+            return claim != null && int.TryParse(claim.Value, out int id) ? id : 0;
         }
 
-        private Models.Entities.BenhNhan GetCurrentPatient()
+        private web_phong_kham_tu_nhan.Models.Entities.BenhNhan GetCurrentPatient()
         {
             int userId = GetUserId();
+            if (userId == 0) return null;
             return _context.Patients
                 .Include(p => p.LichHens)
                 .FirstOrDefault(p => p.UserId == userId);
@@ -37,10 +39,10 @@ namespace web_phong_kham_tu_nhan.Areas.BenhNhans.Controllers
         private User GetCurrentUser()
         {
             int userId = GetUserId();
+            if (userId == 0) return null;
             return _context.Users.FirstOrDefault(u => u.Id == userId);
         }
 
-        // ── TRANG CHỦ PROFILE ──
         public IActionResult Index()
         {
             var patient = GetCurrentPatient();
@@ -49,7 +51,6 @@ namespace web_phong_kham_tu_nhan.Areas.BenhNhans.Controllers
             return View(patient);
         }
 
-        // ── CẬP NHẬT THÔNG TIN ──
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult UpdateInfo(string fullName, string phoneNumber,
@@ -72,55 +73,54 @@ namespace web_phong_kham_tu_nhan.Areas.BenhNhans.Controllers
             if (!string.IsNullOrEmpty(ngaySinh) && DateTime.TryParse(ngaySinh, out DateTime ngay))
                 patient.NgaySinh = ngay;
 
-            // Đồng bộ sang bảng User
             user.FullName = fullName;
             user.Email = email;
             user.PhoneNumber = phoneNumber;
 
             _context.SaveChanges();
-
             TempData["Success"] = "Cập nhật thông tin thành công!";
             TempData["ActiveTab"] = "info";
             return RedirectToAction("Index");
         }
 
-        // ── ĐỔI MẬT KHẨU ──
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ChangePassword(string currentPassword,
-                                             string newPassword,
-                                             string confirmPassword)
+                                                         string newPassword,
+                                                         string confirmPassword)
         {
             var user = GetCurrentUser();
             if (user == null)
                 return RedirectToAction("Dangnhap", "Account", new { area = "" });
 
-            if (user.Password != currentPassword)
+            // ✅ Dùng BCrypt.Verify
+            if (!PasswordHelper.Verify(currentPassword, user.Password))
             {
                 TempData["PwError"] = "Mật khẩu hiện tại không đúng.";
+                TempData["ActiveTab"] = "password";
                 return RedirectToAction("Index");
             }
 
             if (newPassword != confirmPassword)
             {
                 TempData["PwError"] = "Mật khẩu mới và xác nhận không khớp.";
+                TempData["ActiveTab"] = "password";
                 return RedirectToAction("Index");
             }
 
             if (newPassword.Length < 6)
             {
                 TempData["PwError"] = "Mật khẩu mới phải có ít nhất 6 ký tự.";
+                TempData["ActiveTab"] = "password";
                 return RedirectToAction("Index");
             }
 
-            // 1. Lưu mật khẩu mới
-            user.Password = newPassword;
+            // ✅ Hash mật khẩu mới
+            user.Password = PasswordHelper.Hash(newPassword);
             _context.SaveChanges();
 
-            // 2. Đăng xuất
+            // ✅ Đăng xuất sau khi đổi mật khẩu
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-
-            // 3. Redirect thẳng về Login với flag
             return RedirectToAction("Dangnhap", "Account", new { area = "", pwChanged = true });
         }
     }

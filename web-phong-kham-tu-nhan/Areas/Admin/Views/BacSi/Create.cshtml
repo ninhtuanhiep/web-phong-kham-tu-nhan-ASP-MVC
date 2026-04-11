@@ -3,79 +3,437 @@
 }
 
 @model web_phong_kham_tu_nhan.Models.Entities.BacSi
+<link rel="stylesheet" href="~/css/Admin/BacSi/Create.css"/>
+<div class="create-page">
 
-<div class="create-wrapper">
-    <div class="create-container">
-        <div class="form-header">
-            <h2 class="create-title">Thêm Bác Sĩ</h2>
-            <a asp-action="Index" class="close-btn">✕</a>
+    <div class="notification-container" id="toastContainer">
+        @if (TempData["Error"] != null)
+        {
+            <div class="custom-toast error" id="errorToast">
+                <span class="toast-icon"><i class="bi bi-x-circle-fill"></i></span>
+                <div class="toast-content">
+                    <div class="toast-title">Lỗi</div>
+                    <div class="toast-msg">@TempData["Error"]</div>
+                </div>
+                <button class="toast-close" onclick="closeToast('errorToast')">
+                    <i class="bi bi-x"></i>
+                </button>
+            </div>
+        }
+    </div>
+    <a asp-area="Admin" asp-controller="BacSi" asp-action="Index" class="back-link">
+        <i class="bi bi-arrow-left"></i> Quay lại danh sách
+    </a>
+
+    <div class="d-flex align-items-center gap-3 mb-4">
+        <div class="page-hd">
+            <h1 style="margin:0;font-weight:700;color:#1e293b">THÊM BÁC SĨ MỚI</h1>
+            <p style="margin:0;font-size:13px;color:#94a3b8">
+                Điền đầy đủ thông tin để tạo hồ sơ và tài khoản cho bác sĩ
+            </p>
+        </div>
+    </div>
+
+    <!-- STEPPER -->
+    <div class="form-stepper">
+        <div class="fs-step">
+            <div class="fs-circle active" id="fc1">1</div>
+            <div class="fs-lbl active" id="fl1">Thông tin cơ bản</div>
+        </div>
+        <div class="fs-line" id="fline1"></div>
+        <div class="fs-step">
+            <div class="fs-circle" id="fc2">2</div>
+            <div class="fs-lbl" id="fl2">Hồ sơ chuyên môn</div>
+        </div>
+        <div class="fs-line" id="fline2"></div>
+        <div class="fs-step">
+            <div class="fs-circle" id="fc3">3</div>
+            <div class="fs-lbl" id="fl3">Tài khoản đăng nhập</div>
+        </div>
+    </div>
+
+    <form asp-area="Admin" asp-controller="BacSi" asp-action="Create"
+          method="post" enctype="multipart/form-data" id="createForm">
+        @Html.AntiForgeryToken()
+
+        <!-- ═══ BƯỚC 1: THÔNG TIN CƠ BẢN ═══ -->
+        <div class="section-panel active" id="panel1">
+
+            <!-- Ảnh đại diện -->
+            <div class="section-card">
+                <div class="section-hd">
+                    <i class="bi bi-image-fill"></i>
+                    <div><h5>Ảnh đại diện</h5></div>
+                </div>
+                <div class="section-bd">
+                    <div class="avatar-upload">
+                        <img id="avatarPreview" src="/Images/default-avatar.png"
+                             class="avatar-preview" alt="Preview" />
+                        <div>
+                            <label class="avatar-upload-btn" for="imageFile">
+                                <i class="bi bi-upload"></i> Chọn ảnh
+                            </label>
+                            <input type="file" name="imageFile" id="imageFile"
+                                   accept="image/*" style="display:none"
+                                   onchange="previewAvatar(this)" />
+                            <div style="font-size:12px;color:#94a3b8;margin-top:6px">
+                                JPG, PNG. Nên dùng ảnh chân dung nền trắng.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Thông tin cá nhân -->
+            <div class="section-card">
+                <div class="section-hd">
+                    <i class="bi bi-person-fill"></i>
+                    <div>
+                        <h5>Thông tin cá nhân</h5>
+                        <p>Thông tin hiển thị công khai trên trang web</p>
+                    </div>
+                </div>
+                <div class="section-bd">
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label><i class="bi bi-person"></i> Họ và tên <span class="req">*</span></label>
+                            <input type="text" name="fullName" class="form-control"
+                                   placeholder="VD: Nguyễn Văn A" required />
+                        </div>
+                        <div class="form-group">
+                            <label><i class="bi bi-hospital"></i> Chuyên khoa <span class="req">*</span></label>
+                            <select name="chuyenKhoaId" class="form-select" required>
+                                <option value="">-- Chọn chuyên khoa --</option>
+                                @foreach (SelectListItem item in (IEnumerable<SelectListItem>)ViewBag.ChuyenKhoas)
+                                {
+                                    <option value="@item.Value">@item.Text</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="bi bi-envelope"></i> Email <span class="req">*</span></label>
+                            <input type="email" name="email" class="form-control"
+                                   placeholder="bacsi@phongkham.vn" required />
+                        </div>
+                        <div class="form-group">
+                            <label><i class="bi bi-telephone"></i> Số điện thoại</label>
+                            <input type="tel" name="dienThoai" class="form-control"
+                                   placeholder="0912 345 678" />
+                        </div>
+                        <div class="form-group">
+                            <label><i class="bi bi-gender-ambiguous"></i> Giới tính</label>
+                            <select name="gioiTinh" class="form-select">
+                                <option value="">-- Chọn --</option>
+                                <option value="Nam">Nam</option>
+                                <option value="Nữ">Nữ</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="bi bi-calendar2"></i> Ngày sinh</label>
+                            <input type="date" name="ngaySinh" class="form-control" />
+                        </div>
+                        <div class="form-group form-full">
+                            <label><i class="bi bi-geo-alt"></i>Địa chỉ</label>
+                            <textarea name="diachi" class="form-control"></textarea>
+                        </div>
+                        <div class="form-group form-full">
+                            <label><i class="bi bi-file-person"></i> Tiểu sử / Mô tả ngắn</label>
+                            <textarea name="tieuSu" class="form-control"
+                                      placeholder="Mô tả ngắn về bác sĩ hiển thị trên trang chủ..."></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end">
+                <button type="button" class="btn-submit" onclick="goStep(2)">
+                    Tiếp theo <i class="bi bi-arrow-right"></i>
+                </button>
+            </div>
         </div>
 
+        <!-- ═══ BƯỚC 2: HỒ SƠ CHUYÊN MÔN ═══ -->
+        <div class="section-panel" id="panel2">
 
-        <form asp-action="Create" method="post" enctype="multipart/form-data">
-            <div class="mb-3">
-                <label>Chọn ảnh đại diện</label>
-                <input name="ImageFile" type="file" class="form-control" />
-                <span asp-validation-for="ImageFile" class="text-danger"></span>
+            <!-- Học vị & Học hàm -->
+            <div class="section-card">
+                <div class="section-hd">
+                    <i class="bi bi-mortarboard-fill"></i>
+                    <div>
+                        <h5>Học vị & Học hàm</h5>
+                        <p>Bằng cấp và danh hiệu học thuật</p>
+                    </div>
+                </div>
+                <div class="section-bd">
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label><i class="bi bi-award"></i> Học vị</label>
+                            <select name="hocVi" class="form-select">
+                                <option value="">-- Chọn học vị --</option>
+                                <option value="Bác sĩ đa khoa">Bác sĩ đa khoa</option>
+                                <option value="Bác sĩ CKI">Bác sĩ Chuyên khoa I (CKI)</option>
+                                <option value="Bác sĩ CKII">Bác sĩ Chuyên khoa II (CKII)</option>
+                                <option value="Thạc sĩ">Thạc sĩ (Ms)</option>
+                                <option value="Tiến sĩ">Tiến sĩ (PhD)</option>
+                                <option value="Bác sĩ nội trú">Bác sĩ nội trú</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="bi bi-person-badge"></i> Học hàm</label>
+                            <select name="hocHam" class="form-select">
+                                <option value="">-- Không có --</option>
+                                <option value="Giáo sư">Giáo sư (GS)</option>
+                                <option value="Phó Giáo sư">Phó Giáo sư (PGS)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="bi bi-building-fill"></i> Trường đào tạo</label>
+                            <input type="text" name="truongDaoTao" class="form-control"
+                                   placeholder="VD: ĐH Y Hà Nội, ĐH Y Dược TP.HCM" />
+                        </div>
+                        <div class="form-group">
+                            <label><i class="bi bi-translate"></i> Ngôn ngữ khám</label>
+                            <input type="text" name="ngonNgu" class="form-control"
+                                   placeholder="VD: Tiếng Việt, Tiếng Anh" />
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <div class="mb-3">
-                <label>Tên bác sĩ</label>
-                <input asp-for="FullName" class="form-control" />
-                <span asp-validation-for="FullName" class="text-danger"></span>
+            <!-- CCHN -->
+            <div class="section-card">
+                <div class="section-hd">
+                    <i class="bi bi-file-earmark-medical-fill"></i>
+                    <div>
+                        <h5>Chứng chỉ hành nghề (CCHN)</h5>
+                        <p>Tài liệu bắt buộc chứng minh phạm vi hành nghề</p>
+                    </div>
+                </div>
+                <div class="section-bd">
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label><i class="bi bi-upc-scan"></i> Số CCHN</label>
+                            <input type="text" name="soCCHN" class="form-control"
+                                   placeholder="VD: 054-12345/BYT" />
+                        </div>
+                        <div class="form-group">
+                            <label><i class="bi bi-diagram-3"></i> Phạm vi hành nghề</label>
+                            <input type="text" name="phamViHanhNghe" class="form-control"
+                                   placeholder="VD: Nội khoa, Ngoại khoa, Nhi..." />
+                        </div>
+                        <div class="form-group">
+                            <label><i class="bi bi-calendar-check"></i> Ngày cấp</label>
+                            <input type="date" name="ngayCapCCHN" class="form-control" />
+                        </div>
+                        <div class="form-group">
+                            <label><i class="bi bi-calendar-x"></i> Ngày hết hạn</label>
+                            <input type="date" name="ngayHetHanCCHN" class="form-control" />
+                        </div>
+                    </div>
+                </div>
             </div>
 
-
-            <div class="mb-3">
-                <label>Email</label>
-                <input asp-for="Email" class="form-control" />
-                <span asp-validation-for="Email" class="text-danger"></span>
+            <!-- Kinh nghiệm -->
+            <div class="section-card">
+                <div class="section-hd">
+                    <i class="bi bi-briefcase-fill"></i>
+                    <div>
+                        <h5>Kinh nghiệm & Chuyên môn sâu</h5>
+                        <p>Quá trình công tác và thế mạnh chuyên môn</p>
+                    </div>
+                </div>
+                <div class="section-bd">
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label><i class="bi bi-clock-history"></i> Số năm kinh nghiệm</label>
+                            <input type="number" name="namKinhNghiem" class="form-control"
+                                   value="0" min="0" max="60" />
+                        </div>
+                        <div class="form-group">
+                            <label><i class="bi bi-trophy"></i> Giải thưởng / Danh hiệu</label>
+                            <input type="text" name="giaiThuong" class="form-control"
+                                   placeholder="VD: Thầy thuốc ưu tú, Thầy thuốc nhân dân..." />
+                        </div>
+                        <div class="form-group form-full">
+                            <label><i class="bi bi-star-fill"></i> Chuyên môn sâu / Thế mạnh</label>
+                            <input type="text" name="chuyenMonSau" class="form-control"
+                                   placeholder="VD: Phẫu thuật nội soi, Điều trị ung thư giai đoạn sớm..." />
+                        </div>
+                        <div class="form-group form-full">
+                            <label><i class="bi bi-building"></i> Kinh nghiệm làm việc</label>
+                            <textarea name="kinhNghiem" class="form-control" rows="5"
+                                      placeholder="Mô tả các bệnh viện, phòng khám đã làm việc, vị trí đảm nhiệm...
+                                        VD:
+                                        • 2010-2018: Bệnh viện Bạch Mai — Trưởng khoa Nội tim mạch
+                                        • 2018-nay: Phòng khám An Khang — Bác sĩ điều trị"></textarea>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <div class="mb-3">
-                <label>Số điện thoại</label>
-                <input asp-for="DienThoai" class="form-control" />
-                <span asp-validation-for="DienThoai" class="text-danger"></span>
+            <div class="d-flex gap-3 justify-content-between">
+                <button type="button" class="btn-cancel-out" onclick="goStep(1)">
+                    <i class="bi bi-arrow-left"></i> Quay lại
+                </button>
+                <button type="button" class="btn-submit" onclick="goStep(3)">
+                    Tiếp theo <i class="bi bi-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- ═══ BƯỚC 3: TÀI KHOẢN ═══ -->
+        <div class="section-panel" id="panel3">
+            <div class="section-card">
+                <div class="section-hd">
+                    <i class="bi bi-shield-lock-fill"></i>
+                    <div>
+                        <h5>Tài khoản đăng nhập</h5>
+                        <p>Tài khoản sẽ được tạo tự động từ thông tin trên</p>
+                    </div>
+                </div>
+                <div class="section-bd">
+                    <div class="alert alert-info d-flex align-items-start gap-3 mb-4"
+                         style="border-radius:10px;font-size:14px">
+                        <i class="bi bi-info-circle-fill fs-5 mt-1 flex-shrink-0"></i>
+                        <div>
+                            <strong>Lưu ý quan trọng:</strong> Tài khoản chỉ được tạo sau khi bác sĩ
+                            đã <strong>ký hợp đồng lao động</strong>. Hệ thống sẽ gửi thông tin đăng nhập
+                            qua email của bác sĩ sau khi tạo thành công.
+                        </div>
+                    </div>
+
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label><i class="bi bi-envelope"></i> Email đăng nhập</label>
+                            <div class="form-control" style="background:#f8fafc;color:#64748b;cursor:default">
+                                (dùng email đã nhập ở bước 1)
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="bi bi-lock"></i> Mật khẩu mặc định</label>
+                            <div class="pw-wrap">
+                                <input type="text" name="matKhau" id="matKhau"
+                                       class="form-control"
+                                       value="Bacsi@2025"
+                                       placeholder="Để trống = Bacsi{@DateTime.Now.Year}" />
+                            </div>
+                            <div class="pw-hint">
+                                <i class="bi bi-exclamation-triangle-fill text-warning me-1"></i>
+                                Thông báo cho bác sĩ đổi mật khẩu sau lần đăng nhập đầu tiên.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TÓM TẮT -->
+                    <div style="background:#f8fafc;border-radius:12px;padding:18px;
+                            border:1px solid #e2e8f0;margin-top:16px">
+                        <div style="font-size:13px;font-weight:700;color:#1e293b;margin-bottom:12px">
+                            <i class="bi bi-clipboard-check me-2 text-primary"></i>
+                            Xác nhận thông tin trước khi tạo
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px">
+                            <div style="color:#64748b">Họ tên:</div>
+                            <div style="font-weight:600;color:#1e293b" id="sum-ten">—</div>
+                            <div style="color:#64748b">Email:</div>
+                            <div style="font-weight:600;color:#1e293b" id="sum-email">—</div>
+                            <div style="color:#64748b">Học vị:</div>
+                            <div style="font-weight:600;color:#1e293b" id="sum-hocvi">—</div>
+                            <div style="color:#64748b">Số CCHN:</div>
+                            <div style="font-weight:600;color:#1e293b" id="sum-cchn">—</div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <div class="mb-3">
-                <label>Chuyên khoa</label>
-
-                <select asp-for="ChuyenKhoaId"
-                        asp-items="ViewBag.ChuyenKhoas"
-                        class="form-control">
-
-                    <option value="">-- Chọn chuyên khoa --</option>
-
-                </select>
-
-                <span asp-validation-for="ChuyenKhoaId" class="text-danger"></span>
+            <div class="submit-bar">
+                <button type="button" class="btn-cancel-out" onclick="goStep(2)">
+                    <i class="bi bi-arrow-left"></i> Quay lại
+                </button>
+                <button type="submit" class="btn-submit">
+                    <i class="bi bi-person-check-fill"></i> Tạo hồ sơ & Tài khoản
+                </button>
             </div>
-            <div class="mb-3">
-                <label>Tóm tắt chuyên môn</label>
-                <input asp-for="tieuSu" class="form-control" />
-                <span asp-validation-for="tieuSu" class="text-danger"></span>
-            </div>
+        </div>
 
-
-            <div class="mb-3">
-                <label>Trạng thái</label>
-
-                <select asp-for="TrangThai" class="form-control">
-                    <option value="1">Đang làm việc</option>
-                    <option value="2">Nghỉ Phép</option>
-                    <option value="3">Đã nghỉ việc</option>
-                </select>
-
-            </div>
-
-            <button type="submit" class="btn btn-primary">Lưu</button>
-
-            <a asp-action="Index" class="btn btn-secondary">
-                Quay lại
-            </a>
-
-        </form>
-
-    </div>
+    </form>
 </div>
+
+    <script>
+        var currentStep = 1;
+
+       function goStep(n) {
+
+        // ===== VALIDATE STEP 1 =====
+        if (n === 2) {
+            const fullName = document.querySelector('[name="fullName"]')?.value.trim();
+            const email = document.querySelector('[name="email"]')?.value.trim();
+            const chuyenKhoa = document.querySelector('[name="chuyenKhoaId"]')?.value;
+
+            if (!fullName || !email || !chuyenKhoa) {
+                alert("Vui lòng nhập đầy đủ thông tin bắt buộc!");
+                return;
+            }
+        }
+
+        // ===== ẨN PANEL HIỆN TẠI =====
+        document.getElementById(`panel${currentStep}`)?.classList.remove('active');
+
+        // ===== UPDATE STEPPER =====
+        for (let i = 1; i <= 3; i++) {
+            const circle = document.getElementById(`fc${i}`);
+            const label  = document.getElementById(`fl${i}`);
+            const line   = document.getElementById(`fline${i}`);
+
+            if (!circle || !label) continue;
+
+            // reset
+            circle.classList.remove('active', 'done');
+            label.classList.remove('active');
+
+            if (i < n) {
+                // DONE STEP
+                circle.classList.add('done');
+                circle.innerHTML = '<i class="bi bi-check2"></i>';
+                line?.classList.add('done');
+            }
+            else if (i === n) {
+                // CURRENT STEP
+                circle.classList.add('active');
+                circle.textContent = i;
+                label.classList.add('active');
+            }
+            else {
+                // NEXT STEP
+                circle.textContent = i;
+                line?.classList.remove('done');
+            }
+        }
+
+        // ===== HIỆN PANEL MỚI =====
+        document.getElementById(`panel${n}`)?.classList.add('active');
+        currentStep = n;
+
+        // ===== FILL SUMMARY =====
+        if (n === 3) fillSummary();
+
+        // ===== SCROLL TOP =====
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+        function fillSummary() {
+            document.getElementById('sum-ten').textContent   = document.querySelector('[name="fullName"]').value || '—';
+            document.getElementById('sum-email').textContent = document.querySelector('[name="email"]').value    || '—';
+            document.getElementById('sum-hocvi').textContent = document.querySelector('[name="hocVi"]').value    || '—';
+            document.getElementById('sum-cchn').textContent  = document.querySelector('[name="soCCHN"]').value   || '—';
+        }
+
+        function previewAvatar(input) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('avatarPreview').src = e.target.result;
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+    </script>

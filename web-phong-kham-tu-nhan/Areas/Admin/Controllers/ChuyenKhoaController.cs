@@ -29,9 +29,7 @@ namespace web_phong_kham_tu_nhan.Area.Admin.Controllers
                     Id = s.Id,
                     Name = s.Name,
                     MoTa = s.MoTa,
-
                     DoctorCount = s.BacSis.Count(),
-
                     PatientCount = _context.Appointments
                         .Where(a => a.BacSi.ChuyenKhoaId == s.Id)
                         .Select(a => a.BenhNhanId)
@@ -43,18 +41,16 @@ namespace web_phong_kham_tu_nhan.Area.Admin.Controllers
             return View(data);
         }
 
-        public IActionResult Create()
-        {
-            return View();
-        }
+        public IActionResult Create() => View();
 
         [HttpPost]
+        [ValidateAntiForgeryToken]   // ✅ Thêm AntiForgery
         public IActionResult Create(ChuyenKhoa model)
         {
             if (ModelState.IsValid)
             {
                 _service.Add(model);
-                TempData["success"] = "Thêm mới thành công!";
+                TempData["Success"] = "Thêm mới chuyên khoa thành công!";  // ✅ chữ hoa
                 return RedirectToAction("Index");
             }
             return View(model);
@@ -63,21 +59,37 @@ namespace web_phong_kham_tu_nhan.Area.Admin.Controllers
         public IActionResult Edit(int id)
         {
             var sp = _service.GetById(id);
+            if (sp == null) return NotFound();
             return View(sp);
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]   // ✅ Thêm AntiForgery
         public IActionResult Edit(ChuyenKhoa model)
         {
+            if (!ModelState.IsValid)
+                return View(model);
+
             _service.Update(model);
-            TempData["success"] = "Cập nhật thành công!";
+            TempData["Success"] = "Cập nhật chuyên khoa thành công!";  // ✅ chữ hoa
             return RedirectToAction("Index");
         }
 
+        // ✅ Đổi sang HttpPost + AntiForgery để tránh CSRF
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult Delete(int id)
         {
+            // Kiểm tra còn bác sĩ thuộc chuyên khoa này không
+            bool cosBacSi = _context.Doctors.Any(d => d.ChuyenKhoaId == id);
+            if (cosBacSi)
+            {
+                TempData["Error"] = "Không thể xóa chuyên khoa đang có bác sĩ thuộc về.";
+                return RedirectToAction("Index");
+            }
+
             _service.Delete(id);
-            TempData["success"] = "Xóa thành công!";
+            TempData["Success"] = "Xóa chuyên khoa thành công!";  // ✅ chữ hoa
             return RedirectToAction("Index");
         }
     }

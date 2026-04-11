@@ -14,6 +14,7 @@ builder.Services.AddScoped<web_phong_kham_tu_nhan.Services.Giao_diện.ISpecialt
 builder.Services.AddScoped<web_phong_kham_tu_nhan.Services.Giao_diện.IDoctorServices, web_phong_kham_tu_nhan.Services.Triển_khai.DoctorService>();
 builder.Services.AddScoped<web_phong_kham_tu_nhan.Services.Giao_diện.IPatientService, web_phong_kham_tu_nhan.Services.Triển_khai.PatientService>();
 builder.Services.AddScoped<web_phong_kham_tu_nhan.Services.Giao_diện.IAppointmentService, web_phong_kham_tu_nhan.Services.Triển_khai.AppointmentService>();
+builder.Services.AddTransient<web_phong_kham_tu_nhan.Services.EmailService>();
 builder.Services.AddSession();
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)

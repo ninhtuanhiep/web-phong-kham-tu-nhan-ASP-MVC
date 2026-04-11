@@ -103,6 +103,12 @@ href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.c
                                         Xin chào, @User.Identity.Name
                                     </a>
                                 }
+                                else if(User.IsInRole("Admin"))
+                                {
+                                    <a class="nav-link username" asp-area="Admin" asp-controller="DashBoard" asp-action="Index">
+                                        Đi tới DashBoard
+                                    </a>
+                                }
 
                             </li>
                              

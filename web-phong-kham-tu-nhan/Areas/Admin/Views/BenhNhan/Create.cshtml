@@ -4,87 +4,267 @@
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
-<div class="container-fluid">
+<link rel="stylesheet"  href="~/css/Admin/BenhNhan/Create.css"/>
 
-    <div class="form-card">
+<div style="padding:35px">
+    <a asp-area="Admin" asp-controller="BenhNhan" asp-action="Index" class="back-link">
+        <i class="bi bi-arrow-left"></i> Quay lại danh sách
+    </a>
 
-        <div class="form-header">
-            <h3>Thêm bệnh nhân mới</h3>
-            <a asp-action="Index" class="close-btn">✕</a>
+    <div class="d-flex align-items-center gap-3 mb-4">
+        <div class="page-hd">
+            <h1 style="margin:0;font-weight:700;color:#1e293b">THÊM BỆNH NHÂN MỚI</h1>
+            <p style="margin:0;font-size:13px;color:#94a3b8">
+                Điền thông tin để tạo hồ sơ và tài khoản cho bệnh nhân
+            </p>
         </div>
-
-        <form asp-action="Create" method="post">
-
-            <div class="row">
-
-                <div class="col-md-12 mb-3">
-                    <label>Họ và tên *</label>
-                    <input asp-for="FullName" class="form-control" placeholder="Nhập họ và tên">
-                    <span asp-validation-for="FullName" class="text-danger"></span>
-                </div>
-
-                <div class="col-md-6 mb-3">
-                    <label>Email *</label>
-                    <input asp-for="Email" class="form-control" placeholder="abc@email.com">
-                    <span asp-validation-for="Email" class="text-danger"></span>
-                </div>
-
-                <div class="col-md-6 mb-3">
-                    <label>Số điện thoại *</label>
-                    <input asp-for="PhoneNumber" class="form-control" placeholder="(+84) 123-4567">
-                    <span asp-validation-for="PhoneNumber" class="text-danger"></span>
-                </div>
-
-                <div class="col-md-6 mb-3">
-                    <label>Ngày sinh *</label>
-                    <input asp-for="NgaySinh" type="date" class="form-control">
-                    <span asp-validation-for="NgaySinh" class="text-danger"></span>
-                </div>
-
-                <div class="col-md-6 mb-3">
-                    <label>Giới tính *</label>
-                    <select asp-for="GioiTinh" class="form-control">
-                        <option value="Nam">Nam</option>
-                        <option value="Nữ">Nữ</option>
-                    </select>
-                    <span asp-validation-for="GioiTinh" class="text-danger"></span>
-                </div>
-
-                <div class="col-md-12 mb-3">
-                    <label>Địa chỉ *</label>
-                    <input asp-for="DiaChi" class="form-control" placeholder="Nhập địa chỉ">
-                    <span asp-validation-for="DiaChi" class="text-danger"></span>
-                </div>
-
-                <div class="col-md-12 mb-3">
-                    <label>Lịch sử y tế</label>
-                    <textarea asp-for = "LichSuYTe" class="form-control" rows="4"
-                              placeholder="Vui lòng ghi rõ tiền sử bệnh lý, dị ứng hoặc các bệnh lý liên quan..."></textarea>
-                    <span asp-validation-for="LichSuYTe" class="text-danger"></span>
-                </div>
-
-                <div class="col-md-12 mb-3">
-                    <label>Trạng thái *</label>
-                    <select asp-for="TrangThai" class="form-control">
-                        <option value="1"> Đang nằm viện</option>
-                        <option value="0"> Đã xuất viện</option>
-                    </select>
-                </div>
-
-            </div>
-
-            <div class="form-actions">
-                <button type="submit" class="btn btn-primary">
-                    Lưu thông tin
-                </button>
-
-                <a asp-action="Index" class="btn btn-secondary">
-                    Hủy
-                </a>
-            </div>
-
-        </form>
-
     </div>
 
+    @if (ViewBag.Error != null)
+    {
+        <div class="alert alert-danger d-flex align-items-center gap-2 mb-4" style="border-radius:10px">
+            <i class="bi bi-exclamation-circle-fill fs-5"></i> @ViewBag.Error
+        </div>
+    }
+
+    <!-- STEPPER -->
+    <div class="form-stepper">
+        <div class="fs-step">
+            <div class="fs-circle active" id="fc1">1</div>
+            <div class="fs-lbl active" id="fl1">Thông tin cá nhân</div>
+        </div>
+        <div class="fs-line" id="fline1"></div>
+        <div class="fs-step">
+            <div class="fs-circle" id="fc2">2</div>
+            <div class="fs-lbl" id="fl2">Tài khoản đăng nhập</div>
+        </div>
+    </div>
+
+    <form asp-area="Admin" asp-controller="BenhNhan" asp-action="Create"
+          method="post" id="createForm">
+        @Html.AntiForgeryToken()
+
+        <!-- ══ BƯỚC 1: THÔNG TIN CÁ NHÂN ══ -->
+        <div class="step-panel active" id="panel1">
+
+            <div class="section-card">
+                <div class="section-hd">
+                    <i class="bi bi-person-fill"></i>
+                    <div>
+                        <h5>Thông tin cá nhân</h5>
+                        <p>Thông tin cơ bản của bệnh nhân</p>
+                    </div>
+                </div>
+                <div class="section-bd">
+                    <div class="form-grid-2">
+                        <div class="form-group form-full">
+                            <label>
+                                <i class="bi bi-person"></i> Họ và tên
+                                <span class="req">*</span>
+                            </label>
+                            <input type="text" name="fullName" id="inp-ten" class="fc"
+                                   placeholder="VD: Nguyễn Văn A" required />
+                        </div>
+                        <div class="form-group">
+                            <label><i class="bi bi-envelope"></i> Email</label>
+                            <input type="email" name="email" id="inp-email" class="fc"
+                                   placeholder="benhnhan@email.com" />
+                            <div style="font-size:11px;color:#94a3b8;margin-top:4px">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Dùng để đăng nhập. Để trống nếu bệnh nhân chưa có email.
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="bi bi-telephone"></i> Số điện thoại</label>
+                            <input type="tel" name="phoneNumber" class="fc"
+                                   placeholder="0912 345 678" />
+                        </div>
+                        <div class="form-group">
+                            <label><i class="bi bi-gender-ambiguous"></i> Giới tính</label>
+                            <select name="gioiTinh" class="fc">
+                                <option value="">-- Chọn --</option>
+                                <option value="Nam">Nam</option>
+                                <option value="Nữ">Nữ</option>
+                                <option value="Khác">Khác</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="bi bi-cake2"></i> Ngày sinh</label>
+                            <input type="date" name="ngaySinh" class="fc" />
+                        </div>
+                        <div class="form-group form-full">
+                            <label><i class="bi bi-geo-alt"></i> Địa chỉ</label>
+                            <input type="text" name="diaChi" class="fc"
+                                   placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành phố" />
+                        </div>
+                        <div class="form-group form-full">
+                            <label>
+                                <i class="bi bi-clipboard2-heart"></i> Lịch sử y tế
+                                <span style="font-weight:400;color:#94a3b8">(không bắt buộc)</span>
+                            </label>
+                            <textarea name="lichSuYTe" class="fc" rows="4"
+                                      placeholder="Tiền sử bệnh lý, dị ứng thuốc, bệnh nền...&#10;VD: Tiểu đường type 2, dị ứng penicillin"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end">
+                <button type="button" class="btn-next" onclick="goStep(2)">
+                    Tiếp theo <i class="bi bi-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- ══ BƯỚC 2: TÀI KHOẢN ══ -->
+        <div class="step-panel" id="panel2">
+
+            <div class="section-card">
+                <div class="section-hd">
+                    <i class="bi bi-shield-lock-fill"></i>
+                    <div>
+                        <h5>Tài khoản đăng nhập</h5>
+                        <p>Hệ thống sẽ tạo tài khoản tự động từ thông tin trên</p>
+                    </div>
+                </div>
+                <div class="section-bd">
+
+                    <div class="alert alert-info d-flex align-items-start gap-3 mb-4"
+                         style="border-radius:10px;font-size:14px">
+                        <i class="bi bi-info-circle-fill fs-5 mt-1 flex-shrink-0"></i>
+                        <div>
+                            Tài khoản sẽ được tạo với <strong>vai trò Bệnh nhân</strong>.
+                            Sau khi tạo, hệ thống sẽ gửi thông tin đăng nhập qua email
+                            (nếu bệnh nhân có email).
+                        </div>
+                    </div>
+
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label><i class="bi bi-envelope"></i> Email đăng nhập</label>
+                            <div class="fc" style="background:#f8fafc;color:#64748b;cursor:default"
+                                 id="sum-email-display">
+                                (dùng email đã nhập ở bước 1)
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="bi bi-lock"></i> Mật khẩu mặc định</label>
+                            <input type="text" name="matKhau" id="inp-matkhau"
+                                   class="fc" value="Benhnhan@2025"
+                                   placeholder="Để trống = Benhnhan@{
+                                                                      }" />
+                            <div style="font-size:11px;color:#f59e0b;margin-top:4px">
+                                <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                                Thông báo cho bệnh nhân đổi mật khẩu sau lần đăng nhập đầu tiên.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TÓM TẮT -->
+                    <div class="summary-box">
+                        <h6><i class="bi bi-clipboard-check text-primary"></i> Xác nhận trước khi tạo</h6>
+                        <div class="summary-grid">
+                            <div class="sum-lbl">Họ tên:</div>
+                            <div class="sum-val" id="sum-ten">—</div>
+                            <div class="sum-lbl">Email:</div>
+                            <div class="sum-val" id="sum-email">—</div>
+                            <div class="sum-lbl">Giới tính:</div>
+                            <div class="sum-val" id="sum-gt">—</div>
+                            <div class="sum-lbl">Mật khẩu:</div>
+                            <div class="sum-val" id="sum-mk">—</div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="submit-bar">
+                <button type="button" class="btn-back-step" onclick="goStep(1)">
+                    <i class="bi bi-arrow-left"></i> Quay lại
+                </button>
+                <button type="submit" class="btn-submit">
+                    <i class="bi bi-person-check-fill"></i> Tạo hồ sơ & Tài khoản
+                </button>
+            </div>
+
+        </div>
+
+    </form>
 </div>
+
+
+<script>
+    var currentStep = 1;
+
+    function goStep(n) {
+
+        // ===== VALIDATE STEP 1 =====
+        if (n === 2) {
+            const fullName = document.querySelector('[name="fullName"]')?.value.trim();
+            const email = document.querySelector('[name="email"]')?.value.trim();
+            const chuyenKhoa = document.querySelector('[name="chuyenKhoaId"]')?.value;
+
+            if (!fullName || !email || !chuyenKhoa) {
+                alert("Vui lòng nhập đầy đủ thông tin bắt buộc!");
+                return;
+            }
+        }
+
+        // ===== ẨN PANEL HIỆN TẠI =====
+        document.getElementById(`panel${currentStep}`)?.classList.remove('active');
+
+        // ===== UPDATE STEPPER =====
+        for (let i = 1; i <= 3; i++) {
+            const circle = document.getElementById(`fc${i}`);
+            const label  = document.getElementById(`fl${i}`);
+            const line   = document.getElementById(`fline${i}`);
+
+            if (!circle || !label) continue;
+
+            // reset
+            circle.classList.remove('active', 'done');
+            label.classList.remove('active');
+
+            if (i < n) {
+                // DONE STEP
+                circle.classList.add('done');
+                circle.innerHTML = '<i class="bi bi-check2"></i>';
+                line?.classList.add('done');
+            }
+            else if (i === n) {
+                // CURRENT STEP
+                circle.classList.add('active');
+                circle.textContent = i;
+                label.classList.add('active');
+            }
+            else {
+                // NEXT STEP
+                circle.textContent = i;
+                line?.classList.remove('done');
+            }
+        }
+
+        // ===== HIỆN PANEL MỚI =====
+        document.getElementById(`panel${n}`)?.classList.add('active');
+        currentStep = n;
+
+        // ===== FILL SUMMARY =====
+        if (n === 3) fillSummary();
+
+        // ===== SCROLL TOP =====
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function fillSummary() {
+        var ten   = document.querySelector('[name="fullName"]').value || '—';
+        var email = document.querySelector('[name="email"]').value    || '(Không có)';
+        var gt    = document.querySelector('[name="gioiTinh"]').value || '—';
+        var mk = document.getElementById('inp-matkhau').value || 'Benhnhan@@' + new Date().getFullYear();
+
+        document.getElementById('sum-ten').textContent   = ten;
+        document.getElementById('sum-email').textContent = email;
+        document.getElementById('sum-gt').textContent    = gt;
+        document.getElementById('sum-mk').textContent    = mk;
+        document.getElementById('sum-email-display').textContent = email;
+    }
+</script>
