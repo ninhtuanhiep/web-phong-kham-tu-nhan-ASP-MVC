@@ -154,11 +154,11 @@ namespace web_phong_kham_tu_nhan.Services
                       <div class='info-box'>
                         <div class='info-row'>
                           <span class='info-lbl'>Email đăng nhập</span>
-                          <span class='info-val blue'>{loginEmail}</span>
+                          <span class='info-val blue'>  {loginEmail}</span>
                         </div>
                         <div class='info-row'>
                           <span class='info-lbl'>Mật khẩu</span>
-                          <span class='info-val blue'>{password}</span>
+                          <span class='info-val blue'>  {password}</span>
                         </div>
                       </div>
                       <div class='warning'>

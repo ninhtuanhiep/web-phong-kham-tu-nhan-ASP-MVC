@@ -118,7 +118,7 @@
                             <td>
                                 @if (item.UserId == null)
                                 {
-                                    <form asp-area="Admin" asp-controller="BacSi" asp-action="TaoTaiKhoan"
+                                    <form asp-area="Admin" asp-controller="BacSi" asp-action="Create"
                                           method="post" style="display:inline"
                                           onsubmit="return confirm('Tạo tài khoản cho BS. @item.FullName?')">
                                         @Html.AntiForgeryToken()
@@ -137,7 +137,17 @@
                             </td>
                             <td>
                                 <a asp-action="Detail" asp-route-id="@item.Id" class="btn btn-sm btn-info me-1">👁</a>
-                                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger btn-delete">🗑</a>
+
+                                <form asp-area="Admin" asp-controller="BacSi" asp-action="Delete"
+                                      asp-route-id="@item.Id" method="post" style="display:inline"
+                                      onsubmit="return confirm('Xóa bác sĩ @item.FullName?')">
+
+                                    @Html.AntiForgeryToken()
+
+                                    <button type="submit" class="btn btn-sm btn-danger">
+                                        🗑
+                                    </button>
+                                </form>
                             </td>
                         </tr>
                     }

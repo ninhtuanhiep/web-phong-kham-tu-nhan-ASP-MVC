@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using web_phong_kham_tu_nhan.Data;
 using web_phong_kham_tu_nhan.Helpers;
 using web_phong_kham_tu_nhan.Models.Entities;
@@ -134,6 +135,11 @@ namespace web_phong_kham_tu_nhan.Area.Admin.Controllers
         {
             var user = _context.Users.Find(id);
             if (user == null) return NotFound();
+            ViewBag.LinkedBacSi = _context.Doctors
+                .Include(d => d.ChuyenKhoa)
+                .FirstOrDefault(d => d.UserId == id);
+            ViewBag.LinkedBenhNhan = _context.Patients
+                .FirstOrDefault(p => p.UserId == id);
             return View(user);
         }
 

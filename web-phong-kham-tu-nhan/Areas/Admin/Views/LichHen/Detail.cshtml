@@ -1,103 +1,446 @@
 ﻿@{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Chi tiết lịch hẹn";
+
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Chi tiết lịch hẹn";
+    string activeTab = TempData["ActiveTab"] as string ?? "view";
+
+    string[] ttLabels = { "Chờ xác nhận", "Đã xác nhận", "Hoàn thành", "Đã hủy" };
+    string[] ttColors = { "#f59e0b", "#0d6efd", "#10b981", "#94a3b8" };
+    string[] ttBgs = { "#fffbeb", "#eff6ff", "#f0fdf4", "#f8fafc" };
+    string[] ttIcons = { "bi-hourglass-split", "bi-calendar-check", "bi-patch-check-fill", "bi-x-circle" };
+    string[] ttPillCls = { "p0", "p1", "p2", "p3" };
+    int idx = Math.Min(Model.TrangThai, 3);
+    string[] dayNames = { "Chủ nhật", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7" };
 }
 
 @model web_phong_kham_tu_nhan.Models.Entities.LichHen
+<link rel="stylesheet" href="~/css/Admin/LichHen/Detail.css"/>
 
-<div class="container mt-5">
-
-    <div class="card detail-card shadow-lg">
-
-        <div class="card-header detail-header">
-            <h3>📋 CHI TIẾT LỊCH KHÁM</h3>
+<div class="container" style="padding:35px">
+    <!-- BANNER -->
+    <div class="lh-banner">
+        <div>
+            <div class="lh-id">#LH-@Model.Id.ToString("D4")</div>
+            <div class="lh-title"><i class="bi bi-calendar2-check me-2"></i>Chi tiết lịch hẹn</div>
+            <div class="lh-sub">Đặt lúc @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</div>
         </div>
+        <span class="st-big">
+            <i class="bi @ttIcons[idx]"></i> @ttLabels[idx]
+        </span>
+    </div>
 
-        <div class="card-body">
+    <!-- DATETIME HIGHLIGHT -->
+    <div class="dt-box">
+        <div class="dt-day">@Model.AppointmentDate.Day</div>
+        <div class="dt-sep"></div>
+        <div style="flex:1">
+            <div class="dt-thu">@dayNames[(int)Model.AppointmentDate.DayOfWeek], tháng @Model.AppointmentDate.Month/@Model.AppointmentDate.Year</div>
+            <div class="dt-slot"><i class="bi bi-clock me-1"></i>@(Model.TimeSlot ?? "—")</div>
+            <div class="dt-full">@Model.AppointmentDate.ToString("dd/MM/yyyy")</div>
+        </div>
+        <div class="dt-status">
+            <span class="tt-pill @ttPillCls[idx]">
+                <i class="bi @ttIcons[idx]"></i> @ttLabels[idx]
+            </span>
+        </div>
+    </div>
 
-            <div class="row">
+    <!-- ACTION BAR -->
+    <div class="action-bar">
+        <a asp-area="Admin" asp-controller="LichHen" asp-action="Index" class="btn-act btn-back-act">
+            <i class="bi bi-arrow-left"></i> Quay lại
+        </a>
+        <button class="btn-act btn-edit-act" onclick="switchTab('edit',null)">
+            <i class="bi bi-pencil"></i> Chỉnh sửa
+        </button>
 
-                <!-- Thông tin bệnh nhân -->
-                <div class="col-md-6 mb-4">
-                    <div class="info-box">
-                        <h5 class="info-title">👤 Thông tin bệnh nhân</h5>
+        @if (Model.TrangThai == 0)
+        {
+            <form asp-area="Admin" asp-controller="LichHen" asp-action="CapNhatTrangThai"
+                  method="post" style="display:inline">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.Id" />
+                <input type="hidden" name="trangThai" value="1" />
+                <button type="submit" class="btn-act btn-confirm">
+                    <i class="bi bi-check-circle"></i> Xác nhận lịch
+                </button>
+            </form>
+        }
+        @if (Model.TrangThai == 1)
+        {
+            <form asp-area="Admin" asp-controller="LichHen" asp-action="CapNhatTrangThai"
+                  method="post" style="display:inline">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.Id" />
+                <input type="hidden" name="trangThai" value="2" />
+                <button type="submit" class="btn-act btn-done">
+                    <i class="bi bi-patch-check"></i> Hoàn thành
+                </button>
+            </form>
+        }
+        @if (Model.TrangThai == 0 || Model.TrangThai == 1)
+        {
+            <form asp-area="Admin" asp-controller="LichHen" asp-action="CapNhatTrangThai"
+                  method="post" style="display:inline"
+                  onsubmit="return confirm('Hủy lịch hẹn này?')">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.Id" />
+                <input type="hidden" name="trangThai" value="3" />
+                <button type="submit" class="btn-act btn-cancel-act">
+                    <i class="bi bi-x-circle"></i> Hủy lịch
+                </button>
+            </form>
+        }
+    </div>
 
-                        <p><strong>Tên bệnh nhân:</strong> @Model.BenhNhan?.FullName</p>
-                        <p><strong>ID bệnh nhân:</strong> #@Model.BenhNhanId</p>
-                    </div>
+    <!-- TABS -->
+    <div class="tab-nav">
+        <button class="tab-btn @(activeTab == "view" ? "active" : "")" id="tbView" onclick="switchTab('view',this)">
+            <i class="bi bi-clipboard-fill"></i><span>Chi tiết</span>
+        </button>
+        <button class="tab-btn @(activeTab == "edit" ? "active" : "")" id="tbEdit" onclick="switchTab('edit',this)">
+            <i class="bi bi-pencil-square"></i><span>Chỉnh sửa</span>
+        </button>
+    </div>
+
+    <!-- ═══ TAB VIEW ═══ -->
+    <div class="tab-panel @(activeTab == "view" ? "active" : "")" id="tab-view">
+        <div class="info-grid" style="margin-bottom:16px">
+
+            <!-- BỆNH NHÂN -->
+            <div class="d-card" style="margin-bottom:0">
+                <div class="d-card-hd">
+                    <i class="bi bi-person-fill"></i><h5>Bệnh nhân</h5>
                 </div>
-
-                <!-- Thông tin bác sĩ -->
-                <div class="col-md-6 mb-4">
-                    <div class="info-box">
-                        <h5 class="info-title">🩺 Bác sĩ phụ trách</h5>
-
-                        <p><strong>Bác sĩ:</strong> @Model.BacSi?.FullName</p>
-                        <p><strong>Chuyên khoa:</strong> @Model.ChuyenKhoa?.Name</p>
+                <div class="d-card-bd">
+                    <div class="person-block">
+                        <div class="person-ph"><i class="bi bi-person"></i></div>
+                        <div>
+                            <div class="person-name">@(Model.BenhNhan?.FullName ?? "Không rõ")</div>
+                            <div class="person-sub">Mã BN: #@Model.BenhNhanId</div>
+                        </div>
                     </div>
+                    @if (Model.BenhNhan != null)
+                    {
+                        <div class="info-grid" style="grid-template-columns:1fr">
+                            <div class="info-item">
+                                <div class="info-lbl"><i class="bi bi-telephone"></i> Số điện thoại</div>
+                                <div class="info-val @(string.IsNullOrEmpty(Model.BenhNhan.PhoneNumber) ? "empty" : "")">
+                                    @(Model.BenhNhan.PhoneNumber ?? "—")
+                                </div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-lbl"><i class="bi bi-envelope"></i> Email</div>
+                                <div class="info-val @(string.IsNullOrEmpty(Model.BenhNhan.Email) ? "empty" : "")">
+                                    @(Model.BenhNhan.Email ?? "—")
+                                </div>
+                            </div>
+                        </div>
+                    }
                 </div>
+            </div>
 
-                <!-- Thông tin lịch khám -->
-                <div class="col-md-6 mb-4">
-                    <div class="info-box">
-                        <h5 class="info-title">📅 Thông tin lịch khám</h5>
-
-                        <p>
-                            <strong>Ngày khám:</strong>
-                            @Model.AppointmentDate.ToString("dd/MM/yyyy")
-                        </p>
-
-                        <p>
-                            <strong>Thời gian:</strong>
-                            @Model.TimeSlot
-                        </p>
-                    </div>
+            <!-- BÁC SĨ -->
+            <div class="d-card" style="margin-bottom:0">
+                <div class="d-card-hd">
+                    <i class="bi bi-person-badge-fill"></i><h5>Bác sĩ phụ trách</h5>
                 </div>
-
-                <div class="col-md-6 mb-4">
-                    <div class="info-box">
-                        <h5 class="info-title">📅 Lý do khám</h5>
-                        <p>@(Model.LyDoKham ?? "Chưa có thông tin về lý do khám")</p>
-                    </div>
-                </div>
-
-                <!-- Trạng thái -->
-                <div class="col-md-6 mb-4">
-                    <div class="info-box">
-                        <h5 class="info-title">📊 Trạng thái</h5>
-
-                        @if (Model.TrangThai == 0)
+                <div class="d-card-bd">
+                    <div class="person-block">
+                        @if (Model.BacSi != null && !string.IsNullOrEmpty(Model.BacSi.ImageUrl))
                         {
-                            <span class="status-badge status-inactive">
-                                ⏳ Chưa giải quyết
-                            </span>
-                        }
-                        else if (Model.TrangThai == 1)
-                        {
-                            <span class="status-badge status-approved">
-                                ✔ Đã phê duyệt
-                            </span>
+                            <img src="@Model.BacSi.ImageUrl" class="person-img"
+                                 onerror="this.src='/Images/default-avatar.png'" />
                         }
                         else
                         {
-                            <span class="status-badge status-completed">
-                                🏥 Đã khám
-                            </span>
+                            <div class="person-ph"><i class="bi bi-person-badge"></i></div>
                         }
+                        <div>
+                            <div class="person-name">@(Model.BacSi?.FullName ?? "Không rõ")</div>
+                            <div class="person-spec">@(Model.ChuyenKhoa?.Name ?? "—")</div>
+                            <div class="person-sub">Mã BS: #@Model.BacSiId</div>
+                        </div>
                     </div>
+                    @if (Model.BacSi != null)
+                    {
+                        <div class="info-grid" style="grid-template-columns:1fr">
+                            <div class="info-item">
+                                <div class="info-lbl"><i class="bi bi-telephone"></i> Số điện thoại</div>
+                                <div class="info-val @(string.IsNullOrEmpty(Model.BacSi.DienThoai) ? "empty" : "")">
+                                    @(Model.BacSi.DienThoai ?? "—")
+                                </div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-lbl"><i class="bi bi-envelope"></i> Email</div>
+                                <div class="info-val @(string.IsNullOrEmpty(Model.BacSi.Email) ? "empty" : "")">
+                                    @(Model.BacSi.Email ?? "—")
+                                </div>
+                            </div>
+                        </div>
+                    }
                 </div>
-
             </div>
-
-            <!-- Buttons -->
-            <div class="detail-buttons mt-4">
-                <a asp-action="Index" class="btn btn-secondary">
-                    ← Quay lại
-                </a>
-
-            </div>
-
         </div>
 
+        @if (!string.IsNullOrEmpty(Model.LyDoKham))
+        {
+            <div class="d-card">
+                <div class="d-card-hd">
+                    <i class="bi bi-chat-text-fill"></i><h5>Lý do khám</h5>
+                </div>
+                <div class="d-card-bd">
+                    <div class="lydo-box">
+                        <label><i class="bi bi-chat-left-text-fill"></i> Ghi chú từ bệnh nhân</label>
+                        <p>@Model.LyDoKham</p>
+                    </div>
+                </div>
+            </div>
+        }
     </div>
 
+    <!-- ═══ TAB EDIT ═══ -->
+    <div class="tab-panel @(activeTab == "edit" ? "active" : "")" id="tab-edit">
+
+        <!-- Thông tin hiện tại để tham chiếu -->
+        <div class="info-strip">
+            <div class="is-item">
+                <i class="bi bi-person-fill"></i>
+                Bệnh nhân: <span class="is-val">@(Model.BenhNhan?.FullName ?? "#" + Model.BenhNhanId)</span>
+            </div>
+            <div class="is-item">
+                <i class="bi bi-calendar-event"></i>
+                Hiện tại: <span class="is-val">@dayNames[(int)Model.AppointmentDate.DayOfWeek], @Model.AppointmentDate.ToString("dd/MM/yyyy") · @(Model.TimeSlot ?? "—")</span>
+            </div>
+        </div>
+
+        <form asp-area="Admin" asp-controller="LichHen" asp-action="Edit" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" name="BenhNhanId" value="@Model.BenhNhanId" />
+            <input type="hidden" name="BacSiId" id="hBacSi" value="@Model.BacSiId" />
+            <input type="hidden" name="TimeSlot" id="hSlot" value="@Model.TimeSlot" />
+            <input type="hidden" name="TrangThai" id="hTrangThai" value="@Model.TrangThai" />
+
+            <!-- CHUYÊN KHOA & BÁC SĨ -->
+            <div class="section-card">
+                <div class="section-hd">
+                    <i class="bi bi-hospital-fill"></i>
+                    <div>
+                        <h5>Chuyên khoa & Bác sĩ</h5>
+                        <p>Đổi chuyên khoa sẽ tải lại danh sách bác sĩ</p>
+                    </div>
+                </div>
+                <div class="section-bd">
+                    <div class="fg" style="margin-bottom:16px">
+                        <label><i class="bi bi-diagram-3"></i> Chuyên khoa</label>
+                        <select id="selectCK" class="fc" onchange="loadDoctors(this.value)">
+                            <option value="">-- Chọn chuyên khoa --</option>
+                            @if (ViewBag.Specialties != null)
+                            {
+                                @foreach (SelectListItem item in (IEnumerable<SelectListItem>)ViewBag.Specialties)
+                                {
+                                    <option value="@item.Value"
+                                            selected="@(item.Value == Model.ChuyenKhoaId.ToString() ? "selected" : "")">
+                                        @item.Text
+                                    </option>
+                                }
+                            }
+
+                        </select>
+                        <input type="hidden" name="ChuyenKhoaId" id="hCK" value="@Model.ChuyenKhoaId" />
+                    </div>
+                    <div class="loading-spin" id="loadingDoc">
+                        <div class="spinner-border spinner-border-sm text-primary me-2"></div> Đang tải...
+                    </div>
+                    <div id="doctorListWrap">
+                        <label style="font-size:12px;font-weight:600;color:#475569;
+                                  margin-bottom:8px;display:flex;align-items:center;gap:5px">
+                            <i class="bi bi-person-badge" style="color:#0d6efd;font-size:12px"></i> Bác sĩ
+                        </label>
+                        <div class="doctor-list" id="doctorList">
+                            @if (ViewBag.Doctors != null)
+                            {
+                                @foreach (SelectListItem d in (IEnumerable<SelectListItem>)ViewBag.Doctors)
+                                {
+                                    <div class="doctor-item @(d.Value == Model.BacSiId.ToString() ? "selected" : "")"
+                                         data-id="@d.Value" onclick="selectDoc(this,@d.Value)">
+                                        <img src="/Images/default-avatar.png"
+                                             onerror="this.src='/Images/default-avatar.png'" />
+                                        <div class="doctor-item-info">
+                                            <strong>@d.Text</strong><span>Bác sĩ</span>
+                                        </div>
+                                        <div class="doctor-item-check">
+                                            @if (d.Value == Model.BacSiId.ToString())
+                                            {
+                                                <i class="bi bi-check2" style="color:white;font-size:11px"></i>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            }
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- NGÀY & GIỜ -->
+            <div class="section-card">
+                <div class="section-hd">
+                    <i class="bi bi-calendar-event-fill"></i>
+                    <div><h5>Ngày & Giờ khám</h5></div>
+                </div>
+                <div class="section-bd">
+                    <div class="form-grid-2" style="margin-bottom:16px">
+                        <div class="fg">
+                            <label><i class="bi bi-calendar3"></i> Ngày khám</label>
+                            <input type="date" name="AppointmentDate" id="inputDate"
+                                   class="fc" value="@Model.AppointmentDate.ToString("yyyy-MM-dd")"
+                                   required onchange="renderSlots()" />
+                        </div>
+                        <div class="fg">
+                            <label><i class="bi bi-pencil"></i> Nhập giờ tự do</label>
+                            <input type="time" id="inputTimeManual" class="fc"
+                                   value="@(Model.TimeSlot != null && Model.TimeSlot.Length <= 5 ? Model.TimeSlot : "")"
+                                   onchange="setSlotManual(this.value)" />
+                        </div>
+                    </div>
+                    <label style="font-size:12px;font-weight:600;color:#475569;
+                              margin-bottom:8px;display:flex;align-items:center;gap:5px">
+                        <i class="bi bi-clock" style="color:#0d6efd;font-size:12px"></i>
+                        Hoặc chọn khung giờ nhanh
+                    </label>
+                    <div class="slot-grid" id="slotGrid"></div>
+                </div>
+            </div>
+
+            <!-- LÝ DO & TRẠNG THÁI -->
+            <div class="section-card">
+                <div class="section-hd">
+                    <i class="bi bi-chat-text-fill"></i>
+                    <div><h5>Ghi chú & Trạng thái</h5></div>
+                </div>
+                <div class="section-bd">
+                    <div class="fg" style="margin-bottom:16px">
+                        <label><i class="bi bi-chat-text"></i> Lý do khám</label>
+                        <textarea name="LyDoKham" class="fc" rows="3"
+                                  placeholder="Mô tả triệu chứng hoặc lý do khám...">@Model.LyDoKham</textarea>
+                    </div>
+                    <div class="fg">
+                        <label><i class="bi bi-activity"></i> Trạng thái</label>
+                        <div class="status-opts">
+                            @{
+                                string[] sLabels = { "Chờ xác nhận", "Đã xác nhận", "Hoàn thành", "Đã hủy" };
+                                string[] sIcons = { "bi-hourglass-split", "bi-calendar-check", "bi-patch-check", "bi-x-circle" };
+                            }
+                            @for (int si = 0; si < 4; si++)
+                            {
+                                int v = si;
+                                <div class="status-opt @(Model.TrangThai == si ? "sel-" + si : "")"
+                                     onclick="setStatus(@v,this)">
+                                    <i class="bi @sIcons[si] me-1"></i>@sLabels[si]
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="save-bar">
+                <button type="submit" class="btn-save">
+                    <i class="bi bi-check-circle"></i> Lưu thay đổi
+                </button>
+                <button type="button" class="btn-cancel-f" onclick="switchTab('view',null)">
+                    Hủy bỏ
+                </button>
+            </div>
+        </form>
+    </div>
 </div>
+
+
+<script>
+    var ALL_SLOTS = ['07:30','08:00','08:30','09:00','09:30','10:00','10:30','11:00',
+                     '13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30'];
+    var currentSlot = '@Model.TimeSlot';
+
+    function switchTab(name, el) {
+        document.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.remove('active'); });
+        document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
+        document.getElementById('tab-' + name).classList.add('active');
+        var map = {view:'tbView', edit:'tbEdit'};
+        if (document.getElementById(map[name])) document.getElementById(map[name]).classList.add('active');
+        window.scrollTo({top:0, behavior:'smooth'});
+    }
+
+    function renderSlots() {
+        var grid = document.getElementById('slotGrid');
+        grid.innerHTML = '';
+        ALL_SLOTS.forEach(function(s) {
+            var cls = (s === currentSlot) ? 'slot-btn selected' : 'slot-btn';
+            grid.innerHTML += '<div class="'+cls+'" data-slot="'+s+'" onclick="selectSlot(this)">'+s+'</div>';
+        });
+    }
+
+    function selectSlot(el) {
+        document.querySelectorAll('.slot-btn').forEach(function(b){ b.classList.remove('selected'); });
+        el.classList.add('selected');
+        currentSlot = el.dataset.slot;
+        document.getElementById('hSlot').value = el.dataset.slot;
+        document.getElementById('inputTimeManual').value = '';
+    }
+
+    function setSlotManual(val) {
+        document.querySelectorAll('.slot-btn').forEach(function(b){ b.classList.remove('selected'); });
+        document.getElementById('hSlot').value = val;
+        currentSlot = val;
+    }
+
+    function loadDoctors(specialtyId) {
+        document.getElementById('hCK').value = specialtyId;
+        document.getElementById('hBacSi').value = '';
+        if (!specialtyId) return;
+        document.getElementById('loadingDoc').style.display = 'block';
+        document.getElementById('doctorListWrap').style.display = 'none';
+        fetch('/Admin/LichHen/GetDoctorsBySpecialty?specialtyId=' + specialtyId)
+            .then(function(r){ return r.json(); })
+            .then(function(docs) {
+                document.getElementById('loadingDoc').style.display = 'none';
+                var list = document.getElementById('doctorList');
+                list.innerHTML = '';
+                docs.forEach(function(d) {
+                    list.innerHTML +=
+                        '<div class="doctor-item" data-id="'+d.id+'" onclick="selectDoc(this,'+d.id+')">'
+                        +'<img src="'+(d.imageUrl||'/Images/default-avatar.png')+'"'
+                        +' onerror="this.src=\'/Images/default-avatar.png\'" />'
+                        +'<div class="doctor-item-info"><strong>'+d.name+'</strong><span>'+d.specialty+'</span></div>'
+                        +'<div class="doctor-item-check"></div></div>';
+                });
+                document.getElementById('doctorListWrap').style.display = 'block';
+            });
+    }
+
+    function selectDoc(el, id) {
+        document.querySelectorAll('.doctor-item').forEach(function(e){
+            e.classList.remove('selected');
+            e.querySelector('.doctor-item-check').innerHTML = '';
+        });
+        el.classList.add('selected');
+        el.querySelector('.doctor-item-check').innerHTML
+            = '<i class="bi bi-check2" style="color:white;font-size:11px"></i>';
+        document.getElementById('hBacSi').value = id;
+    }
+
+    function setStatus(val, el) {
+        document.querySelectorAll('.status-opt').forEach(function(o){
+            o.classList.remove('sel-0','sel-1','sel-2','sel-3');
+        });
+        el.classList.add('sel-' + val);
+        document.getElementById('hTrangThai').value = val;
+    }
+
+    document.addEventListener('DOMContentLoaded', function() { renderSlots(); });
+</script>

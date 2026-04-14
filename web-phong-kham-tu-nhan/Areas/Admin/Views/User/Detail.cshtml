@@ -1,174 +1,391 @@
 ﻿@model web_phong_kham_tu_nhan.Models.Entities.User
-
+@using web_phong_kham_tu_nhan.Helpers
 @{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Chi tiết người dùng";
+    string activeTab = TempData["ActiveTab"] as string ?? "view";
+
+    string roleColor = Model.Role == "Admin" ? "#ef4444"
+                     : Model.Role == "Bác sĩ" ? "#0d6efd" : "#10b981";
+    string roleBg = Model.Role == "Admin" ? "#fef2f2"
+                     : Model.Role == "Bác sĩ" ? "#eff6ff" : "#f0fdf4";
+    string roleIcon = Model.Role == "Admin" ? "bi-shield-lock-fill"
+                     : Model.Role == "Bác sĩ" ? "bi-heart-pulse-fill" : "bi-person-fill";
+
+    // string initials = "";
+    
+    // if (!string.IsNullOrEmpty(Model.FullName))
+    // {
+    //     var parts = Model.FullName.Split(' ');
+    //     initials = parts.Length > 1
+    //         ? (parts[0][0].ToString() + parts[parts.Length - 1][0].ToString()).ToUpper()
+    //         : parts[0][0].ToString().ToUpper();
+    // }
+
+    var linkedBacSi = ViewBag.LinkedBacSi as web_phong_kham_tu_nhan.Models.Entities.BacSi;
+    var linkedBenhNhan = ViewBag.LinkedBenhNhan as web_phong_kham_tu_nhan.Models.Entities.BenhNhan;
+
+    string avatar = "";
+    bool isImage = false;
+
+    if (linkedBacSi != null && !string.IsNullOrEmpty(linkedBacSi.ImageUrl))
+    {
+        avatar = linkedBacSi.ImageUrl;
+        isImage = true;
+    }
+    else
+    {
+        avatar = AvatarHelper.GetInitials(
+            linkedBacSi?.FullName ?? linkedBenhNhan?.FullName ?? Model.FullName
+        );
+    }
+
 }
 
-<div class="container mt-4">
+<link rel="stylesheet" href="~/css/Admin/User/Detail.css"/>
+<div class="container" style="padding:35px">
+    <!-- HERO -->
+    <div class="hero">
+        @if (isImage)
+        {
+            <img src="@avatar" class="hero-av" />
+        }
+        else
+        {
+            <div class="hero-av">@avatar</div>
+        }
+        <div style="flex:1">
+            <div class="hero-name">@(Model.FullName ?? "—")</div>
+            <div class="hero-email">@(Model.Email ?? "Chưa có email")</div>
+            <div class="hero-badges">
+                <span class="hero-badge">
+                    <i class="bi @roleIcon"></i> @(Model.Role ?? "Chưa phân vai trò")
+                </span>
+                <span class="hero-badge @(Model.IsActive ? "active" : "inactive")">
+                    <i class="bi @(Model.IsActive ? "bi-check-circle-fill" : "bi-x-circle-fill")"></i>
+                    @(Model.IsActive ? "Đang hoạt động" : "Bị khóa")
+                </span>
+            </div>
+        </div>
+        <div class="hero-id">ID: #@Model.Id</div>
+    </div>
 
-    <div class="card shadow-lg border-0">
+    <!-- ACTION BAR -->
+    <div class="action-bar">
+        <a asp-area="Admin" asp-controller="User" asp-action="Index" class="btn-act btn-back-act">
+            <i class="bi bi-arrow-left"></i> Quay lại
+        </a>
+        <button class="btn-act btn-edit-act" onclick="switchTab('edit',null)">
+            <i class="bi bi-pencil"></i> Chỉnh sửa
+        </button>
+        <form asp-area="Admin" asp-controller="User" asp-action="ToggleStatus"
+              asp-route-id="@Model.Id" method="post" style="display:inline">
+            @Html.AntiForgeryToken()
+            <button type="submit"
+                    class="btn-act btn-toggle-act @(!Model.IsActive ? "unlock" : "")">
+                <i class="bi @(Model.IsActive ? "bi-lock" : "bi-unlock")"></i>
+                @(Model.IsActive ? "Khóa tài khoản" : "Mở khóa")
+            </button>
+        </form>
+        <form asp-area="Admin" asp-controller="User" asp-action="Delete"
+              asp-route-id="@Model.Id" method="post" style="display:inline"
+              onsubmit="return confirm('Xóa vĩnh viễn tài khoản này?')">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn-act btn-del-act">
+                <i class="bi bi-trash3"></i> Xóa
+            </button>
+        </form>
+    </div>
 
-        <div class="card-header bg-info text-white">
-            <h4 class="mb-0">
-                <i class="bi bi-person-vcard"></i> Thông tin chi tiết người dùng
-            </h4>
+    <!-- TABS -->
+    <div class="tab-nav">
+        <button class="tab-btn @(activeTab == "view" ? "active" : "")" id="tbView" onclick="switchTab('view',this)">
+            <i class="bi bi-person-badge-fill"></i><span>Thông tin</span>
+        </button>
+        <button class="tab-btn @(activeTab == "edit" ? "active" : "")" id="tbEdit" onclick="switchTab('edit',this)">
+            <i class="bi bi-pencil-square"></i><span>Chỉnh sửa</span>
+        </button>
+    </div>
+
+    <!-- ═══ TAB VIEW ═══ -->
+    <div class="tab-panel @(activeTab == "view" ? "active" : "")" id="tab-view">
+
+        <div class="d-card">
+            <div class="d-card-hd">
+                <i class="bi bi-person-fill"></i><h5>Thông tin liên hệ</h5>
+            </div>
+            <div class="d-card-bd">
+                <div class="info-row">
+                    <div class="info-icon"><i class="bi bi-person"></i></div>
+                    <div>
+                        <div class="info-lbl">Họ và tên</div>
+                        <div class="info-val">@(Model.FullName ?? "—")</div>
+                    </div>
+                </div>
+                <div class="info-row">
+                    <div class="info-icon"><i class="bi bi-envelope"></i></div>
+                    <div>
+                        <div class="info-lbl">Email</div>
+                        <div class="info-val">@(Model.Email ?? "—")</div>
+                    </div>
+                </div>
+                <div class="info-row">
+                    <div class="info-icon"><i class="bi bi-telephone"></i></div>
+                    <div>
+                        <div class="info-lbl">Số điện thoại</div>
+                        <div class="info-val">@(Model.PhoneNumber ?? "—")</div>
+                    </div>
+                </div>
+                <div class="info-row">
+                    <div class="info-icon"><i class="bi bi-calendar3"></i></div>
+                    <div>
+                        <div class="info-lbl">Ngày tạo</div>
+                        <div class="info-val">@Model.CreateAt.ToString("dd/MM/yyyy HH:mm")</div>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <div class="card-body">
-
-            <div class="row" style="display:flex; align-items:center;">
-
-                <!-- Avatar -->
-                <div class="col-md-4 text-center">
-
-                    <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png"
-                         class="rounded-circle mb-3"
-                         width="200" />
-
-                    <h5>@Model.FullName</h5>
-
-                    <p class="text-muted">@Model.Email</p>
-
-                </div>
-
-                <!-- Thông tin -->
-                <div class="col-md-8">
-
-                    <table class="table table-bordered">
-
-                        <tr>
-                            <th style="width:200px;">ID</th>
-                            <td>@Model.Id</td>
-                        </tr>
-
-                        <tr>
-                            <th>Họ và tên</th>
-                            <td>@Model.FullName</td>
-                        </tr>
-
-                        <tr>
-                            <th>Email</th>
-                            <td>@Model.Email</td>
-                        </tr>
-                        <tr>
-                            <th>Password</th>
-                            <td>
-
-                                <div class="input-group" style="max-width:1000px;">
-
-                                    <span id="passwordText" class="form-control">••••••••</span>
-
-                                    <span id="realPassword" class="form-control" style="display:none;">
-                                        @Model.Password
-                                    </span>
-
-                                    <button class="btn btn-outline-secondary"
-                                            type="button"
-                                            onclick="togglePassword()">
-
-                                        <i id="eyeIcon" class="bi bi-eye"></i>
-
-                                    </button>
-
-                                </div>
-
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <th>Số điện thoại</th>
-                            <td>@Model.PhoneNumber</td>
-                        </tr>
-
-                        <tr>
-                            <th>Vai trò</th>
-                            <td>
-
-                                @if (Model.Role == "Admin")
-                                {
-                                    <span class="badge role-admin">Admin</span>
-                                }
-                                else if (Model.Role == "Bác sĩ")
-                                {
-                                    <span class="badge role-bacsi">Bác sĩ</span>
-                                }
-                                else
-                                {
-                                    <span class="badge role-benhnhan">Bệnh nhân</span>
-                                }
-
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <th>Trạng thái</th>
-                            <td>
-
-                                @if (Model.IsActive)
-                                {
-                                    <span class="badge bg-success">Hoạt động</span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-danger">Đã khóa</span>
-                                }
-
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <th>Ngày tạo</th>
-                            <td>@Model.CreateAt.ToString("dd/MM/yyyy HH:mm")</td>
-                        </tr>
-
-                    </table>
-
-                </div>
-
+        <div class="d-card">
+            <div class="d-card-hd">
+                <i class="bi bi-shield-lock-fill"></i><h5>Bảo mật & Vai trò</h5>
             </div>
-
-            <hr />
-
-            <div class="d-flex justify-content-end">
-
-                <a asp-action="Index" class="btn btn-secondary me-2">
-                    Quay lại
-                </a>
+            <div class="d-card-bd">
+                <div class="info-row">
+                    <div class="info-icon"><i class="bi bi-shield-fill"></i></div>
+                    <div>
+                        <div class="info-lbl">Vai trò</div>
+                        <div class="mt-1">
+                            <span class="role-badge-big">
+                                <i class="bi @roleIcon"></i> @(Model.Role ?? "Chưa phân")
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="info-row">
+                    <div class="info-icon"><i class="bi bi-activity"></i></div>
+                    <div>
+                        <div class="info-lbl">Trạng thái</div>
+                        <div class="mt-1">
+                            <span class="st-badge @(Model.IsActive ? "st-active" : "st-inactive")">
+                                <i class="bi @(Model.IsActive ? "bi-check-circle-fill" : "bi-x-circle-fill")"></i>
+                                @(Model.IsActive ? "Đang hoạt động" : "Bị khóa")
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="info-row">
+                    <div class="info-icon"><i class="bi bi-key"></i></div>
+                    <div>
+                        <div class="info-lbl">Mật khẩu</div>
+                        <div class="pw-row mt-1">
+                            <span class="pw-dots" id="pwDots">••••••••</span>
+                            <span class="pw-real" id="pwReal">@Model.Password</span>
+                            <button type="button" class="pw-eye" onclick="toggleViewPw()">
+                                <i class="bi bi-eye" id="pwEyeIcon"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
-
         </div>
 
+        @if (linkedBacSi != null || linkedBenhNhan != null)
+        {
+            <div class="d-card">
+                <div class="d-card-hd">
+                    <i class="bi bi-link-45deg"></i><h5>Hồ sơ liên kết</h5>
+                </div>
+                <div class="d-card-bd">
+                    @if (linkedBacSi != null)
+                    {
+                        <div class="linked-card">
+                            <div>
+                                <div class="linked-name">BS. @linkedBacSi.FullName</div>
+                                <div class="linked-sub">Bác sĩ · @(linkedBacSi.ChuyenKhoa?.Name ?? "—")</div>
+                            </div>
+                            <a asp-area="Admin" asp-controller="BacSi" asp-action="Detail"
+                               asp-route-id="@linkedBacSi.Id" class="btn-linked">
+                                <i class="bi bi-arrow-right"></i> Xem hồ sơ
+                            </a>
+                        </div>
+                    }
+                    @if (linkedBenhNhan != null)
+                    {
+                        <div class="linked-card">
+                            <div>
+                                <div class="linked-name">@linkedBenhNhan.FullName</div>
+                                <div class="linked-sub">Bệnh nhân</div>
+                            </div>
+                            <a asp-area="Admin" asp-controller="BenhNhan" asp-action="Detail"
+                               asp-route-id="@linkedBenhNhan.Id" class="btn-linked">
+                                <i class="bi bi-arrow-right"></i> Xem hồ sơ
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- ═══ TAB EDIT ═══ -->
+    <div class="tab-panel @(activeTab == "edit" ? "active" : "")" id="tab-edit">
+        <form asp-area="Admin" asp-controller="User" asp-action="Edit" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" name="Role" id="hRole" value="@Model.Role" />
+            <input type="hidden" name="IsActive" id="hActive" value="@Model.IsActive.ToString().ToLower()" />
+
+            <!-- Thông tin cơ bản -->
+            <div class="edit-card">
+                <div class="edit-card-hd">
+                    <i class="bi bi-person-fill"></i>
+                    <div><h5>Thông tin cơ bản</h5><p>Tên, email và số điện thoại</p></div>
+                </div>
+                <div class="edit-card-bd">
+                    <div class="form-grid">
+                        <div class="fg">
+                            <label><i class="bi bi-person"></i> Họ và tên</label>
+                            <input asp-for="FullName" class="fc" placeholder="Nhập họ và tên" />
+                        </div>
+                        <div class="fg">
+                            <label><i class="bi bi-envelope"></i> Email</label>
+                            <input asp-for="Email" type="email" class="fc" placeholder="example@gmail.com" />
+                        </div>
+                        <div class="fg">
+                            <label><i class="bi bi-telephone"></i> Số điện thoại</label>
+                            <input asp-for="PhoneNumber" class="fc" placeholder="0912 345 678" />
+                        </div>
+                        <div class="fg">
+                            <label>
+                                <i class="bi bi-lock"></i> Mật khẩu
+                                <span class="opt">(để trống = giữ nguyên)</span>
+                            </label>
+                            <div class="pw-wrap">
+                                <input asp-for="Password" type="password" id="pwInput"
+                                       class="fc" placeholder="Nhập mật khẩu mới nếu muốn đổi..."
+                                       oninput="checkPw(this.value)" />
+                                <button type="button" class="pw-toggle" onclick="toggleEditPw()">
+                                    <i class="bi bi-eye" id="editPwIcon"></i>
+                                </button>
+                            </div>
+                            <div class="pw-bar"><div class="pw-fill" id="pwFill"></div></div>
+                            <div class="pw-lbl" id="pwLbl"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vai trò -->
+            <div class="edit-card">
+                <div class="edit-card-hd">
+                    <i class="bi bi-shield-fill"></i>
+                    <div><h5>Vai trò & Trạng thái</h5></div>
+                </div>
+                <div class="edit-card-bd">
+                    <div class="slabel"><i class="bi bi-shield-fill"></i> Vai trò</div>
+                    <div class="role-grid" style="margin-bottom:20px">
+                        @{
+                            string rA = Model.Role == "Admin" ? "sel-admin" : "";
+                            string rB = Model.Role == "Bác sĩ" ? "sel-bacsi" : "";
+                            string rP = Model.Role == "Bệnh nhân" ? "sel-benhnhan" : "";
+                        }
+                        <div class="role-btn @rA" onclick="setRole('Admin',this)">
+                            <i class="bi bi-shield-lock-fill" style="color:#ef4444"></i>
+                            <span>Admin</span>
+                        </div>
+                        <div class="role-btn @rB" onclick="setRole('Bác sĩ',this)">
+                            <i class="bi bi-heart-pulse-fill" style="color:#0d6efd"></i>
+                            <span>Bác sĩ</span>
+                        </div>
+                        <div class="role-btn @rP" onclick="setRole('Bệnh nhân',this)">
+                            <i class="bi bi-person-fill" style="color:#10b981"></i>
+                            <span>Bệnh nhân</span>
+                        </div>
+                    </div>
+                    <div class="slabel"><i class="bi bi-toggle-on"></i> Trạng thái tài khoản</div>
+                    <div class="status-toggle">
+                        <div class="st-opt @(Model.IsActive ? "sel-active" : "")"
+                             id="stActive" onclick="setActive(true,this)">
+                            <i class="bi bi-check-circle-fill"></i> Hoạt động
+                        </div>
+                        <div class="st-opt @(!Model.IsActive ? "sel-inactive" : "")"
+                             id="stInactive" onclick="setActive(false,this)">
+                            <i class="bi bi-x-circle-fill"></i> Bị khóa
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="save-bar">
+                <button type="submit" class="btn-save">
+                    <i class="bi bi-check-circle"></i> Lưu thay đổi
+                </button>
+                <button type="button" class="btn-cancel-f" onclick="switchTab('view',null)">
+                    Hủy bỏ
+                </button>
+            </div>
+        </form>
     </div>
 
 </div>
 
 <script>
-
-    function togglePassword() {
-
-        var text = document.getElementById("passwordText");
-        var real = document.getElementById("realPassword");
-        var icon = document.getElementById("eyeIcon");
-
-        if (real.style.display === "none") {
-
-            real.style.display = "inline";
-            text.style.display = "none";
-
-            icon.classList.remove("bi-eye");
-            icon.classList.add("bi-eye-slash");
-
-        }
-        else {
-
-            real.style.display = "none";
-            text.style.display = "inline";
-
-            icon.classList.remove("bi-eye-slash");
-            icon.classList.add("bi-eye");
-
-        }
-
+    function switchTab(name, el) {
+        document.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.remove('active'); });
+        document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
+        document.getElementById('tab-' + name).classList.add('active');
+        var map = {view:'tbView', edit:'tbEdit'};
+        if (document.getElementById(map[name])) document.getElementById(map[name]).classList.add('active');
+        window.scrollTo({top:0, behavior:'smooth'});
     }
 
+    // View tab — hiện/ẩn mật khẩu
+    function toggleViewPw() {
+        var dots = document.getElementById('pwDots');
+        var real = document.getElementById('pwReal');
+        var icon = document.getElementById('pwEyeIcon');
+        var show = real.style.display === 'none' || real.style.display === '';
+        real.style.display = show ? 'block' : 'none';
+        dots.style.display = show ? 'none' : 'block';
+        icon.className = show ? 'bi bi-eye-slash' : 'bi bi-eye';
+    }
+
+    // Edit tab — toggle pw input
+    function toggleEditPw() {
+        var inp  = document.getElementById('pwInput');
+        var icon = document.getElementById('editPwIcon');
+        if (inp.type==='password') { inp.type='text'; icon.className='bi bi-eye-slash'; }
+        else { inp.type='password'; icon.className='bi bi-eye'; }
+    }
+
+    function checkPw(val) {
+        var fill=document.getElementById('pwFill'), lbl=document.getElementById('pwLbl');
+        if (!val) { fill.style.width='0'; lbl.textContent=''; return; }
+        var sc=0;
+        if(val.length>=6)sc++; if(val.length>=10)sc++;
+        if(/[A-Z]/.test(val))sc++; if(/[0-9]/.test(val))sc++; if(/[^A-Za-z0-9]/.test(val))sc++;
+        var lvs=[{w:'20%',c:'#ef4444',l:'Rất yếu'},{w:'40%',c:'#f97316',l:'Yếu'},
+                 {w:'60%',c:'#eab308',l:'Trung bình'},{w:'80%',c:'#22c55e',l:'Mạnh'},
+                 {w:'100%',c:'#10b981',l:'Rất mạnh'}];
+        var lv=lvs[Math.min(sc-1,4)];
+        fill.style.width=lv.w; fill.style.background=lv.c;
+        lbl.textContent=lv.l; lbl.style.color=lv.c;
+    }
+
+    function setRole(val, el) {
+        document.querySelectorAll('.role-btn').forEach(function(b){
+            b.classList.remove('sel-admin','sel-bacsi','sel-benhnhan');
+        });
+        var cls = val==='Admin'?'sel-admin':val==='Bác sĩ'?'sel-bacsi':'sel-benhnhan';
+        el.classList.add(cls);
+        document.getElementById('hRole').value = val;
+    }
+
+    function setActive(val, el) {
+        document.getElementById('stActive').classList.remove('sel-active');
+        document.getElementById('stInactive').classList.remove('sel-inactive');
+        el.classList.add(val ? 'sel-active' : 'sel-inactive');
+        document.getElementById('hActive').value = val ? 'true' : 'false';
+    }
 </script>

@@ -20,55 +20,25 @@
 }
 
 <link rel="stylesheet" href="~/css/Admin/YeuCauCapNhat/Index.css"/>
-<div class="container">
+<div class="container"  style="padding:35px;">
+
+    <!-- HEADER -->
     <div class="page-hd">
-        <h1>YÊU CẦU CẬP NHẬT HỒ SƠ</h1>
-        @*
-        <div class="notification-container" id="toastContainer">
-            @if (TempData["Success"] != null)
-            {
-                <div class="custom-toast success" id="successToast">
-                    <span class="toast-icon"><i class="bi bi-check-circle-fill"></i></span>
-                    <div class="toast-content">
-                        <div class="toast-title">Thành công</div>
-                        <div class="toast-msg">@TempData["Success"]</div>
-                    </div>
-                    <button class="toast-close" onclick="closeToast('successToast')">
-                        <i class="bi bi-x"></i>
-                    </button>
-                </div>
-            }
-            @if (TempData["Error"] != null)
-            {
-                <div class="custom-toast error" id="errorToast">
-                    <span class="toast-icon"><i class="bi bi-x-circle-fill"></i></span>
-                    <div class="toast-content">
-                        <div class="toast-title">Lỗi</div>
-                        <div class="toast-msg">@TempData["Error"]</div>
-                    </div>
-                    <button class="toast-close" onclick="closeToast('errorToast')">
-                        <i class="bi bi-x"></i>
-                    </button>
-                </div>
-            }
-        </div> *@
+        <h1>Yêu cầu cập nhật hồ sơ</h1>
     </div>
-   
+
     <!-- STATS -->
     <div class="stat-row">
-        <a href="@Url.Action("Index", new { trangThai = "0" })"
-           class="stat-box cho @(trangThai == "0" ? "ring-2 ring-amber-400" : "")">
-            <div class="stat-icon si-amber"><i class="bi bi-hourglass-split"></i></div>
+        <a href="@Url.Action("Index", new { trangThai = "0" })" class="stat-box cho">
+            <div class="si si-amber"><i class="bi bi-hourglass-split"></i></div>
             <div><div class="stat-num">@tongCho</div><div class="stat-lbl">Chờ duyệt</div></div>
         </a>
-        <a href="@Url.Action("Index", new { trangThai = "1" })"
-           class="stat-box duyet">
-            <div class="stat-icon si-green"><i class="bi bi-check-circle-fill"></i></div>
+        <a href="@Url.Action("Index", new { trangThai = "1" })" class="stat-box duyet">
+            <div class="si si-green"><i class="bi bi-check-circle-fill"></i></div>
             <div><div class="stat-num">@tongDuyet</div><div class="stat-lbl">Đã duyệt</div></div>
         </a>
-        <a href="@Url.Action("Index", new { trangThai = "2" })"
-           class="stat-box tuchoi">
-            <div class="stat-icon si-red"><i class="bi bi-x-circle-fill"></i></div>
+        <a href="@Url.Action("Index", new { trangThai = "2" })" class="stat-box tuchoi">
+            <div class="si si-red"><i class="bi bi-x-circle-fill"></i></div>
             <div><div class="stat-num">@tongTuChoi</div><div class="stat-lbl">Đã từ chối</div></div>
         </a>
     </div>
@@ -76,9 +46,7 @@
     <!-- TOOLBAR -->
     <div class="toolbar">
         <a href="@Url.Action("Index", new { trangThai = "all" })"
-           class="filter-tab @(trangThai == "all" ? "active" : "")">
-            Tất cả <span class="ms-1">@Model.Count</span>
-        </a>
+           class="filter-tab @(trangThai == "all" ? "active" : "")">Tất cả</a>
         <a href="@Url.Action("Index", new { trangThai = "0" })"
            class="filter-tab @(trangThai == "0" ? "active" : "")">
             <i class="bi bi-hourglass-split"></i> Chờ duyệt
@@ -92,17 +60,22 @@
             <i class="bi bi-x-circle"></i> Từ chối
         </a>
 
-        <form method="get" style="display:flex;align-items:center;gap:8px;flex:1;min-width:200px">
-            <input type="hidden" name="trangThai" value="@trangThai" />
-            <div class="search-wrap">
-                <i class="bi bi-search"></i>
-                <input type="text" name="search" value="@ViewBag.Search"
-                       placeholder="Tìm theo tên bác sĩ..." />
-            </div>
-        </form>
+        <!-- LIVE SEARCH BOX -->
+        <div class="search-box">
+            <i class="bi bi-search icon"></i>
+            <input type="text" id="liveSearch" placeholder="Tìm tên bác sĩ, trường, học vị..."
+                   oninput="liveSearch(this.value)" autocomplete="off" />
+            <button class="clear-s" id="clearSearch" onclick="clearSearch()">
+                <i class="bi bi-x"></i>
+            </button>
+        </div>
+        <div class="search-info" id="searchInfo">
+            Tìm thấy <span class="hl" id="searchCount">0</span> kết quả cho
+            "<span id="searchQuery"></span>"
+        </div>
     </div>
 
-    <!-- BULK ACTION BAR -->
+    <!-- BULK BAR -->
     @if (trangThai == "0")
     {
         <div class="bulk-bar" id="bulkBar">
@@ -124,208 +97,312 @@
     {
         <div class="empty-box">
             <i class="bi bi-inbox"></i>
-            <h5>Không có yêu cầu nào</h5>
-            <p class="text-muted" style="font-size:14px">
-                @(trangThai == "0" ? "Hiện không có yêu cầu nào đang chờ duyệt." : "Không tìm thấy kết quả phù hợp.")
+            <h5 style="color:#64748b;font-weight:600">Không có yêu cầu nào</h5>
+            <p style="color:#94a3b8;font-size:14px">
+                @(trangThai == "0" ? "Không có yêu cầu nào đang chờ duyệt." : "Không tìm thấy kết quả.")
             </p>
         </div>
     }
     else
     {
-        @foreach (var yc in Model)
-        {
-            string ttBadge = yc.TrangThai == 0 ? "badge-cho"
-            : yc.TrangThai == 1 ? "badge-duyet" : "badge-tuchoi";
-            string ttLabel = yc.TrangThai == 0 ? "Chờ duyệt"
-            : yc.TrangThai == 1 ? "Đã duyệt" : "Từ chối";
-            string ttIcon = yc.TrangThai == 0 ? "bi-hourglass-split"
-            : yc.TrangThai == 1 ? "bi-check-circle-fill" : "bi-x-circle-fill";
-            string tenBacSi = yc.BacSi?.FullName ?? "Không rõ";
-            string imgUrl = yc.BacSi?.ImageUrl ?? "/Images/default-avatar.png";
-            string fieldName = tenHienThi(yc.TenTruong);
+        <div id="yqList">
+            @foreach (var yc in Model)
+            {
+                string ttBadge = yc.TrangThai == 0 ? "badge-s0" : yc.TrangThai == 1 ? "badge-s1" : "badge-s2";
+                string ttLabel = yc.TrangThai == 0 ? "Chờ duyệt" : yc.TrangThai == 1 ? "Đã duyệt" : "Từ chối";
+                string ttIcon = yc.TrangThai == 0 ? "bi-hourglass-split"
+                : yc.TrangThai == 1 ? "bi-check-circle-fill" : "bi-x-circle-fill";
+                string tenBacSi = yc.BacSi?.FullName ?? "Không rõ";
+                string imgUrl = yc.BacSi?.ImageUrl ?? "/Images/default-avatar.png";
+                string fieldName = tenHienThi(yc.TenTruong);
+                string cuShort = (yc.GiaTriCu ?? "").Length > 50
+                ? (yc.GiaTriCu ?? "").Substring(0, 50) + "..." : (yc.GiaTriCu ?? "");
+                string moiShort = yc.GiaTriMoi.Length > 60
+                ? yc.GiaTriMoi.Substring(0, 60) + "..." : yc.GiaTriMoi;
 
-            <div class="yc-card @(yc.TrangThai == 0 ? "cho-duyet" : "")" id="yc-@yc.Id"
-                 onclick="openModal(@yc.Id,'@tenBacSi','@imgUrl','@fieldName',
-                             '@Html.Raw((yc.GiaTriCu ?? "").Replace("'", "&#39;").Replace("\n", " "))',
-                             '@Html.Raw((yc.GiaTriMoi ?? "").Replace("'", "&#39;").Replace("\n", " "))',
-                             '@Html.Raw((yc.LyDo ?? "").Replace("'", "&#39;"))',
-                             @yc.TrangThai,
-                             '@Html.Raw((yc.LyDoTuChoi ?? "").Replace("'", "&#39;"))')">
-                <div class="yc-body">
-
-                    @if (trangThai == "0")
-                    {
-                        <div class="yc-check" onclick="event.stopPropagation()">
-                            <input type="checkbox" class="yc-checkbox" data-id="@yc.Id"
-                                   onchange="updateBulk()" />
-                        </div>
-                    }
-                    else
-                    {
-                        <div></div>
-                    }
-
-                    <div class="yc-info">
-                        <div class="yc-doctor">
-                            <img src="@imgUrl" onerror="this.src='/Images/default-avatar.png'" alt="" />
-                            BS. @tenBacSi
-                        </div>
-                        <div class="yc-meta">
-                            <span class="field-pill">
-                                <i class="bi bi-tag-fill" style="font-size:10px"></i> @fieldName
-                            </span>
-                            <span class="yc-meta-item">
-                                <i class="bi bi-clock"></i> @yc.TaoLuc.ToString("dd/MM/yyyy HH:mm")
-                            </span>
-                            @if (yc.DuyetLuc.HasValue)
-                            {
-                                <span class="yc-meta-item">
-                                    <i class="bi bi-person-check"></i>
-                                    Duyệt bởi @yc.DuyetBoi lúc @yc.DuyetLuc.Value.ToString("dd/MM HH:mm")
-                                </span>
-                            }
-                        </div>
-                        <div class="yc-change">
-                            @if (!string.IsNullOrEmpty(yc.GiaTriCu))
-                            {
-                                <span class="yc-old">@(yc.GiaTriCu.Length > 50 ? yc.GiaTriCu.Substring(0, 50) + "..." : yc.GiaTriCu)</span>
-                                <i class="bi bi-arrow-right" style="font-size:11px;color:#94a3b8"></i>
-                            }
-                            <span class="yc-new">@(yc.GiaTriMoi.Length > 60 ? yc.GiaTriMoi.Substring(0, 60) + "..." : yc.GiaTriMoi)</span>
-                        </div>
-                        @if (!string.IsNullOrEmpty(yc.LyDo))
+                <div class="yc-card" id="yqCard-@yc.Id"
+                     data-search="@tenBacSi.ToLower() @fieldName.ToLower() @(yc.GiaTriMoi ?? "").ToLower() @(yc.LyDo ?? "").ToLower()"
+                     onclick="openModal(@yc.Id,'@tenBacSi','@imgUrl','@fieldName',
+                                 '@Html.Raw((yc.GiaTriCu ?? "").Replace("'", "&#39;").Replace("\n", " "))',
+                                 '@Html.Raw(yc.GiaTriMoi.Replace("'", "&#39;").Replace("\n", " "))',
+                                 '@Html.Raw((yc.LyDo ?? "").Replace("'", "&#39;"))',
+                                 @yc.TrangThai,
+                                 '@Html.Raw((yc.LyDoTuChoi ?? "").Replace("'", "&#39;"))')">
+                    <div class="yc-body">
+                        @if (trangThai == "0")
                         {
-                            <div class="yc-lydo">
-                                <i class="bi bi-chat-text-fill" style="font-size:11px"></i>
-                                @yc.LyDo
+                            <div class="yc-check" onclick="event.stopPropagation()">
+                                <input type="checkbox" class="yc-checkbox" data-id="@yc.Id"
+                                       onchange="updateBulk()" />
                             </div>
-                        }
-                        @if (!string.IsNullOrEmpty(yc.LyDoTuChoi))
-                        {
-                            <div class="yc-lydo" style="background:#fef2f2;color:#991b1b">
-                                <i class="bi bi-x-circle-fill" style="font-size:11px"></i>
-                                @yc.LyDoTuChoi
-                            </div>
-                        }
-                    </div>
-
-                    <div class="yc-actions" onclick="event.stopPropagation()">
-                        <span class="status-pill @ttBadge">
-                            <i class="bi @ttIcon"></i> @ttLabel
-                        </span>
-                        @if (yc.TrangThai == 0)
-                        {
-                            <button class="btn-duyet" onclick="openModal(@yc.Id,'@tenBacSi','@imgUrl','@fieldName',
-                                            '@Html.Raw((yc.GiaTriCu ?? string.Empty).Replace("'", "&#39;"))',
-                                            '@Html.Raw(yc.GiaTriMoi.Replace("'", "&#39;"))',
-                                            '@Html.Raw((yc.LyDo ?? string.Empty).Replace("'", "&#39;"))',
-                                            0,'')">
-                                <i class="bi bi-eye"></i> Xem & Duyệt
-                            </button>
                         }
                         else
                         {
-                            <form asp-area="Admin" asp-controller="YeuCauCapNhat" asp-action="Xoa"
-                                  method="post" onsubmit="return confirm('Xóa yêu cầu này?')">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="id" value="@yc.Id" />
-                                <button type="submit" class="btn-xoa-sm">
-                                    <i class="bi bi-trash3"></i> Xóa
-                                </button>
-                            </form>
-                        }
-                    </div>
 
+                            <div></div>
+                        }
+
+                        <div>
+                            <div class="yc-doctor">
+                                <img src="@imgUrl" onerror="this.src='/Images/default-avatar.png'" />
+                                <span data-field="name">BS. @tenBacSi</span>
+                            </div>
+                            <div class="yc-meta">
+                                <span class="field-pill">
+                                    <i class="bi bi-tag-fill" style="font-size:10px"></i>
+                                    <span data-field="field">@fieldName</span>
+                                </span>
+                                <span class="yc-meta-item">
+                                    <i class="bi bi-clock"></i>@yc.TaoLuc.ToString("dd/MM/yyyy HH:mm")
+                                </span>
+                                @if (yc.DuyetLuc.HasValue)
+                                {
+                                    <span class="yc-meta-item">
+                                        <i class="bi bi-person-check"></i>@yc.DuyetBoi · @yc.DuyetLuc.Value.ToString("dd/MM HH:mm")
+                                    </span>
+                                }
+                            </div>
+                            <div class="yc-change">
+                                @if (!string.IsNullOrEmpty(yc.GiaTriCu))
+                                {
+                                    <span class="yc-old">@cuShort</span>
+                                    <i class="bi bi-arrow-right" style="font-size:11px;color:#94a3b8"></i>
+                                }
+                                <span class="yc-new" data-field="value">@moiShort</span>
+                            </div>
+                            @if (!string.IsNullOrEmpty(yc.LyDo))
+                            {
+                                <div class="yc-lydo-box">
+                                    <i class="bi bi-chat-text-fill" style="font-size:10px"></i>
+                                    @yc.LyDo
+                                </div>
+                            }
+                            @if (!string.IsNullOrEmpty(yc.LyDoTuChoi))
+                            {
+                                <div class="yc-lydo-box" style="background:#fef2f2;color:#991b1b">
+                                    <i class="bi bi-x-circle-fill" style="font-size:10px"></i>
+                                    @yc.LyDoTuChoi
+                                </div>
+                            }
+                        </div>
+
+                        <div class="yc-actions" onclick="event.stopPropagation()">
+                            <span class="status-pill @ttBadge">
+                                <i class="bi @ttIcon"></i> @ttLabel
+                            </span>
+                            @if (yc.TrangThai == 0)
+                            {
+                                <button class="btn-duyet"
+                                        onclick="openModal(@yc.Id,'@tenBacSi','@imgUrl','@fieldName',
+                                                        '@Html.Raw((yc.GiaTriCu ?? string.Empty).Replace("'", "&#39;"))',
+                                                        '@Html.Raw(yc.GiaTriMoi.Replace("'", "&#39;"))',
+                                                        '@Html.Raw((yc.LyDo ?? string.Empty).Replace("'", "&#39;"))',0,'')">
+                                    <i class="bi bi-eye"></i> Xem & Duyệt
+                                </button>
+                            }
+                            else
+                            {
+                                <form asp-area="Admin" asp-controller="YeuCauCapNhat" asp-action="Xoa"
+                                      method="post" onsubmit="return confirm('Xóa yêu cầu này?')">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@yc.Id" />
+                                    <button type="submit" class="btn-del-sm">
+                                        <i class="bi bi-trash3"></i> Xóa
+                                    </button>
+                                </form>
+                            }
+                        </div>
+                    </div>
                 </div>
-            </div>
-        }
+            }
+        </div>
+        <div class="no-search-result" id="noResult">
+            <i class="bi bi-search" style="font-size:40px;color:#cbd5e1;display:block;margin-bottom:10px"></i>
+            <p style="color:#64748b;font-weight:600;margin-bottom:4px">Không tìm thấy kết quả</p>
+            <p style="color:#94a3b8;font-size:13px">Thử từ khóa khác hoặc kiểm tra lại chính tả</p>
+        </div>
     }
+
 </div>
 
-<!-- MODAL XEM & DUYỆT -->
+<!-- MODAL -->
 <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
     <div class="modal-box">
-        <div class="modal-hd" id="modalHd" style="background:linear-gradient(135deg,#f59e0b,#fbbf24)">
-            <h5><i class="bi bi-file-earmark-text me-2"></i>Chi tiết yêu cầu cập nhật</h5>
+        <div class="modal-hd" id="modalHd">
+            <h5><i class="bi bi-file-earmark-text me-2"></i>Chi tiết yêu cầu</h5>
             <button class="modal-cl" onclick="closeModalBtn()"><i class="bi bi-x"></i></button>
         </div>
         <div class="modal-bd">
-
-            <!-- Bác sĩ -->
-            <div class="modal-section" style="display:flex;align-items:center;gap:12px">
-                <img id="m-img" src="" style="width:48px;height:48px;border-radius:50%;
+            <div class="m-section" style="display:flex;align-items:center;gap:12px">
+                <img id="m-img" src="" style="width:46px;height:46px;border-radius:50%;
                      object-fit:cover;object-position:top;border:2px solid #dbeafe" />
                 <div>
                     <div style="font-weight:700;font-size:15px;color:#1e293b" id="m-bacsi"></div>
                     <div style="font-size:12px;color:#0d6efd;font-weight:600" id="m-field"></div>
                 </div>
             </div>
-
-            <!-- Thay đổi -->
-            <div class="modal-section">
-                <div class="modal-lbl">Giá trị cũ</div>
-                <div class="modal-val" id="m-cu" style="color:#94a3b8;text-decoration:line-through">—</div>
-                <div class="modal-lbl mt-2">Giá trị mới đề xuất</div>
-                <div class="modal-val" id="m-moi" style="color:#0d6efd"></div>
+            <div class="m-section">
+                <div class="m-lbl">Giá trị hiện tại</div>
+                <div class="m-val" id="m-cu" style="color:#94a3b8;text-decoration:line-through">—</div>
+                <div class="m-lbl mt-2">Đề xuất thay đổi thành</div>
+                <div class="m-val" id="m-moi" style="color:#0d6efd"></div>
             </div>
-
-            <!-- Lý do -->
-            <div class="modal-section" id="m-lydo-block" style="display:none">
-                <div class="modal-lbl">Lý do / Giải thích</div>
-                <div class="modal-val" id="m-lydo" style="color:#78350f;background:#fef9c3;
-                     border-radius:6px;padding:8px;font-size:13px"></div>
+            <div class="m-section" id="m-lydo-wrap" style="display:none;background:#fef9c3;border-color:#fde68a">
+                <div class="m-lbl" style="color:#92400e">Lý do của bác sĩ</div>
+                <div class="m-val" id="m-lydo" style="color:#78350f;font-size:13px;font-weight:400"></div>
             </div>
-
-            <!-- Lý do từ chối (chỉ hiện khi đã xử lý) -->
-            <div id="m-tuchoi-block" style="display:none">
-                <div class="modal-section" style="background:#fef2f2;border-color:#fecaca">
-                    <div class="modal-lbl" style="color:#991b1b">Lý do từ chối</div>
-                    <div class="modal-val" id="m-tuchoi" style="color:#dc2626;font-size:13px"></div>
+            <div id="m-tuchoi-show" style="display:none">
+                <div class="m-section" style="background:#fef2f2;border-color:#fecaca">
+                    <div class="m-lbl" style="color:#991b1b">Lý do từ chối</div>
+                    <div class="m-val" id="m-tuchoi-val" style="color:#dc2626;font-size:13px;font-weight:400"></div>
                 </div>
             </div>
-
-            <!-- Form từ chối (nhập lý do) -->
-            <div id="m-tuchoi-form" style="display:none">
-                <label style="font-size:12px;font-weight:600;color:#475569;margin-bottom:5px;display:block">
-                    <i class="bi bi-x-circle text-danger me-1"></i> Lý do từ chối <span style="color:#ef4444">*</span>
-                </label>
-                <textarea id="m-lydo-tuchoi" class="form-control" rows="2"
-                          placeholder="Nhập lý do từ chối để thông báo cho bác sĩ..."
-                          style="border-radius:8px;font-size:13px;border:1.5px solid #e2e8f0;width:100%;padding:8px 12px;margin-bottom:12px"></textarea>
-            </div>
-
-            <!-- Actions -->
             <div class="modal-actions" id="m-actions">
-                <form id="formDuyet" asp-area="Admin" asp-controller="YeuCauCapNhat"
-                      asp-action="Duyet" method="post">
+                <form asp-area="Admin" asp-controller="YeuCauCapNhat" asp-action="Duyet" method="post"
+                      style="flex:1">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="id" id="m-id" />
                     <input type="hidden" name="chapNhan" value="true" />
-                    <button type="submit" class="btn-confirm-duyet">
+                    <button type="submit" class="btn-m-duyet" style="width:100%">
                         <i class="bi bi-check-circle-fill"></i> Duyệt & Áp dụng
                     </button>
                 </form>
-                <button type="button" class="btn-confirm-tuchoi" onclick="toggleTuChoi()">
-                    <i class="bi bi-x-circle"></i> <span id="btnTuChoiText">Từ chối</span>
-                </button>
+                <div style="flex:1">
+                    <button type="button" class="btn-m-tc" style="width:100%" onclick="toggleTuChoi()">
+                        <i class="bi bi-x-circle"></i>
+                        <span id="tcBtnText">Từ chối</span>
+                    </button>
+                    <div class="tc-form" id="tcForm">
+                        <textarea class="tc-input" id="tcInput" rows="2"
+                                  placeholder="Nhập lý do từ chối..."></textarea>
+                        <form asp-area="Admin" asp-controller="YeuCauCapNhat" asp-action="Duyet"
+                              method="post" id="tcSubmitForm">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" id="m-id2" />
+                            <input type="hidden" name="chapNhan" value="false" />
+                            <input type="hidden" name="lyDoTuChoi" id="tcLyDo" />
+                        </form>
+                        <button type="button" class="btn-m-tc mt-2" style="width:100%;background:#fef2f2"
+                                onclick="submitTuChoi()">
+                            <i class="bi bi-send"></i> Xác nhận từ chối
+                        </button>
+                    </div>
+                </div>
             </div>
-
-            <!-- Form submit từ chối ẩn -->
-            <form id="formTuChoi" asp-area="Admin" asp-controller="YeuCauCapNhat"
-                  asp-action="Duyet" method="post" style="display:none">
-                @Html.AntiForgeryToken()
-                <input type="hidden" name="id" id="m-id2" />
-                <input type="hidden" name="chapNhan" value="false" />
-                <input type="hidden" name="lyDoTuChoi" id="m-lydo-submit" />
-                <button type="submit" id="btnSubmitTuChoi"
-                        style="display:none"></button>
-            </form>
-
         </div>
     </div>
 </div>
 
 <script>
+    // ════════════════════════════════════════
+    // LIVE FUZZY SEARCH
+    // ════════════════════════════════════════
+    var searchTimer = null;
+
+    function liveSearch(query) {
+        var clearBtn    = document.getElementById('clearSearch');
+        var searchInfo  = document.getElementById('searchInfo');
+        var searchCount = document.getElementById('searchCount');
+        var searchQuery = document.getElementById('searchQuery');
+        var noResult    = document.getElementById('noResult');
+        var cards       = document.querySelectorAll('.yc-card');
+
+        clearBtn.classList.toggle('show', query.length > 0);
+
+        if (!query.trim()) {
+            cards.forEach(function(c){ c.classList.remove('hidden'); removeHighlight(c); });
+            searchInfo.classList.remove('show');
+            if (noResult) noResult.style.display = 'none';
+            return;
+        }
+
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(function() {
+            var q = query.toLowerCase().trim();
+            var visible = 0;
+
+            cards.forEach(function(c) {
+                var searchData = (c.dataset.search || '').toLowerCase();
+                var matched = fuzzyMatch(searchData, q);
+                if (matched) {
+                    c.classList.remove('hidden');
+                    highlightCard(c, q);
+                    visible++;
+                } else {
+                    c.classList.add('hidden');
+                    removeHighlight(c);
+                }
+            });
+
+            searchQuery.textContent = query;
+            searchCount.textContent = visible;
+            searchInfo.classList.add('show');
+            if (noResult) noResult.style.display = visible === 0 ? 'block' : 'none';
+        }, 150); // realtime — delay ngắn
+    }
+
+    // Fuzzy match: tất cả ký tự trong query phải xuất hiện theo đúng thứ tự trong text
+    // Ví dụ: query "ngt" khớp với "nguyen thanh"
+    function fuzzyMatch(text, query) {
+        // 1. Khớp chính xác (substring)
+        if (text.includes(query)) return true;
+
+        // 2. Fuzzy: từng ký tự theo thứ tự
+        var ti = 0, qi = 0;
+        while (ti < text.length && qi < query.length) {
+            if (text[ti] === query[qi]) qi++;
+            ti++;
+        }
+        return qi === query.length;
+    }
+
+    // Highlight text trong card
+    function highlightCard(card, query) {
+        var fields = card.querySelectorAll('[data-field]');
+        fields.forEach(function(el) {
+            var original = el.dataset.original || el.textContent;
+            el.dataset.original = original;
+            el.innerHTML = highlightText(original, query);
+        });
+    }
+
+    function removeHighlight(card) {
+        var fields = card.querySelectorAll('[data-field]');
+        fields.forEach(function(el) {
+            if (el.dataset.original) {
+                el.textContent = el.dataset.original;
+                delete el.dataset.original;
+            }
+        });
+    }
+
+    function highlightText(text, query) {
+        if (!query) return escHtml(text);
+        // Highlight substring matches
+        var idx = text.toLowerCase().indexOf(query.toLowerCase());
+        if (idx >= 0) {
+            return escHtml(text.substring(0, idx))
+                 + '<mark>' + escHtml(text.substring(idx, idx + query.length)) + '</mark>'
+                 + escHtml(text.substring(idx + query.length));
+        }
+        return escHtml(text);
+    }
+
+    function clearSearch() {
+        var input = document.getElementById('liveSearch');
+        input.value = '';
+        input.focus();
+        liveSearch('');
+    }
+
+    function escHtml(str) {
+        if (!str) return '';
+        return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    // ════════════════════════════════════════
+    // MODAL
+    // ════════════════════════════════════════
     var tuChoiMode = false;
 
     function openModal(id, bacsi, img, field, cu, moi, lydo, trangThai, lyDoTuChoi) {
@@ -333,39 +410,39 @@
         document.getElementById('m-id2').value = id;
         document.getElementById('m-bacsi').textContent = 'BS. ' + bacsi;
         document.getElementById('m-field').textContent = field;
-        document.getElementById('m-img').src = img;
-        document.getElementById('m-cu').textContent  = cu  || '(Chưa có)';
-        document.getElementById('m-moi').textContent = moi || '—';
+        document.getElementById('m-img').src           = img;
+        document.getElementById('m-cu').textContent    = cu  || '(Chưa có)';
+        document.getElementById('m-moi').textContent   = moi || '—';
 
-        var lydoBlock = document.getElementById('m-lydo-block');
+        var lydoWrap = document.getElementById('m-lydo-wrap');
         if (lydo && lydo.trim()) {
             document.getElementById('m-lydo').textContent = lydo;
-            lydoBlock.style.display = 'block';
+            lydoWrap.style.display = 'block';
         } else {
-            lydoBlock.style.display = 'none';
+            lydoWrap.style.display = 'none';
         }
 
-        // Ẩn form từ chối
+        // Reset từ chối form
         tuChoiMode = false;
-        document.getElementById('m-tuchoi-form').style.display = 'none';
-        document.getElementById('m-lydo-tuchoi').value = '';
-        document.getElementById('btnTuChoiText').textContent = 'Từ chối';
+        document.getElementById('tcForm').classList.remove('show');
+        document.getElementById('tcInput').value = '';
+        document.getElementById('tcBtnText').textContent = 'Từ chối';
 
-        // Nếu đã xử lý thì ẩn actions
         var actions = document.getElementById('m-actions');
-        var tuChoiHienThi = document.getElementById('m-tuchoi-block');
+        var tcShow  = document.getElementById('m-tuchoi-show');
+
         if (trangThai === 0) {
             actions.style.display = 'flex';
-            tuChoiHienThi.style.display = 'none';
+            tcShow.style.display  = 'none';
             document.getElementById('modalHd').style.background = 'linear-gradient(135deg,#f59e0b,#fbbf24)';
         } else if (trangThai === 1) {
             actions.style.display = 'none';
-            tuChoiHienThi.style.display = 'none';
+            tcShow.style.display  = 'none';
             document.getElementById('modalHd').style.background = 'linear-gradient(135deg,#10b981,#34d399)';
         } else {
             actions.style.display = 'none';
-            document.getElementById('m-tuchoi').textContent = lyDoTuChoi || '—';
-            tuChoiHienThi.style.display = 'block';
+            document.getElementById('m-tuchoi-val').textContent = lyDoTuChoi || '—';
+            tcShow.style.display  = 'block';
             document.getElementById('modalHd').style.background = 'linear-gradient(135deg,#ef4444,#f87171)';
         }
 
@@ -374,20 +451,16 @@
 
     function toggleTuChoi() {
         tuChoiMode = !tuChoiMode;
-        document.getElementById('m-tuchoi-form').style.display = tuChoiMode ? 'block' : 'none';
-        document.getElementById('btnTuChoiText').textContent   = tuChoiMode ? 'Xác nhận từ chối' : 'Từ chối';
+        document.getElementById('tcForm').classList.toggle('show', tuChoiMode);
+        document.getElementById('tcBtnText').textContent = tuChoiMode ? 'Hủy từ chối' : 'Từ chối';
+        if (tuChoiMode) setTimeout(function(){ document.getElementById('tcInput').focus(); }, 100);
+    }
 
-        if (tuChoiMode) {
-            // Submit form từ chối khi bấm lần 2
-            document.querySelector('.btn-confirm-tuchoi').onclick = function() {
-                var lydo = document.getElementById('m-lydo-tuchoi').value.trim();
-                if (!lydo) { alert('Vui lòng nhập lý do từ chối.'); return; }
-                document.getElementById('m-lydo-submit').value = lydo;
-                document.getElementById('btnSubmitTuChoi').click();
-            };
-        } else {
-            document.querySelector('.btn-confirm-tuchoi').onclick = toggleTuChoi;
-        }
+    function submitTuChoi() {
+        var lydo = document.getElementById('tcInput').value.trim();
+        if (!lydo) { document.getElementById('tcInput').focus(); return; }
+        document.getElementById('tcLyDo').value = lydo;
+        document.getElementById('tcSubmitForm').submit();
     }
 
     function closeModal(e) {
@@ -398,13 +471,15 @@
         document.getElementById('modalOverlay').classList.remove('show');
     }
 
+    // ════════════════════════════════════════
     // BULK SELECT
+    // ════════════════════════════════════════
     function updateBulk() {
         var checked = document.querySelectorAll('.yc-checkbox:checked');
         var bar     = document.getElementById('bulkBar');
+        if (!bar) return;
         var count   = document.getElementById('bulkCount');
         var ids     = document.getElementById('bulkIds');
-
         if (checked.length > 0) {
             bar.classList.add('show');
             count.textContent = checked.length + ' yêu cầu được chọn';
@@ -415,24 +490,10 @@
         } else {
             bar.classList.remove('show');
         }
-
-        // Highlight card
-        document.querySelectorAll('.yc-card').forEach(function(card){ card.classList.remove('selected'); });
+        document.querySelectorAll('.yc-card').forEach(function(c){ c.classList.remove('selected'); });
         checked.forEach(function(cb) {
-            document.getElementById('yc-' + cb.dataset.id)?.classList.add('selected');
+            var card = document.getElementById('yqCard-' + cb.dataset.id);
+            if (card) card.classList.add('selected');
         });
     }
-
-    function closeToast() {
-        var toast = document.getElementById('successToast');
-        if (toast) {
-            toast.classList.add('toast-out');
-            setTimeout(function(){ toast.remove(); }, 500);
-        }
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        var toast = document.getElementById('successToast');
-        if (toast) setTimeout(closeToast, 2000);
-    });
 </script>

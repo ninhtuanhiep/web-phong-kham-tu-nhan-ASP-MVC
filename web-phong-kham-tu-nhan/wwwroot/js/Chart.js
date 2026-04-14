@@ -1,4 +1,4 @@
-﻿function renderStatusChart(pending, approved, completed) {
+﻿function renderStatusChart(pending, approved, completed, cancelled) {
 
     const ctx = document.getElementById("statusChart");
 
@@ -8,19 +8,20 @@
         type: "doughnut",
 
         data: {
-            labels: ["Chưa giải quyết", "Đã phê duyệt", "Đã khám"],
+            labels: ["Chưa giải quyết", "Đã phê duyệt", "Đã khám","Đã hủy"],
 
             datasets: [{
-                data: [pending, approved, completed],
+                data: [pending, approved, completed, cancelled],
 
                 backgroundColor: [
                     "#ffc107",
                     "#0d6efd",
-                    "#28a745"
+                    "#28a745",
+                    "#dc3545"
                 ]
             }]
         },
-
+            
         options: {
             responsive: true,
             plugins: {

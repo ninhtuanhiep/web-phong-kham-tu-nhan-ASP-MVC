@@ -25,6 +25,7 @@ namespace web_phong_kham_tu_nhan.Area.Admin.Controllers
             ViewBag.Pending = _context.Appointments.Count(x => x.TrangThai == 0);
             ViewBag.Approved = _context.Appointments.Count(x => x.TrangThai == 1);
             ViewBag.Completed = _context.Appointments.Count(x => x.TrangThai == 2);
+            ViewBag.Cancelled = _context.Appointments.Count(x => x.TrangThai == 3);
 
             // Lịch hôm nay
             var today = DateTime.Today;

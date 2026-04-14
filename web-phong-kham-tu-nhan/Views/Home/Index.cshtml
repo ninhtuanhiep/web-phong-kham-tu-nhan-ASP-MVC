@@ -314,11 +314,12 @@
                             </p>
 
                             <a
+                               asp-area="BenhNhan"
                                asp-controller="LichHen"
                                asp-action="Create"
                                asp-route-doctorId="@item.Id"
                                class="btn btn-primary w-100">
-                                Book Appointment
+                                Đặt lịch ngay
                             </a>
                         </div>
 
@@ -652,38 +653,6 @@
             });
         });
 
-
-        // $(document).ready(function () {
-
-        //     $('#chuyenKhoaSelect').change(function () {
-
-        //         var specialtyId = $(this).val();
-
-        //         if (specialtyId) {
-
-        //             $.get('/BenhNhan/LichHen/GetDoctorsBySpecialty', { specialtyId: specialtyId }, function (data) {
-
-        //                 var doctorSelect = $('#doctorSelect');
-
-        //                 doctorSelect.empty();
-
-        //                 doctorSelect.append('<option value="">--Chọn bác sĩ--</option>');
-
-        //                 $.each(data, function (index, doctor) {
-        //                     doctorSelect.append('<option value="' + doctor.id + '">' + doctor.fullName + '</option>');
-        //                 });
-
-        //                 doctorSelect.prop('disabled', false);
-
-        //             });
-
-        //         } else {
-
-        //             $('#doctorSelect').prop('disabled', true);
-        //         }
-        //     });
-
-        // });
         $(document).ready(function () {
 
             $('#chuyenKhoaSelect').change(function () {

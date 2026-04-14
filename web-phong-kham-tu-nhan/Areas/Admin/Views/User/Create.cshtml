@@ -4,138 +4,202 @@
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
-<div class="container mt-4">
+<link rel="stylesheet" href="~/css/Admin/User/Create.css" />
 
-    <div class="card shadow-lg border-0">
+<div class="container">
 
-        <div class="card-header bg-primary text-white">
-            <h4 class="mb-0">
-                <i class="bi bi-person-plus"></i> Thêm người dùng mới
-            </h4>
+    <a asp-area="Admin" asp-controller="User" asp-action="Index" class="back-link">
+        <i class="bi bi-arrow-left"></i> Quay lại danh sách
+    </a>
+
+    <div class="d-flex align-items-center gap-3 mb-4">
+        <div class="page-hd">
+            <h1 style="margin:0;font-weight:700;color:#1e293b">Thêm người dùng mới</h1>
+            <p style="margin:0;font-size:13px;color:#94a3b8">Tạo tài khoản hệ thống cho người dùng</p>
         </div>
-
-        <div class="card-body">
-
-            <form asp-action="Create" method="post">
-
-                <div class="row">
-
-                    <!-- Họ tên -->
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Họ và tên</label>
-                        <input asp-for="FullName" class="form-control" placeholder="Nhập họ tên..." />
-                    </div>
-
-                    <!-- Email -->
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Email</label>
-                        <input asp-for="Email" class="form-control" placeholder="example@gmail.com" />
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Số điện thoại</label>
-                        <input asp-for="PhoneNumber" class="form-control"/>
-                    </div>
-
-                    <!-- Mật khẩu -->
-                    <div class="col-md-6 mb-3">
-
-                        <label class="form-label">Mật khẩu</label>
-
-                        <div class="input-group">
-
-                            <input asp-for="Password"
-                                   type="password"
-                                   class="form-control"
-                                   id="password"
-                                   placeholder="Nhập mật khẩu..." />
-
-                            <button type="button"
-                                    class="btn btn-outline-secondary"
-                                    onclick="togglePassword()">
-
-                                <i id="eyeIcon" class="bi bi-eye"></i>
-
-                            </button>
-
-                        </div>
-
-                    </div>
-
-                    <!-- Vai trò -->
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Vai trò</label>
-
-                        <select asp-for="Role" class="form-select">
-
-                            <option value="">-- Chọn vai trò --</option>
-
-                            <option value="Admin">Admin</option>
-                            <option value="Bác sĩ">Bác sĩ</option>
-                            <option value="Bệnh nhân">Bệnh nhân</option>
-
-                        </select>
-
-                    </div>
-
-                    <!-- Trạng thái -->
-                    <div class="col-md-6 mb-3">
-
-                        <label class="form-label">Trạng thái</label>
-
-                        <select asp-for="IsActive" class="form-select">
-
-                            <option value="true">Hoạt động</option>
-                            <option value="false">Bị khóa</option>
-
-                        </select>
-
-                    </div>
-
-                </div>
-
-                <hr />
-
-                <div class="d-flex justify-content-end">
-
-                    <a asp-action="Index" class="btn btn-secondary me-2">
-                        Quay lại
-                    </a>
-
-                    <button type="submit" class="btn btn-success">
-                        <i class="bi bi-save"></i> Lưu người dùng
-                    </button>
-
-                </div>
-
-            </form>
-
-        </div>
-
     </div>
+
+    @if (!string.IsNullOrEmpty(ViewBag.Error as string))
+    {
+        <div class="alert alert-danger d-flex align-items-center gap-2 mb-4" style="border-radius:10px">
+            <i class="bi bi-exclamation-circle-fill fs-5"></i> @ViewBag.Error
+        </div>
+    }
+
+    <form asp-area="Admin" asp-controller="User" asp-action="Create" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="Role" id="hRole" value="" />
+        <input type="hidden" name="IsActive" id="hActive" value="true" />
+
+        <!-- THÔNG TIN CƠ BẢN -->
+        <div class="section-card">
+            <div class="section-hd">
+                <i class="bi bi-person-fill"></i>
+                <div><h5>Thông tin cơ bản</h5><p>Tên, liên hệ và thông tin định danh</p></div>
+            </div>
+            <div class="section-bd">
+                <div class="form-grid-2">
+                    <div class="form-group form-full">
+                        <label>
+                            <i class="bi bi-person"></i> Họ và tên <span class="req">*</span>
+                        </label>
+                        <input asp-for="FullName" class="fc" placeholder="Nhập họ và tên đầy đủ" required />
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <i class="bi bi-envelope"></i> Email <span class="req">*</span>
+                        </label>
+                        <input asp-for="Email" type="email" class="fc"
+                               placeholder="example@gmail.com" required />
+                    </div>
+                    <div class="form-group">
+                        <label><i class="bi bi-telephone"></i> Số điện thoại</label>
+                        <input asp-for="PhoneNumber" class="fc" placeholder="0912 345 678" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MẬT KHẨU -->
+        <div class="section-card">
+            <div class="section-hd">
+                <i class="bi bi-lock-fill"></i>
+                <div><h5>Mật khẩu</h5><p>Tối thiểu 6 ký tự, nên có chữ hoa và số</p></div>
+            </div>
+            <div class="section-bd">
+                <div style="max-width:440px">
+                    <div class="form-group">
+                        <label><i class="bi bi-key"></i> Mật khẩu <span class="req">*</span></label>
+                        <div class="pw-wrap">
+                            <input asp-for="Password" type="password" id="pwInput"
+                                   class="fc" placeholder="Nhập mật khẩu..."
+                                   oninput="checkPw(this.value)" required />
+                            <button type="button" class="pw-toggle" onclick="togglePw()">
+                                <i class="bi bi-eye" id="pwIcon"></i>
+                            </button>
+                        </div>
+                        <div class="pw-strength"><div class="pw-fill" id="pwFill"></div></div>
+                        <div class="pw-lbl" id="pwLbl"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VAI TRÒ -->
+        <div class="section-card">
+            <div class="section-hd">
+                <i class="bi bi-shield-fill"></i>
+                <div>
+                    <h5>Vai trò <span style="color:#ef4444">*</span></h5>
+                    <p>Xác định quyền truy cập của người dùng</p>
+                </div>
+            </div>
+            <div class="section-bd">
+                <div class="role-grid">
+                    <div class="role-btn" onclick="setRole('Admin',this)">
+                        <i class="bi bi-shield-lock-fill" style="color:#ef4444"></i>
+                        <span>Admin</span>
+                        <small>Toàn quyền hệ thống</small>
+                    </div>
+                    <div class="role-btn" onclick="setRole('Bác sĩ',this)">
+                        <i class="bi bi-heart-pulse-fill" style="color:#0d6efd"></i>
+                        <span>Bác sĩ</span>
+                        <small>Quản lý lịch hẹn, bệnh nhân</small>
+                    </div>
+                    <div class="role-btn" onclick="setRole('Bệnh nhân',this)">
+                        <i class="bi bi-person-fill" style="color:#10b981"></i>
+                        <span>Bệnh nhân</span>
+                        <small>Đặt lịch, xem hồ sơ</small>
+                    </div>
+                </div>
+                <div id="roleError" style="color:#ef4444;font-size:12px;margin-top:8px;display:none">
+                    <i class="bi bi-exclamation-circle me-1"></i>Vui lòng chọn vai trò.
+                </div>
+            </div>
+        </div>
+
+        <!-- TRẠNG THÁI -->
+        <div class="section-card">
+            <div class="section-hd">
+                <i class="bi bi-toggle-on"></i>
+                <div><h5>Trạng thái tài khoản</h5></div>
+            </div>
+            <div class="section-bd">
+                <div class="status-toggle">
+                    <div class="status-opt sel-active" id="optActive" onclick="setActive(true,this)">
+                        <i class="bi bi-check-circle-fill me-1"></i> Hoạt động
+                    </div>
+                    <div class="status-opt" id="optInactive" onclick="setActive(false,this)">
+                        <i class="bi bi-x-circle me-1"></i> Bị khóa
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="submit-bar">
+            <button type="button" class="btn-back2"
+                    onclick="window.location.href='@Url.Action("Index", "User", new { area = "Admin" })'">
+                <i class="bi bi-x"></i> Hủy bỏ
+            </button>
+
+            <button type="submit" class="btn-submit" onclick="return validateForm()">
+                <i class="bi bi-person-check-fill"></i> Tạo tài khoản
+            </button>
+        </div>
+
+    </form>
 
 </div>
 
 <script>
-
-    function togglePassword() {
-
-        var password = document.getElementById("password");
-        var icon = document.getElementById("eyeIcon");
-
-        if (password.type === "password") {
-
-            password.type = "text";
-            icon.classList.remove("bi-eye");
-            icon.classList.add("bi-eye-slash");
-
-        } else {
-
-            password.type = "password";
-            icon.classList.remove("bi-eye-slash");
-            icon.classList.add("bi-eye");
-
-        }
+    function togglePw() {
+        var inp  = document.getElementById('pwInput');
+        var icon = document.getElementById('pwIcon');
+        if (inp.type==='password') { inp.type='text'; icon.className='bi bi-eye-slash'; }
+        else                       { inp.type='password'; icon.className='bi bi-eye'; }
     }
 
+    function checkPw(val) {
+        var fill = document.getElementById('pwFill');
+        var lbl  = document.getElementById('pwLbl');
+        if (!val) { fill.style.width='0'; lbl.textContent=''; return; }
+        var sc = 0;
+        if (val.length>=6)  sc++;
+        if (val.length>=10) sc++;
+        if (/[A-Z]/.test(val)) sc++;
+        if (/[0-9]/.test(val)) sc++;
+        if (/[^A-Za-z0-9]/.test(val)) sc++;
+        var lvs=[{w:'20%',c:'#ef4444',l:'Rất yếu'},{w:'40%',c:'#f97316',l:'Yếu'},
+                 {w:'60%',c:'#eab308',l:'Trung bình'},{w:'80%',c:'#22c55e',l:'Mạnh'},
+                 {w:'100%',c:'#10b981',l:'Rất mạnh'}];
+        var lv = lvs[Math.min(sc-1,4)];
+        fill.style.width=lv.w; fill.style.background=lv.c;
+        lbl.textContent=lv.l; lbl.style.color=lv.c;
+    }
+
+    function setRole(val, el) {
+        document.querySelectorAll('.role-btn').forEach(function(b){
+            b.classList.remove('sel-admin','sel-bacsi','sel-benhnhan');
+        });
+        var cls = val==='Admin' ? 'sel-admin' : val==='Bác sĩ' ? 'sel-bacsi' : 'sel-benhnhan';
+        el.classList.add(cls);
+        document.getElementById('hRole').value = val;
+        document.getElementById('roleError').style.display='none';
+    }
+
+    function setActive(val, el) {
+        document.getElementById('optActive').classList.remove('sel-active');
+        document.getElementById('optInactive').classList.remove('sel-inactive');
+        el.classList.add(val ? 'sel-active' : 'sel-inactive');
+        document.getElementById('hActive').value = val ? 'true' : 'false';
+    }
+
+    function validateForm() {
+        if (!document.getElementById('hRole').value) {
+            document.getElementById('roleError').style.display='block';
+            document.getElementById('roleError').scrollIntoView({behavior:'smooth',block:'center'});
+            return false;
+        }
+        return true;
+    }
 </script>

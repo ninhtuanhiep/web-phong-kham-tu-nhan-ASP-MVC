@@ -176,14 +176,14 @@ thead {
 
 th {
     text-align: left;
-    padding: 14px 7px;
+    padding: 20px 11px;
     font-size: 13px;
     color: #6b7280;
     text-transform: uppercase;
 }
 
 td {
-    padding: 20px 2px !important;
+    padding: 20px 11px;
     border-top: 1px solid #f1f1f1;
 }
 tbody tr:hover {

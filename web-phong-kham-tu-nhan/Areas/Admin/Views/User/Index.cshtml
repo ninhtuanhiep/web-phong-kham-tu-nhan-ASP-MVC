@@ -107,7 +107,6 @@
                             <td>@item.CreateAt.ToString("dd/MM/yyyy")</td>
                             <td>
                                 <a asp-action="Detail" asp-route-id="@item.Id" class="btn btn-sm btn-info me-1">👁</a>
-                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning me-1">✏</a>
 
                                 @* ✅ ToggleStatus: POST form thay vì GET link *@
                                 @if (item.IsActive)

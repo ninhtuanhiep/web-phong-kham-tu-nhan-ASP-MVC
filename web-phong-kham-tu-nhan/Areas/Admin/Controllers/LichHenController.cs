@@ -85,41 +85,9 @@ namespace web_phong_kham_tu_nhan.Area.Admin.Controllers
             ViewBag.Patients = new SelectList(_context.Patients, "Id", "FullName", data.BenhNhanId);
             ViewBag.Doctors = new SelectList(_context.Doctors, "Id", "FullName", data.BacSiId);
             ViewBag.Specialties = new SelectList(_context.Specialties, "Id", "Name", data.ChuyenKhoaId);
-            //ViewBag.TimeSlots = new SelectList(new List<string> { "08:00-09:00", "09:00-10:00", "10:00-11:00", "13:00-14:00", "14:00-15:00", "15:00-16:00" }, data.TimeSlot);
             return View(data);
         }
-        //[HttpPost]
-        //public IActionResult Edit(LichHen model)
-        //{
-        //    if (ModelState.IsValid)
-        //    {
-        //        _service.Update(model);
-        //        TempData["Success"] = "Cập nhật lịch hẹn thành công!";
-        //        return RedirectToAction("Index");
-        //    }
-        //    return View(model);
-        //}
-        //[HttpPost]
-        //public IActionResult Edit(LichHen model)
-        //{
-        //    // Bỏ qua validation của navigation properties
-        //    ModelState.Remove("BenhNhan");
-        //    ModelState.Remove("BacSi");
-        //    ModelState.Remove("ChuyenKhoa");
 
-        //    if (ModelState.IsValid)
-        //    {
-        //        _service.Update(model);
-        //        TempData["Success"] = "Cập nhật lịch hẹn thành công!";
-        //        return RedirectToAction("Index");
-        //    }
-
-        //    // Nếu vẫn lỗi, load lại ViewBag
-        //    ViewBag.Patients = new SelectList(_context.Patients, "Id", "FullName", model.BenhNhanId);
-        //    ViewBag.Doctors = new SelectList(_context.Doctors, "Id", "FullName", model.BacSiId);
-        //    ViewBag.Specialties = new SelectList(_context.Specialties, "Id", "Name", model.ChuyenKhoaId);
-        //    return View(model);
-        //}
         [HttpPost]
         public IActionResult Edit(LichHen model)
         {
@@ -160,15 +128,67 @@ namespace web_phong_kham_tu_nhan.Area.Admin.Controllers
             return RedirectToAction("Index");
         }
 
+        // ── TÌM KIẾM BỆNH NHÂN (AJAX cho Select2) ──
+        [HttpGet]
+        public JsonResult SearchBenhNhan(string q)
+        {
+            q = q?.Trim() ?? "";
+
+            var result = _context.Patients
+                .Where(p =>
+                    (p.FullName != null && p.FullName.Contains(q)) ||
+                    (p.PhoneNumber != null && p.PhoneNumber.Contains(q)) ||
+                    (p.Email != null && p.Email.Contains(q)))
+                .OrderBy(p => p.FullName)
+                .Take(15)
+                .Select(p => new
+                {
+                    id = p.Id,
+                    // Select2 yêu cầu field "text" để hiển thị
+                    text = (p.FullName ?? "") + " — " + (p.PhoneNumber ?? p.Email ?? ""),
+                    // Thêm data phụ để hiển thị trong dropdown đẹp hơn
+                    name = p.FullName,
+                    phone = p.PhoneNumber,
+                    email = p.Email,
+                    gt = p.GioiTinh,
+                    ngay = p.NgaySinh.HasValue
+                              ? p.NgaySinh.Value.ToString("dd/MM/yyyy")
+                              : ""
+                })
+                .ToList();
+
+            // Select2 AJAX cần format { results: [...] }
+            return Json(new { results = result });
+        }
+
+        // ── CẬP NHẬT TRẠNG THÁI LỊCH HẸN ── (nếu chưa có)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult CapNhatTrangThai(int id, int trangThai)
+        {
+            var lh = _context.Appointments.Find(id);
+            if (lh == null) return NotFound();
+            lh.TrangThai = trangThai;
+            _context.SaveChanges();
+
+            string[] labels = { "Chờ xác nhận", "Đã xác nhận", "Hoàn thành", "Đã hủy" };
+            TempData["Success"] = "Đã cập nhật trạng thái: " + labels[Math.Min(trangThai, 3)];
+            return RedirectToAction("Detail", new { id });
+        }
+
+        // ── CẬP NHẬT GetDoctorsBySpecialty (thêm imageUrl + specialty) ──
         [HttpGet]
         public JsonResult GetDoctorsBySpecialty(int specialtyId)
         {
             var doctors = _context.Doctors
-                .Where(d => d.ChuyenKhoaId == specialtyId)
+                .Include(d => d.ChuyenKhoa)
+                .Where(d => d.ChuyenKhoaId == specialtyId && d.TrangThai == 1)
                 .Select(d => new
                 {
                     id = d.Id,
-                    name = d.FullName
+                    name = d.FullName,
+                    imageUrl = d.ImageUrl,
+                    specialty = d.ChuyenKhoa.Name
                 })
                 .ToList();
 

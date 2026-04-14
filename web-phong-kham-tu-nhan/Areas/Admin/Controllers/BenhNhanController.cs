@@ -2,9 +2,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using web_phong_kham_tu_nhan.Data;
+using web_phong_kham_tu_nhan.Helpers;
 using web_phong_kham_tu_nhan.Models.Entities;
 using web_phong_kham_tu_nhan.Services;
-using web_phong_kham_tu_nhan.Services.Triển_khai;
 using X.PagedList.Extensions;
 
 namespace web_phong_kham_tu_nhan.Area.Admin.Controllers
@@ -39,9 +39,9 @@ namespace web_phong_kham_tu_nhan.Area.Admin.Controllers
 
             if (!string.IsNullOrEmpty(search))
                 patients = patients.Where(p =>
-                    p.FullName.Contains(search) ||
-                    p.PhoneNumber.Contains(search) ||
-                    p.Email.Contains(search));
+                    (p.FullName != null && p.FullName.Contains(search)) ||
+                    (p.PhoneNumber != null && p.PhoneNumber.Contains(search)) ||
+                    (p.Email != null && p.Email.Contains(search)));
 
             ViewBag.Search = search;
             ViewBag.TrangThai = TrangThai;
@@ -63,17 +63,13 @@ namespace web_phong_kham_tu_nhan.Area.Admin.Controllers
 
             if (patient == null) return NotFound();
 
-            // Lấy User liên kết
             ViewBag.User = _context.Users.FirstOrDefault(u => u.Id == patient.UserId);
             return View(patient);
         }
 
         // ── FORM THÊM MỚI ──
         [HttpGet]
-        public IActionResult Create()
-        {
-            return View();
-        }
+        public IActionResult Create() => View();
 
         // ── LƯU BỆNH NHÂN MỚI + TẠO TÀI KHOẢN ──
         [HttpPost]
@@ -83,30 +79,28 @@ namespace web_phong_kham_tu_nhan.Area.Admin.Controllers
             string gioiTinh, string ngaySinh, string diaChi,
             string lichSuYTe, string matKhau)
         {
-            // Validate
             if (string.IsNullOrEmpty(fullName))
             {
                 ViewBag.Error = "Họ tên không được để trống.";
                 return View();
             }
 
-            // Kiểm tra email trùng
             if (!string.IsNullOrEmpty(email) && _context.Users.Any(u => u.Email == email))
             {
                 ViewBag.Error = "Email " + email + " đã được sử dụng.";
                 return View();
             }
 
-            // 1. Tạo User
-            string mkMacDinh = string.IsNullOrEmpty(matKhau)
-                ? "Benhnhan@" + DateTime.Now.Year
+            // ✅ Tạo mật khẩu ngẫu nhiên nếu không nhập, hash trước khi lưu
+            string mkPlainText = string.IsNullOrEmpty(matKhau)
+                ? PasswordHelper.GenerateRandom()
                 : matKhau;
 
             var user = new User
             {
                 FullName = fullName,
                 Email = email,
-                Password = mkMacDinh,
+                Password = PasswordHelper.Hash(mkPlainText),  // ✅ BCrypt hash
                 PhoneNumber = phoneNumber,
                 Role = "Bệnh nhân",
                 IsActive = true,
@@ -115,7 +109,6 @@ namespace web_phong_kham_tu_nhan.Area.Admin.Controllers
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
-            // 2. Tạo BenhNhan liên kết với User
             var benhNhan = new BenhNhan
             {
                 UserId = user.Id,
@@ -134,22 +127,18 @@ namespace web_phong_kham_tu_nhan.Area.Admin.Controllers
             _context.Patients.Add(benhNhan);
             await _context.SaveChangesAsync();
 
-            // 3. Gửi email thông báo tài khoản (nếu có email)
+            // ✅ Gửi email thông tin đăng nhập — KHÔNG hiện mật khẩu trên màn hình
             if (!string.IsNullOrEmpty(email))
             {
                 try
                 {
-                    await _emailService.SendWelcomePatientAsync(email, fullName, email, mkMacDinh);
+                    await _emailService.SendWelcomePatientAsync(email, fullName, email, mkPlainText);
                 }
-                catch
-                {
-                    // Không block nếu gửi email thất bại
-                }
+                catch { /* gửi thất bại không block tạo tài khoản */ }
             }
 
             TempData["Success"] = "Đã thêm bệnh nhân " + fullName
-                + " | Tài khoản: " + email
-                + " | Mật khẩu: " + mkMacDinh;
+                + ". Thông tin đăng nhập đã được gửi qua email " + email + ".";
             return RedirectToAction("Index");
         }
 
@@ -231,8 +220,11 @@ namespace web_phong_kham_tu_nhan.Area.Admin.Controllers
                 return RedirectToAction("Detail", new { id });
             }
 
-            string newPassword = TaoMatKhauNgauNhien();
-            user.Password = newPassword;
+            string newPassword = PasswordHelper.GenerateRandom();
+            string oldHash = user.Password;
+
+            // ✅ Hash trước khi lưu
+            user.Password = PasswordHelper.Hash(newPassword);
             await _context.SaveChangesAsync();
 
             if (!string.IsNullOrEmpty(user.Email))
@@ -245,38 +237,21 @@ namespace web_phong_kham_tu_nhan.Area.Admin.Controllers
                 }
                 catch
                 {
-                    TempData["Error"] = "Reset thành công nhưng không thể gửi email. Mật khẩu mới: " + newPassword;
+                    // ✅ Rollback nếu gửi email thất bại
+                    user.Password = oldHash;
+                    await _context.SaveChangesAsync();
+                    TempData["Error"] = "Không thể gửi email reset. Mật khẩu chưa thay đổi. Vui lòng thử lại.";
                 }
             }
             else
             {
-                TempData["Success"] = "Đã reset mật khẩu. Mật khẩu mới: " + newPassword;
+                // Không có email — không thể gửi, rollback
+                user.Password = oldHash;
+                await _context.SaveChangesAsync();
+                TempData["Error"] = "Bệnh nhân này chưa có email. Không thể reset mật khẩu tự động.";
             }
 
             return RedirectToAction("Detail", new { id });
-        }
-
-        private string TaoMatKhauNgauNhien()
-        {
-            const string chars = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz";
-            const string digits = "23456789";
-            const string special = "@#!";
-            var rng = new System.Security.Cryptography.RNGCryptoServiceProvider();
-            var bytes = new byte[8];
-            rng.GetBytes(bytes);
-            var result = new System.Text.StringBuilder();
-            result.Append(chars[bytes[0] % chars.Length]);
-            result.Append(digits[bytes[1] % digits.Length]);
-            result.Append(special[bytes[2] % special.Length]);
-            for (int i = 3; i < 8; i++)
-                result.Append((chars + digits)[bytes[i] % (chars.Length + digits.Length)]);
-            var arr = result.ToString().ToCharArray();
-            for (int i = arr.Length - 1; i > 0; i--)
-            {
-                int j = bytes[i % bytes.Length] % (i + 1);
-                var tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
-            }
-            return new string(arr);
         }
     }
 }

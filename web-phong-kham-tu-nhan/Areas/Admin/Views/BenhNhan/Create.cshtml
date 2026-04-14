@@ -150,9 +150,8 @@
                         <div class="form-group">
                             <label><i class="bi bi-lock"></i> Mật khẩu mặc định</label>
                             <input type="text" name="matKhau" id="inp-matkhau"
-                                   class="fc" value="Benhnhan@2025"
-                                   placeholder="Để trống = Benhnhan@{
-                                                                      }" />
+                                   class="fc" value="Benhnhan@2026"
+                                   placeholder="Để trống = Benhnhan@{}" />
                             <div style="font-size:11px;color:#f59e0b;margin-top:4px">
                                 <i class="bi bi-exclamation-triangle-fill me-1"></i>
                                 Thông báo cho bệnh nhân đổi mật khẩu sau lần đăng nhập đầu tiên.
@@ -165,7 +164,7 @@
                         <h6><i class="bi bi-clipboard-check text-primary"></i> Xác nhận trước khi tạo</h6>
                         <div class="summary-grid">
                             <div class="sum-lbl">Họ tên:</div>
-                            <div class="sum-val" id="sum-ten">—</div>
+                            <div class="sum-val" id="sum-ten">-</div>
                             <div class="sum-lbl">Email:</div>
                             <div class="sum-val" id="sum-email">—</div>
                             <div class="sum-lbl">Giới tính:</div>
@@ -202,9 +201,8 @@
         if (n === 2) {
             const fullName = document.querySelector('[name="fullName"]')?.value.trim();
             const email = document.querySelector('[name="email"]')?.value.trim();
-            const chuyenKhoa = document.querySelector('[name="chuyenKhoaId"]')?.value;
 
-            if (!fullName || !email || !chuyenKhoa) {
+            if (!fullName || !email) {
                 alert("Vui lòng nhập đầy đủ thông tin bắt buộc!");
                 return;
             }
@@ -249,7 +247,7 @@
         currentStep = n;
 
         // ===== FILL SUMMARY =====
-        if (n === 3) fillSummary();
+        if (n === 2) fillSummary();
 
         // ===== SCROLL TOP =====
         window.scrollTo({ top: 0, behavior: 'smooth' });

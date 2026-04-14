@@ -100,8 +100,16 @@
                             </td>
                             <td>
                                 <a asp-action="Detail" asp-route-id="@item.Id" class="btn btn-sm btn-info me-1">👁</a>
-                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning me-1">✏</a>
-                                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger btn-delete">🗑</a>
+                                <form asp-area="Admin" asp-controller="BenhNhan" asp-action="Delete"
+                                      asp-route-id="@item.Id" method="post" style="display:inline"
+                                      onsubmit="return confirm('Xóa bệnh nhân @item.FullName?')">
+
+                                    @Html.AntiForgeryToken()
+
+                                    <button type="submit" class="btn btn-sm btn-danger">
+                                        🗑
+                                    </button>
+                                </form>
                             </td>
                         </tr>
                     }

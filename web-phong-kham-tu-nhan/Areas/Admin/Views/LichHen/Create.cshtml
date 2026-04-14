@@ -3,137 +3,494 @@
 }
 
 @model web_phong_kham_tu_nhan.Models.Entities.LichHen
+<link rel="stylesheet" href="~/css/Admin/LichHen/Create.css"/>
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
-<div class="container mt-5">
-    <div class="card appointment-card shadow-lg">
+<div class="container">
 
-        <div class="card-header appointment-header">
-            <h3>📅 THÊM LỊCH HẸN MỚI</h3>
+    <a asp-area="Admin" asp-controller="LichHen" asp-action="Index" class="back-link">
+        <i class="bi bi-arrow-left"></i> Quay lại danh sách
+    </a>
+
+    <div class="d-flex align-items-center gap-3 mb-4">
+        <div style="width:44px;height:44px;border-radius:12px;
+                    background:linear-gradient(135deg,#0d6efd,#4dabf7);
+                    display:flex;align-items:center;justify-content:center;
+                    color:white;font-size:20px;flex-shrink:0">
+            <i class="bi bi-calendar-plus-fill"></i>
         </div>
-
-        <div class="card-body">
-
-            <form asp-action="Create" method="post">
-
-                <div class="row">
-
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Bệnh nhân</label>
-                        <select asp-for="BenhNhanId" class="form-control select1" asp-items="ViewBag.Patients">
-                            <option value="">-- Select Patient --</option>
-                        </select>
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Chuyên khoa</label>
-                        <select asp-for="ChuyenKhoaId" class="form-control select1" asp-items="ViewBag.Specialties" id="chuyenKhoaSelect">
-                            <option value="">--Chọn chuyên khoa--</option>
-                        </select>
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Bác sĩ</label>
-                        <select asp-for="BacSiId" class="form-control select2" asp-items="ViewBag.Doctors" id="doctorSelect" disabled>
-                            <option value="">--Chọn bác sĩ--</option>
-                        </select>
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Ngày khám</label>
-                        <input asp-for="AppointmentDate" type="date" class="form-control" />
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Thời gian khám</label>
-                        <input asp-for="TimeSlot" type="time" class="form-control" />
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Trạng thái</label>
-                        <select asp-for="TrangThai" class="form-control">
-
-                            <option value="0">Chưa giải quyết</option>
-                            <option value="1">Đã phê duyệt</option>
-                            <option value="2">Đã khám</option>
-
-                        </select>
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Lý do thăm khám</label>
-                        <textarea asp-for="LyDoKham" class="form-control" rows="3" placeholder="Vui lòng ghi lý do thăm khám..."></textarea>
-                    </div>
-
-                </div>
-
-                <div class="form-buttons mt-4">
-
-                    <button type="submit" class="btn btn-success">
-                        Lưu lịch khám
-                    </button>
-
-                    <a asp-action="Index" class="btn btn-secondary">
-                        Quay lại ->
-                    </a>
-
-                </div>
-
-            </form>
-
+        <div>
+            <h4 style="margin:0;font-weight:700;color:#1e293b">Thêm lịch hẹn mới</h4>
+            <p style="margin:0;font-size:13px;color:#94a3b8">Tạo lịch hẹn thủ công cho bệnh nhân</p>
         </div>
-
     </div>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger d-flex align-items-center gap-2 mb-4" style="border-radius:10px">
+            <i class="bi bi-exclamation-circle-fill fs-5"></i> @TempData["Error"]
+        </div>
+    }
+
+    <form asp-area="Admin" asp-controller="LichHen" asp-action="Create"
+          method="post" id="createForm" onsubmit="return validateForm()">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="BenhNhanId" id="hBenhNhan" />
+        <input type="hidden" name="BacSiId" id="hBacSi" />
+        <input type="hidden" name="TimeSlot" id="hSlot" />
+        <input type="hidden" name="TrangThai" id="hTrangThai" value="0" />
+
+        <!-- ── BỆNH NHÂN ── -->
+        <div class="section-card">
+            <div class="section-hd">
+                <i class="bi bi-person-fill"></i>
+                <div>
+                    <h5>Bệnh nhân <span style="color:#ef4444">*</span></h5>
+                    <p>Tìm kiếm theo tên, số điện thoại hoặc email</p>
+                </div>
+            </div>
+            <div class="section-bd">
+                <div class="form-group">
+                    <label><i class="bi bi-search"></i> Tìm kiếm bệnh nhân</label>
+                    <div class="patient-search-wrap">
+                        <i class="bi bi-search search-icon"></i>
+                        <input type="text" id="patientInput" class="fc"
+                               placeholder="Gõ tên, số điện thoại hoặc email..."
+                               autocomplete="off"
+                               oninput="onPatientInput(this.value)"
+                               onfocus="if(this.value.length>=2) showDropdown()" />
+                        <button type="button" class="clear-btn" id="clearBtn"
+                                onclick="clearPatient()">
+                            <i class="bi bi-x"></i>
+                        </button>
+                        <div class="patient-dropdown" id="patientDropdown"></div>
+                    </div>
+                    <div id="patientHint" style="font-size:11px;color:#94a3b8;margin-top:5px">
+                        <i class="bi bi-info-circle me-1"></i>Gõ ít nhất 2 ký tự để tìm kiếm
+                    </div>
+                </div>
+
+                <!-- Card xác nhận đã chọn -->
+                <div class="selected-patient-card" id="selectedPatientCard">
+                    <div class="spc-avatar" id="spcAvatar"></div>
+                    <div style="flex:1">
+                        <div class="spc-name" id="spcName"></div>
+                        <div class="spc-sub" id="spcSub"></div>
+                    </div>
+                    <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── CHUYÊN KHOA & BÁC SĨ ── -->
+        <div class="section-card">
+            <div class="section-hd">
+                <i class="bi bi-hospital-fill"></i>
+                <div>
+                    <h5>Chuyên khoa & Bác sĩ <span style="color:#ef4444">*</span></h5>
+                    <p>Chọn chuyên khoa trước, sau đó chọn bác sĩ</p>
+                </div>
+            </div>
+            <div class="section-bd">
+                <div class="form-group mb-4">
+                    <label><i class="bi bi-diagram-3"></i> Chuyên khoa</label>
+                    <select id="selectChuyenKhoa" class="fc" onchange="loadDoctors(this.value)">
+                        <option value="">-- Chọn chuyên khoa --</option>
+                        @foreach (SelectListItem item in (IEnumerable<SelectListItem>)ViewBag.Specialties)
+                        {
+                            <option value="@item.Value">@item.Text</option>
+                        }
+                    </select>
+                    <input type="hidden" name="ChuyenKhoaId" id="hChuyenKhoa" />
+                </div>
+
+                <div class="loading-spin" id="loadingDoc">
+                    <div class="spinner-border spinner-border-sm text-primary me-2"></div>
+                    Đang tải danh sách bác sĩ...
+                </div>
+                <div id="doctorListWrap" style="display:none">
+                    <label style="font-size:12px;font-weight:600;color:#475569;
+                                  margin-bottom:8px;display:flex;align-items:center;gap:5px">
+                        <i class="bi bi-person-badge" style="color:#0d6efd;font-size:13px"></i>
+                        Chọn bác sĩ
+                    </label>
+                    <div class="doctor-list" id="doctorList"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── NGÀY & GIỜ ── -->
+        <div class="section-card">
+            <div class="section-hd">
+                <i class="bi bi-calendar-event-fill"></i>
+                <div>
+                    <h5>Ngày & Giờ khám <span style="color:#ef4444">*</span></h5>
+                    <p>Chọn ngày và khung giờ phù hợp</p>
+                </div>
+            </div>
+            <div class="section-bd">
+                <div class="form-group mb-4">
+                    <label><i class="bi bi-calendar3"></i> Ngày khám</label>
+                    <input type="date" name="AppointmentDate" id="inputDate"
+                           class="fc" style="max-width:260px"
+                           min="@DateTime.Today.ToString("yyyy-MM-dd")"
+                           required onchange="renderSlots()" />
+                </div>
+
+                <div id="slotWrap" style="display:none">
+                    <label style="font-size:12px;font-weight:600;color:#475569;
+                                  margin-bottom:8px;display:flex;align-items:center;gap:5px">
+                        <i class="bi bi-clock" style="color:#0d6efd;font-size:13px"></i>
+                        Chọn khung giờ
+                    </label>
+                    <div class="slot-grid" id="slotGrid"></div>
+                    <div style="font-size:11px;color:#94a3b8;margin-top:8px">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Bấm vào khung giờ để chọn, hoặc nhập giờ tự do bên dưới.
+                    </div>
+                    <div class="form-group mt-3" style="max-width:200px">
+                        <label><i class="bi bi-pencil"></i> Nhập giờ tự do</label>
+                        <input type="time" id="inputTimeManual" class="fc"
+                               onchange="setSlotManual(this.value)" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── GHI CHÚ & TRẠNG THÁI ── -->
+        <div class="section-card">
+            <div class="section-hd">
+                <i class="bi bi-chat-text-fill"></i>
+                <div><h5>Ghi chú & Trạng thái</h5></div>
+            </div>
+            <div class="section-bd">
+                <div class="form-grid-2">
+                    <div class="form-group form-full">
+                        <label><i class="bi bi-chat-text"></i> Lý do khám</label>
+                        <textarea name="LyDoKham" class="fc" rows="3"
+                                  placeholder="Mô tả triệu chứng hoặc lý do khám..."></textarea>
+                    </div>
+                    <div class="form-group form-full">
+                        <label><i class="bi bi-activity"></i> Trạng thái ban đầu</label>
+                        <div class="status-opts">
+                            <div class="status-opt sel-0" onclick="setStatus(0,this)">
+                                <i class="bi bi-hourglass-split me-1"></i> Chờ xác nhận
+                            </div>
+                            <div class="status-opt" onclick="setStatus(1,this)">
+                                <i class="bi bi-calendar-check me-1"></i> Đã xác nhận
+                            </div>
+                            <div class="status-opt" onclick="setStatus(2,this)">
+                                <i class="bi bi-patch-check me-1"></i> Hoàn thành
+                            </div>
+                            <div class="status-opt" onclick="setStatus(3,this)">
+                                <i class="bi bi-x-circle me-1"></i> Đã hủy
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="submit-bar">
+            <a asp-area="Admin" asp-controller="LichHen" asp-action="Index" class="btn-back2">
+                <i class="bi bi-x"></i> Hủy bỏ
+            </a>
+            <button type="submit" class="btn-submit">
+                <i class="bi bi-calendar-plus"></i> Tạo lịch hẹn
+            </button>
+        </div>
+
+    </form>
 </div>
 
-
 <script>
-    $(document).ready(function () {
-        $('.select2').select2({
-            placeholder: "Vui lòng chọn chuyên khoa trước",
-            allowClear: true,
-            width: '100%'
-        });
+    // ════════════════════════════════
+    // PATIENT SEARCH
+    // ════════════════════════════════
+    var searchTimer   = null;
+    var selectedId    = null;
 
-        $('.select1').select2({
-            placeholder: "Tìm kiếm...",
-            allowClear: true,
-            width: '100%'
-        });
-    });
+    function onPatientInput(val) {
+        var clearBtn = document.getElementById('clearBtn');
+        var input    = document.getElementById('patientInput');
+        var drop     = document.getElementById('patientDropdown');
 
- 
-    $(document).ready(function () {
+        // reset khi đang gõ
+        selectedId = null;
+        document.getElementById('hBenhNhan').value = '';
+        document.getElementById('selectedPatientCard').classList.remove('show');
+        input.classList.remove('has-value');
 
-        $('#chuyenKhoaSelect').change(function () {
+        clearBtn.classList.toggle('show', val.length > 0);
 
-            var specialtyId = $(this).val();
+        if (val.length < 2) {
+            drop.classList.remove('show');
+            drop.innerHTML = '';
+            return;
+        }
 
-            if (specialtyId) {
+        // loading state
+        drop.innerHTML = '<div class="pd-loading">'
+            + '<div class="spinner-border spinner-border-sm text-primary me-2"></div>'
+            + 'Đang tìm kiếm...</div>';
+        drop.classList.add('show');
 
-                $.get('/Admin/LichHen/GetDoctorsBySpecialty', { specialtyId: specialtyId }, function (data) {
-
-                    var doctorSelect = $('#doctorSelect');
-
-                    doctorSelect.empty();
-
-                    doctorSelect.append('<option value="">--Chọn bác sĩ--</option>');
-
-                    $.each(data, function (index, doctor) {
-                        doctorSelect.append('<option value="' + doctor.id + '">' + doctor.name + '</option>');
-                    });
-
-                    doctorSelect.prop('disabled', false);
-
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(function() {
+            fetch('/Admin/LichHen/SearchBenhNhan?q=' + encodeURIComponent(val))
+                .then(function(r) { return r.json(); })
+                .then(function(data) { renderDropdown(data.results); })
+                .catch(function() {
+                    drop.innerHTML = '<div class="pd-empty">Có lỗi xảy ra. Vui lòng thử lại.</div>';
                 });
+        }, 300);
+    }
 
-            } else {
+    function renderDropdown(results) {
+        var drop = document.getElementById('patientDropdown');
+        drop.innerHTML = '';
 
-                $('#doctorSelect').prop('disabled', true);
-            }
+        if (!results || !results.length) {
+            drop.innerHTML = '<div class="pd-empty">'
+                + '<i class="bi bi-person-x d-block fs-2 mb-1"></i>'
+                + 'Không tìm thấy bệnh nhân phù hợp.</div>';
+            return;
+        }
+
+        results.forEach(function(p) {
+            var item = document.createElement('div');
+            item.className = 'pd-item';
+            item.innerHTML =
+                '<div class="pd-avatar">' + getInitials(p.name) + '</div>'
+                + '<div style="flex:1">'
+                +   '<div class="pd-name">' + escHtml(p.name) + '</div>'
+                +   '<div class="pd-sub">'
+                +     (p.phone ? '<i class="bi bi-telephone me-1"></i>' + escHtml(p.phone) : '')
+                +     (p.phone && p.email ? ' &nbsp;·&nbsp; ' : '')
+                +     (p.email ? '<i class="bi bi-envelope me-1"></i>' + escHtml(p.email) : '')
+                +     (p.gt ? ' &nbsp;·&nbsp; ' + escHtml(p.gt) : '')
+                +   '</div>'
+                + '</div>';
+
+            item.addEventListener('click', function() { selectPatient(p); });
+            item.addEventListener('mouseenter', function() { this.style.background='#f8fbff'; });
+            item.addEventListener('mouseleave', function() { this.style.background=''; });
+            drop.appendChild(item);
         });
+    }
 
+    function selectPatient(p) {
+        selectedId = p.id;
+        document.getElementById('hBenhNhan').value = p.id;
+        document.getElementById('patientInput').value = p.name;
+        document.getElementById('patientInput').classList.add('has-value');
+        document.getElementById('patientDropdown').classList.remove('show');
+        document.getElementById('clearBtn').classList.add('show');
+        document.getElementById('patientInput').classList.remove('error');
+
+        // Hiện card xác nhận
+        document.getElementById('spcAvatar').textContent = getInitials(p.name);
+        document.getElementById('spcName').textContent   = p.name;
+        var parts = [];
+        if (p.phone) parts.push(p.phone);
+        if (p.email) parts.push(p.email);
+        if (p.gt)    parts.push(p.gt);
+        if (p.ngay)  parts.push('Ngày sinh: ' + p.ngay);
+        document.getElementById('spcSub').textContent = parts.join('  ·  ');
+        document.getElementById('selectedPatientCard').classList.add('show');
+        document.getElementById('patientHint').style.display = 'none';
+    }
+
+    function clearPatient() {
+        selectedId = null;
+        document.getElementById('hBenhNhan').value = '';
+        document.getElementById('patientInput').value = '';
+        document.getElementById('patientInput').classList.remove('has-value', 'error');
+        document.getElementById('patientDropdown').classList.remove('show');
+        document.getElementById('clearBtn').classList.remove('show');
+        document.getElementById('selectedPatientCard').classList.remove('show');
+        document.getElementById('patientHint').style.display = 'block';
+        document.getElementById('patientInput').focus();
+    }
+
+    // Đóng dropdown khi click ra ngoài
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.patient-search-wrap'))
+            document.getElementById('patientDropdown').classList.remove('show');
     });
+
+    // Keyboard navigation
+    document.getElementById('patientInput').addEventListener('keydown', function(e) {
+        var items = document.querySelectorAll('#patientDropdown .pd-item');
+        if (!items.length) return;
+        var active = document.querySelector('#patientDropdown .pd-item.kbd-active');
+        var idx = Array.from(items).indexOf(active);
+
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            if (active) active.classList.remove('kbd-active');
+            var next = items[Math.min(idx + 1, items.length - 1)];
+            next.classList.add('kbd-active');
+            next.style.background = '#eff6ff';
+            next.scrollIntoView({ block: 'nearest' });
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            if (active) active.classList.remove('kbd-active');
+            var prev = items[Math.max(idx - 1, 0)];
+            prev.classList.add('kbd-active');
+            prev.style.background = '#eff6ff';
+            prev.scrollIntoView({ block: 'nearest' });
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (active) active.click();
+        } else if (e.key === 'Escape') {
+            document.getElementById('patientDropdown').classList.remove('show');
+        }
+    });
+
+    // ════════════════════════════════
+    // DOCTOR LIST
+    // ════════════════════════════════
+    function loadDoctors(specialtyId) {
+        document.getElementById('hChuyenKhoa').value = specialtyId;
+        document.getElementById('hBacSi').value = '';
+        var wrap = document.getElementById('doctorListWrap');
+        var spin = document.getElementById('loadingDoc');
+        if (!specialtyId) { wrap.style.display='none'; spin.style.display='none'; return; }
+        wrap.style.display='none';
+        spin.style.display='block';
+
+        fetch('/Admin/LichHen/GetDoctorsBySpecialty?specialtyId=' + specialtyId)
+            .then(function(r) { return r.json(); })
+            .then(function(docs) {
+                spin.style.display='none';
+                var list = document.getElementById('doctorList');
+                list.innerHTML = '';
+                if (!docs.length) {
+                    list.innerHTML = '<div class="text-center text-muted py-4">'
+                        + '<i class="bi bi-person-x fs-1 d-block mb-2"></i>'
+                        + 'Không có bác sĩ khả dụng trong chuyên khoa này.</div>';
+                } else {
+                    docs.forEach(function(d) {
+                        list.innerHTML +=
+                            '<div class="doctor-item" data-id="' + d.id + '" onclick="selectDoc(this,' + d.id + ')">'
+                            + '<img src="' + (d.imageUrl || '/Images/default-avatar.png') + '"'
+                            + ' onerror="this.src=\'/Images/default-avatar.png\'" />'
+                            + '<div class="doctor-item-info">'
+                            +   '<strong>' + escHtml(d.name) + '</strong>'
+                            +   '<span>' + escHtml(d.specialty) + '</span>'
+                            + '</div>'
+                            + '<div class="doctor-item-check"></div>'
+                            + '</div>';
+                    });
+                }
+                wrap.style.display = 'block';
+            })
+            .catch(function() { spin.style.display='none'; wrap.style.display='block'; });
+    }
+
+    function selectDoc(el, id) {
+        document.querySelectorAll('.doctor-item').forEach(function(e) {
+            e.classList.remove('selected');
+            e.querySelector('.doctor-item-check').innerHTML = '';
+        });
+        el.classList.add('selected');
+        el.querySelector('.doctor-item-check').innerHTML
+            = '<i class="bi bi-check2" style="color:white;font-size:13px"></i>';
+        document.getElementById('hBacSi').value = id;
+    }
+
+    // ════════════════════════════════
+    // TIME SLOTS
+    // ════════════════════════════════
+    var ALL_SLOTS = [
+        '07:30','08:00','08:30','09:00','09:30','10:00','10:30','11:00',
+        '13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30'
+    ];
+
+    function renderSlots() {
+        if (!document.getElementById('inputDate').value) return;
+        var grid = document.getElementById('slotGrid');
+        document.getElementById('slotWrap').style.display = 'block';
+        grid.innerHTML = '';
+        ALL_SLOTS.forEach(function(s) {
+            grid.innerHTML += '<div class="slot-btn" data-slot="' + s + '" onclick="selectSlot(this)">' + s + '</div>';
+        });
+    }
+
+    function selectSlot(el) {
+        document.querySelectorAll('.slot-btn').forEach(function(b) { b.classList.remove('selected'); });
+        el.classList.add('selected');
+        document.getElementById('hSlot').value = el.dataset.slot;
+        document.getElementById('inputTimeManual').value = '';
+    }
+
+    function setSlotManual(val) {
+        document.querySelectorAll('.slot-btn').forEach(function(b) { b.classList.remove('selected'); });
+        document.getElementById('hSlot').value = val;
+    }
+
+    // ════════════════════════════════
+    // STATUS
+    // ════════════════════════════════
+    function setStatus(val, el) {
+        document.querySelectorAll('.status-opt').forEach(function(o) {
+            o.classList.remove('sel-0','sel-1','sel-2','sel-3');
+        });
+        el.classList.add('sel-' + val);
+        document.getElementById('hTrangThai').value = val;
+    }
+
+    // ════════════════════════════════
+    // VALIDATE & SUBMIT
+    // ════════════════════════════════
+    function validateForm() {
+        var ok = true;
+
+        // Bệnh nhân
+        if (!document.getElementById('hBenhNhan').value) {
+            document.getElementById('patientInput').classList.add('error');
+            document.getElementById('patientInput').focus();
+            document.getElementById('patientHint').innerHTML
+                = '<span style="color:#ef4444"><i class="bi bi-exclamation-circle me-1"></i>Vui lòng chọn bệnh nhân.</span>';
+            ok = false;
+        }
+
+        // Bác sĩ
+        if (!document.getElementById('hBacSi').value) {
+            if (ok) alert('Vui lòng chọn bác sĩ.');
+            ok = false;
+        }
+
+        // Ngày
+        if (!document.getElementById('inputDate').value) {
+            if (ok) alert('Vui lòng chọn ngày khám.');
+            ok = false;
+        }
+
+        // Giờ
+        if (!document.getElementById('hSlot').value) {
+            if (ok) alert('Vui lòng chọn khung giờ.');
+            ok = false;
+        }
+
+        return ok;
+    }
+
+    // ════════════════════════════════
+    // HELPERS
+    // ════════════════════════════════
+    function getInitials(name) {
+        if (!name) return '?';
+        var parts = name.trim().split(' ').filter(Boolean);
+        if (parts.length === 1) return parts[0][0].toUpperCase();
+        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+
+    function escHtml(str) {
+        if (!str) return '';
+        return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
 </script>
