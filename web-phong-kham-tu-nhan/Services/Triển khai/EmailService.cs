@@ -184,5 +184,115 @@ namespace web_phong_kham_tu_nhan.Services
             mail.To.Add(new MailAddress(toEmail, toName));
             await client.SendMailAsync(mail);
         }
+        // ── GỬI EMAIL NHẮC LỊCH HẸN CHO BỆNH NHÂN ────────────────────────────
+        public async Task SendNhacLichHenAsync(string toEmail, string toName,
+            string tenBacSi, string chuyenKhoa, string ngayKham, string gioKham)
+        {
+            await SendAsync(toEmail, toName,
+                subject: $"⏰ Nhắc lịch khám ngày {ngayKham} - Phòng Khám An Khang",
+                body: $@"
+                <!DOCTYPE html><html><head><meta charset='utf-8'><style>
+                  body{{font-family:'Segoe UI',Arial,sans-serif;background:#f5f8fc;margin:0;padding:0}}
+                  .wrap{{max-width:520px;margin:40px auto;background:white;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.08)}}
+                  .hd{{background:linear-gradient(135deg,#0d6efd,#4dabf7);padding:28px 36px;text-align:center}}
+                  .hd h1{{color:white;margin:0;font-size:20px;font-weight:700}}
+                  .hd p{{color:rgba(255,255,255,.85);margin:6px 0 0;font-size:13px}}
+                  .bd{{padding:28px 36px}}
+                  .info-box{{background:#f0f7ff;border-radius:12px;padding:20px;margin:18px 0;border:1px solid #bfdbfe}}
+                  .info-row{{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #dbeafe;font-size:14px}}
+                  .info-row:last-child{{border-bottom:none}}
+                  .lbl{{color:#64748b}} .val{{font-weight:700;color:#1e3a5f}}
+                  .tip{{background:#f0fdf4;border-radius:10px;padding:14px 18px;font-size:13px;color:#166534;border-left:4px solid #22c55e;margin-top:16px}}
+                  .ft{{padding:18px 36px;background:#f8fafc;text-align:center;font-size:12px;color:#94a3b8;border-top:1px solid #f1f5f9}}
+                </style></head><body>
+                <div class='wrap'>
+                  <div class='hd'><h1>⏰ Nhắc lịch khám bệnh</h1><p>Phòng Khám Đa Khoa An Khang</p></div>
+                  <div class='bd'>
+                    <p style='font-size:15px;color:#1e293b'>Xin chào <strong>{toName}</strong>,</p>
+                    <p style='color:#475569;font-size:14px;line-height:1.6'>
+                      Bạn có lịch khám vào <strong>ngày mai</strong>. Vui lòng xem thông tin bên dưới và đến đúng giờ.
+                    </p>
+                    <div class='info-box'>
+                      <div class='info-row'><span class='lbl'>📅 Ngày khám</span><span class='val'>: {ngayKham}</span></div>
+                      <div class='info-row'><span class='lbl'>🕐 Giờ khám</span><span class='val'>: {gioKham}</span></div>
+                      <div class='info-row'><span class='lbl'>👨‍⚕️ Bác sĩ</span><span class='val'>: {tenBacSi}</span></div>
+                      <div class='info-row'><span class='lbl'>🏥 Chuyên khoa</span><span class='val'>: {chuyenKhoa}</span></div>
+                    </div>
+                    <div class='tip'>✅ <strong>Lưu ý:</strong> Vui lòng mang theo CMND/CCCD và đến trước giờ hẹn 15 phút để làm thủ tục.</div>
+                  </div>
+                  <div class='ft'>Phòng Khám Đa Khoa An Khang · Hotline: 1900 xxxx<br>Email này được gửi tự động, vui lòng không trả lời.</div>
+                </div></body></html>");
+        }
+
+        // ── GỬI EMAIL THÔNG BÁO BÁC SĨ NGHỈ ĐỘT XUẤT CHO BỆNH NHÂN ──────────
+        public async Task SendBacSiNghiDotXuatAsync(string toEmail, string toName,
+            string tenBacSi, string ngayKham, string gioKham)
+        {
+            await SendAsync(toEmail, toName,
+                subject: $"⚠️ Thông báo thay đổi lịch khám ngày {ngayKham} - Phòng Khám An Khang",
+                body: $@"
+                <!DOCTYPE html><html><head><meta charset='utf-8'><style>
+                  body{{font-family:'Segoe UI',Arial,sans-serif;background:#f5f8fc;margin:0;padding:0}}
+                  .wrap{{max-width:520px;margin:40px auto;background:white;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.08)}}
+                  .hd{{background:linear-gradient(135deg,#ef4444,#f87171);padding:28px 36px;text-align:center}}
+                  .hd h1{{color:white;margin:0;font-size:20px;font-weight:700}}
+                  .hd p{{color:rgba(255,255,255,.85);margin:6px 0 0;font-size:13px}}
+                  .bd{{padding:28px 36px}}
+                  .info-box{{background:#fef2f2;border-radius:12px;padding:20px;margin:18px 0;border:1px solid #fecaca}}
+                  .info-row{{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #fee2e2;font-size:14px}}
+                  .info-row:last-child{{border-bottom:none}}
+                  .lbl{{color:#64748b}} .val{{font-weight:700;color:#7f1d1d}}
+                  .note{{background:#fffbeb;border-radius:10px;padding:14px 18px;font-size:13px;color:#92400e;border-left:4px solid #f59e0b;margin-top:16px}}
+                  .ft{{padding:18px 36px;background:#f8fafc;text-align:center;font-size:12px;color:#94a3b8;border-top:1px solid #f1f5f9}}
+                </style></head><body>
+                <div class='wrap'>
+                  <div class='hd'><h1>⚠️ Thông báo thay đổi lịch khám</h1><p>Phòng Khám Đa Khoa An Khang</p></div>
+                  <div class='bd'>
+                    <p style='font-size:15px;color:#1e293b'>Xin chào <strong>: {toName}</strong>,</p>
+                    <p style='color:#475569;font-size:14px;line-height:1.6'>
+                      Chúng tôi rất tiếc phải thông báo rằng <strong>Bác sĩ {tenBacSi}</strong> có việc đột xuất
+                      và không thể khám vào ngày đã hẹn. Lịch hẹn của bạn đã bị ảnh hưởng:
+                    </p>
+                    <div class='info-box'>
+                      <div class='info-row'><span class='lbl'>📅 Ngày khám bị hủy</span><span class='val'>: {ngayKham}</span></div>
+                      <div class='info-row'><span class='lbl'>🕐 Giờ khám</span><span class='val'>: {gioKham}</span></div>
+                      <div class='info-row'><span class='lbl'>👨‍⚕️ Bác sĩ</span><span class='val'>: {tenBacSi}</span></div>
+                      <div class='info-row'><span class='lbl'>📋 Trạng thái</span><span class='val' style='color:#ef4444'>: Chờ sắp xếp lại</span></div>
+                    </div>
+                    <div class='note'>
+                      📞 <strong>Phòng khám sẽ chủ động liên hệ lại</strong> để sắp xếp lịch khám mới cho bạn trong thời gian sớm nhất.
+                      Nếu cần hỗ trợ gấp, vui lòng gọi Hotline: <strong>1900 xxxx</strong>.
+                    </div>
+                  </div>
+                  <div class='ft'>Phòng Khám Đa Khoa An Khang · Hotline: 1900 xxxx<br>Xin lỗi vì sự bất tiện này.</div>
+                </div></body></html>");
+        }
+
+        // ── HELPER SEND CHUNG ─────────────────────────────────────────────────
+        private async Task SendAsync(string toEmail, string toName, string subject, string body)
+        {
+            var smtpHost = _config["Email:SmtpHost"] ?? "smtp.gmail.com";
+            var smtpPort = int.Parse(_config["Email:SmtpPort"] ?? "587");
+            var smtpUser = _config["Email:SmtpUser"];
+            var smtpPass = _config["Email:SmtpPass"];
+            var fromName = _config["Email:FromName"] ?? "Phòng Khám An Khang";
+
+            using var client = new SmtpClient(smtpHost, smtpPort)
+            {
+                Credentials = new NetworkCredential(smtpUser, smtpPass),
+                EnableSsl = true,
+                DeliveryMethod = SmtpDeliveryMethod.Network
+            };
+
+            var mail = new MailMessage
+            {
+                From = new MailAddress(smtpUser!, fromName),
+                Subject = subject,
+                Body = body,
+                IsBodyHtml = true
+            };
+            mail.To.Add(new MailAddress(toEmail, toName));
+            await client.SendMailAsync(mail);
+        }
     }
 }

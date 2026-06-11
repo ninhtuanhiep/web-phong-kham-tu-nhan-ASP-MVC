@@ -1,0 +1,755 @@
+﻿@model List<web_phong_kham_tu_nhan.Models.Entities.LichHen>
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Yêu cầu đổi lịch";
+    string[] dayNames = { "Chủ nhật", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7" };
+    string? toastType = TempData["ToastType"] as string;
+    string? toastMessage = TempData["ToastMessage"] as string;
+}
+
+<style>
+    .detail-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: #64748b;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 500;
+        margin-bottom: 24px;
+        transition: .2s;
+    }
+
+        .detail-back:hover {
+            color: #0d6efd;
+        }
+    .page-wrap {
+        background: #f5f8fc;
+        min-height: 80vh;
+        padding: 36px 0 60px;
+    }
+
+    /* TOAST */
+    .toast-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        pointer-events: none;
+    }
+
+    .toast-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 14px 18px;
+        border-radius: 12px;
+        min-width: 300px;
+        max-width: 420px;
+        box-shadow: 0 8px 32px rgba(0,0,0,.15);
+        pointer-events: all;
+        animation: toastIn .3s ease;
+        border-left: 4px solid transparent;
+        background: white;
+    }
+
+        .toast-item.toast-success {
+            border-left-color: #10b981;
+        }
+
+        .toast-item.toast-error {
+            border-left-color: #ef4444;
+        }
+
+        .toast-item.toast-warning {
+            border-left-color: #f59e0b;
+        }
+
+    .toast-icon {
+        font-size: 20px;
+        flex-shrink: 0;
+        margin-top: 1px;
+    }
+
+    .toast-success .toast-icon {
+        color: #10b981;
+    }
+
+    .toast-error .toast-icon {
+        color: #ef4444;
+    }
+
+    .toast-warning .toast-icon {
+        color: #f59e0b;
+    }
+
+    .toast-title {
+        font-weight: 700;
+        font-size: 14px;
+        color: #1e293b;
+        margin-bottom: 2px;
+    }
+
+    .toast-msg {
+        font-size: 13px;
+        color: #475569;
+        line-height: 1.4;
+    }
+
+    .toast-close {
+        margin-left: auto;
+        background: none;
+        border: none;
+        color: #94a3b8;
+        cursor: pointer;
+        font-size: 16px;
+        flex-shrink: 0;
+    }
+
+    @@keyframes toastIn {
+        from {
+            opacity: 0;
+            transform: translateX(20px)
+        }
+
+        to {
+            opacity: 1;
+            transform: none
+        }
+    }
+
+    @@keyframes toastOut {
+        from {
+            opacity: 1
+        }
+
+        to {
+            opacity: 0;
+            transform: translateX(20px)
+        }
+    }
+
+    .toast-item.hiding {
+        animation: toastOut .3s ease forwards;
+    }
+
+    /* PAGE HEADER */
+    .page-hd {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 24px;
+    }
+
+    .page-icon {
+        width: 46px;
+        height: 46px;
+        border-radius: 12px;
+        background: linear-gradient(135deg,#f59e0b,#fbbf24);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 20px;
+        flex-shrink: 0;
+    }
+
+    /* THÔNG BÁO RÕ RÀNG CHO BÁC SĨ */
+    .doctor-notice {
+        background: linear-gradient(135deg,#fffbeb,#fef9c3);
+        border: 1.5px solid #fde68a;
+        border-radius: 14px;
+        padding: 18px 22px;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+    }
+
+    .dn-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: #f59e0b;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 20px;
+        flex-shrink: 0;
+    }
+
+    .dn-title {
+        font-weight: 700;
+        font-size: 15px;
+        color: #d97706;
+        margin-bottom: 5px;
+    }
+
+    .dn-body {
+        font-size: 13px;
+        color: #92400e;
+        line-height: 1.6;
+    }
+
+    .dn-steps {
+        margin-top: 8px;
+    }
+
+    .dn-step {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        font-size: 13px;
+        color: #92400e;
+        margin-bottom: 3px;
+    }
+
+        .dn-step i {
+            color: #f59e0b;
+        }
+
+    /* DOI LICH CARD */
+    .doi-card {
+        background: white;
+        border-radius: 14px;
+        border: 1px solid #fde68a;
+        box-shadow: 0 2px 10px rgba(0,0,0,.06);
+        margin-bottom: 14px;
+        overflow: hidden;
+        border-left: 4px solid #f59e0b;
+    }
+
+    .doi-body {
+        padding: 20px;
+    }
+
+    /* PATIENT HEADER */
+    .doi-patient-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 16px;
+        padding-bottom: 14px;
+        border-bottom: 1px solid #fef9c3;
+    }
+
+    .doi-patient {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .doi-av {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: #eff6ff;
+        border: 2px solid #dbeafe;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 15px;
+        color: #0d6efd;
+        flex-shrink: 0;
+    }
+
+    .doi-name {
+        font-weight: 700;
+        font-size: 16px;
+        color: #1e293b;
+    }
+
+    .doi-sub {
+        font-size: 12px;
+        color: #6b7280;
+        margin-top: 1px;
+    }
+
+    .doi-sent-badge {
+        background: #fffbeb;
+        border: 1px solid #fde68a;
+        border-radius: 100px;
+        padding: 5px 12px;
+        font-size: 12px;
+        color: #d97706;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    /* SCHEDULE COMPARE */
+    .schedule-compare {
+        display: grid;
+        grid-template-columns: 1fr 36px 1fr;
+        gap: 10px;
+        align-items: center;
+        margin-bottom: 14px;
+    }
+
+    .sch-box {
+        border-radius: 10px;
+        padding: 14px;
+    }
+
+    .sch-old {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+    }
+
+    .sch-new {
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+    }
+
+    .sch-tag {
+        font-size: 11px;
+        font-weight: 700;
+        margin-bottom: 7px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .sch-old .sch-tag {
+        color: #dc2626;
+    }
+
+    .sch-new .sch-tag {
+        color: #16a34a;
+    }
+
+    .sch-date {
+        font-size: 14px;
+        font-weight: 700;
+        color: #1e293b;
+    }
+
+    .sch-time {
+        font-size: 13px;
+        color: #475569;
+        margin-top: 3px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .sch-arrow {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        color: #94a3b8;
+    }
+
+    /* LÝ DO */
+    .doi-note {
+        background: #fffbeb;
+        border-radius: 8px;
+        padding: 10px 14px;
+        border-left: 3px solid #f59e0b;
+        font-size: 13px;
+        color: #78350f;
+        margin-bottom: 14px;
+        display: flex;
+        align-items: flex-start;
+        gap: 7px;
+    }
+
+    /* ACTION SECTION */
+    .action-section {
+        border-top: 1px solid #fef9c3;
+        padding-top: 14px;
+    }
+
+    .action-title {
+        font-size: 12px;
+        font-weight: 600;
+        color: #64748b;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+        .action-title i {
+            color: #0d6efd;
+        }
+
+    .action-row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .btn-confirm {
+        background: linear-gradient(135deg,#10b981,#34d399);
+        color: white;
+        border: none;
+        padding: 10px 22px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 13px;
+        cursor: pointer;
+        transition: .3s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+        .btn-confirm:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(16,185,129,.3);
+        }
+
+    .btn-tc-toggle {
+        background: white;
+        color: #ef4444;
+        border: 1.5px solid #ef4444;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 13px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: .2s;
+    }
+
+        .btn-tc-toggle:hover {
+            background: #fef2f2;
+        }
+
+    /* FROM TỪ CHỐI */
+    .tc-panel {
+        display: none;
+        margin-top: 12px;
+        background: #fef2f2;
+        border-radius: 9px;
+        padding: 14px;
+        border: 1px solid #fecaca;
+    }
+
+        .tc-panel.show {
+            display: block;
+        }
+
+    .tc-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: #dc2626;
+        margin-bottom: 7px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .tc-input {
+        width: 100%;
+        border: 1.5px solid #fca5a5;
+        border-radius: 8px;
+        padding: 9px 12px;
+        font-size: 13px;
+        font-family: inherit;
+        background: white;
+        resize: none;
+        transition: .2s;
+    }
+
+        .tc-input:focus {
+            border-color: #ef4444;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(239,68,68,.1);
+        }
+
+    .btn-tc-submit {
+        background: #ef4444;
+        color: white;
+        border: none;
+        padding: 9px 20px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        margin-top: 10px;
+    }
+
+        .btn-tc-submit:hover {
+            background: #dc2626;
+        }
+
+    /* EMPTY */
+    .empty-box {
+        text-align: center;
+        padding: 60px 20px;
+        background: white;
+        border-radius: 14px;
+        border: 1px solid #f1f5f9;
+    }
+
+        .empty-box i {
+            font-size: 52px;
+            color: #cbd5e1;
+            display: block;
+            margin-bottom: 12px;
+        }
+
+    @@media(max-width:600px) {
+        .schedule-compare {
+            grid-template-columns: 1fr;
+        }
+
+        .sch-arrow {
+            transform: rotate(90deg);
+        }
+    }
+</style>
+<a asp-area="BacSi" asp-controller="Profile" asp-action="Index" class="detail-back">
+    <i class="bi bi-arrow-left"></i> Quay lại trang thông tin
+</a>
+<div class="toast-container" id="toastContainer"></div>
+
+<div class="page-wrap">
+    <div class="container" style="max-width:720px">
+
+        <div class="page-hd">
+            <div class="page-icon"><i class="bi bi-calendar-event"></i></div>
+            <div>
+                <h2 style="font-weight:700;color:#1e293b;margin:0">Yêu cầu đổi lịch</h2>
+                <p style="color:#94a3b8;font-size:14px;margin:3px 0 0">
+                    Bệnh nhân yêu cầu thay đổi thời gian khám
+                </p>
+            </div>
+        </div>
+
+        @if (Model.Any())
+        {
+            <!-- THÔNG BÁO CHO BÁC SĨ -->
+            <div class="doctor-notice">
+                <div class="dn-icon"><i class="bi bi-bell-fill"></i></div>
+                <div>
+                    <div class="dn-title">
+                        <i class="bi bi-exclamation-circle-fill me-1"></i>
+                        Có @Model.Count yêu cầu đổi lịch cần xem xét
+                    </div>
+                    <div class="dn-body">
+                        Bệnh nhân đã gửi yêu cầu thay đổi ngày/giờ khám.
+                        Bạn cần xem xét và xác nhận hoặc từ chối.
+                        <div class="dn-steps">
+                            <div class="dn-step">
+                                <i class="bi bi-1-circle-fill"></i>
+                                <strong>Xác nhận</strong> → Lịch tự động cập nhật sang ngày/giờ mới
+                            </div>
+                            <div class="dn-step">
+                                <i class="bi bi-2-circle-fill"></i>
+                                <strong>Từ chối</strong> → Lịch cũ được giữ nguyên, trạng thái về "Đã xác nhận"
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        @if (!Model.Any())
+        {
+            <div class="empty-box">
+                <i class="bi bi-calendar-check"></i>
+                <h5 style="color:#64748b;font-weight:600">Không có yêu cầu nào</h5>
+                <p style="color:#94a3b8;font-size:14px">Hiện chưa có bệnh nhân nào gửi yêu cầu đổi lịch.</p>
+            </div>
+        }
+        else
+        {
+            @foreach (var lh in Model)
+            {
+                string initials = "";
+                if (!string.IsNullOrEmpty(lh.BenhNhan?.FullName))
+                {
+                    var ps = lh.BenhNhan.FullName.Split(' ');
+                    initials = ps.Length > 1
+                    ? (ps[0][0].ToString() + ps[ps.Length - 1][0].ToString()).ToUpper()
+                    : ps[0][0].ToString().ToUpper();
+                }
+
+                <div class="doi-card">
+                    <div class="doi-body">
+
+                        <!-- BỆNH NHÂN -->
+                        <div class="doi-patient-row">
+                            <div class="doi-patient">
+                                <div class="doi-av">@initials</div>
+                                <div>
+                                    <div class="doi-name">@(lh.BenhNhan?.FullName ?? "Không rõ")</div>
+                                    <div class="doi-sub">
+                                        @(lh.BenhNhan?.PhoneNumber ?? lh.BenhNhan?.Email ?? "—")
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="doi-sent-badge">
+                                <i class="bi bi-clock-history"></i>
+                                Gửi @(lh.RescheduleAt.HasValue? lh.RescheduleAt.Value.ToString("HH:mm, dd/MM/yyyy") : "—")
+                            </div>
+                        </div>
+
+                        <!-- SO SÁNH LỊCH -->
+                        <div style="font-size:12px;font-weight:600;color:#475569;
+                                        margin-bottom:10px;display:flex;align-items:center;gap:5px">
+                            <i class="bi bi-arrow-left-right" style="color:#f59e0b"></i>
+                            Yêu cầu thay đổi lịch khám
+                        </div>
+                        <div class="schedule-compare">
+                            <div class="sch-box sch-old">
+                                <div class="sch-tag"><i class="bi bi-calendar-x-fill"></i> Lịch hiện tại</div>
+                                <div class="sch-date">
+                                    @dayNames[(int)lh.AppointmentDate.DayOfWeek],
+                                    @lh.AppointmentDate.ToString("dd/MM/yyyy")
+                                </div>
+                                <div class="sch-time"><i class="bi bi-clock"></i> @(lh.TimeSlot ?? "—")</div>
+                            </div>
+
+                            <div class="sch-arrow"><i class="bi bi-arrow-right"></i></div>
+
+                            <div class="sch-box sch-new">
+                                <div class="sch-tag"><i class="bi bi-calendar-check-fill"></i> Muốn đổi sang</div>
+                                @if (lh.RescheduleDate.HasValue)
+                                {
+                                    <div class="sch-date">
+                                        @dayNames[(int)lh.RescheduleDate.Value.DayOfWeek],
+                                        @lh.RescheduleDate.Value.ToString("dd/MM/yyyy")
+                                    </div>
+                                    <div class="sch-time"><i class="bi bi-clock"></i> @(lh.RescheduleTimeSlot ?? "—")</div>
+                                }
+                                else
+                                {
+                                    <div class="sch-date" style="color:#94a3b8">Chưa có</div>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- LÝ DO -->
+                        @if (!string.IsNullOrEmpty(lh.RescheduleNote))
+                        {
+                            <div class="doi-note">
+                                <i class="bi bi-chat-text-fill" style="flex-shrink:0"></i>
+                                <div><strong>Lý do của bệnh nhân:</strong> @lh.RescheduleNote</div>
+                            </div>
+                        }
+
+                        <!-- ACTIONS -->
+                        <div class="action-section">
+                            <div class="action-title">
+                                <i class="bi bi-check2-square"></i>
+                                Quyết định của bạn
+                            </div>
+                            <div class="action-row" id="actionRow-@lh.Id">
+                                <!-- XÁC NHẬN -->
+                                <form asp-area="BacSi" asp-controller="LichHen"
+                                      asp-action="DuyetDoiLich" method="post"
+                                      onsubmit="return confirm('Xác nhận lịch mới cho bệnh nhân @(lh.BenhNhan?.FullName ?? "")?')">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@lh.Id" />
+                                    <input type="hidden" name="chapNhan" value="true" />
+                                    <input type="hidden" name="lyDoTuChoi" value="" />
+                                    <button type="submit" class="btn-confirm">
+                                        <i class="bi bi-check-circle-fill"></i> Xác nhận lịch mới
+                                    </button>
+                                </form>
+
+                                <!-- TỪ CHỐI -->
+                                <button class="btn-tc-toggle" id="tcToggle-@lh.Id"
+                                        onclick="toggleTC(@lh.Id)">
+                                    <i class="bi bi-x-circle"></i> Từ chối
+                                </button>
+                            </div>
+
+                            <!-- PANEL TỪ CHỐI -->
+                            <div class="tc-panel" id="tcPanel-@lh.Id">
+                                <div class="tc-label">
+                                    <i class="bi bi-x-circle-fill"></i>
+                                    Lý do từ chối (không bắt buộc, nhưng nên điền để bệnh nhân hiểu)
+                                </div>
+                                <form asp-area="BacSi" asp-controller="LichHen"
+                                      asp-action="DuyetDoiLich" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@lh.Id" />
+                                    <input type="hidden" name="chapNhan" value="false" />
+                                    <textarea name="lyDoTuChoi" class="tc-input" rows="2"
+                                      placeholder="VD: Ngày đó bác sĩ đã kín lịch, vui lòng chọn ngày khác..."></textarea>
+                                    <div style="display:flex;gap:8px;margin-top:8px">
+                                        <button type="submit" class="btn-tc-submit">
+                                            <i class="bi bi-send"></i> Xác nhận từ chối
+                                        </button>
+                                        <button type="button"
+                                                onclick="toggleTC(@lh.Id)"
+                                                style="background:white;border:1.5px solid #e2e8f0;
+                                                           padding:8px 16px;border-radius:7px;
+                                                           font-size:13px;cursor:pointer;color:#64748b">
+                                            Hủy
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            }
+        }
+
+    </div>
+</div>
+
+<script>
+    var TOAST_ICONS  = { success:'bi-check-circle-fill', error:'bi-exclamation-circle-fill', warning:'bi-exclamation-triangle-fill' };
+    var TOAST_TITLES = { success:'Thành công', error:'Lỗi', warning:'Thông báo' };
+
+    function showToast(type, message, duration) {
+        duration = duration || 4000;
+        var container = document.getElementById('toastContainer');
+        var el = document.createElement('div');
+        el.className = 'toast-item toast-' + type;
+        el.innerHTML = '<i class="bi ' + (TOAST_ICONS[type]||'bi-info-circle-fill') + ' toast-icon"></i>'
+            + '<div><div class="toast-title">' + (TOAST_TITLES[type]||'Thông báo') + '</div>'
+            + '<div class="toast-msg">' + message + '</div></div>'
+            + '<button class="toast-close" onclick="closeToast(this.parentElement)">×</button>';
+        container.appendChild(el);
+        setTimeout(function(){ closeToast(el); }, duration);
+    }
+    function closeToast(el) {
+        if (!el||!el.parentElement) return;
+        el.classList.add('hiding');
+        setTimeout(function(){ if(el.parentElement) el.parentElement.removeChild(el); }, 300);
+    }
+
+    function toggleTC(id) {
+        var panel  = document.getElementById('tcPanel-' + id);
+        var toggle = document.getElementById('tcToggle-' + id);
+        var isOpen = panel.classList.contains('show');
+        panel.classList.toggle('show', !isOpen);
+        toggle.innerHTML = isOpen
+            ? '<i class="bi bi-x-circle"></i> Từ chối'
+            : '<i class="bi bi-x"></i> Hủy từ chối';
+        if (!isOpen) {
+            var inp = panel.querySelector('.tc-input');
+            if (inp) { inp.focus(); panel.scrollIntoView({behavior:'smooth',block:'nearest'}); }
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        @if (!string.IsNullOrEmpty(toastType) && !string.IsNullOrEmpty(toastMessage))
+        {
+                <text>showToast('@toastType', '@Html.Raw(toastMessage.Replace("'", "\\'"))');</text>
+        }
+    });
+</script>

@@ -1,0 +1,451 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var chuyenKhoaList = ViewBag.ChuyenKhoas as List<web_phong_kham_tu_nhan.Models.Entities.ChuyenKhoa>
+                                                    ?? new List<web_phong_kham_tu_nhan.Models.Entities.ChuyenKhoa>();
+}
+<link rel="stylesheet" href="~/css/BenhNhanHome/Create.css" />
+<div class="booking-page">
+    <div class="container" style="max-width:720px">
+
+
+        <h2 style="font-weight:700;color:#1e293b;margin-bottom:28px">
+            <i class="bi bi-calendar-plus text-primary me-2"></i>Đặt lịch khám
+        </h2>
+
+        <!-- STEPPER -->
+        <div class="stepper">
+            <div class="step">
+                <div class="step-circle active" id="sc1">1</div>
+                <div class="step-label active" id="sl1">Chuyên khoa</div>
+            </div>
+            <div class="step-line" id="sline1"></div>
+            <div class="step">
+                <div class="step-circle" id="sc2">2</div>
+                <div class="step-label" id="sl2">Bác sĩ</div>
+            </div>
+            <div class="step-line" id="sline2"></div>
+            <div class="step">
+                <div class="step-circle" id="sc3">3</div>
+                <div class="step-label" id="sl3">Ngày & Giờ</div>
+            </div>
+            <div class="step-line" id="sline3"></div>
+            <div class="step">
+                <div class="step-circle" id="sc4">4</div>
+                <div class="step-label" id="sl4">Xác nhận</div>
+            </div>
+        </div>
+
+        <form asp-area="BenhNhan" asp-controller="LichHen" asp-action="Create"
+              method="post" id="bookingForm">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="ChuyenKhoaId" id="hCK" />
+            <input type="hidden" name="BacSiId" id="hBS" />
+            <input type="hidden" name="TimeSlot" id="hSlot" />
+            <input type="hidden" name="AppointmentDate" id="hDate" />
+
+            <!-- ══ BƯỚC 1: CHUYÊN KHOA ══ -->
+            <div class="step-panel active" id="panel1">
+                <div class="step-card">
+                    <div class="step-card-hd">
+                        <h4>Bước 1 — Chọn chuyên khoa</h4>
+                        <p>Chọn chuyên khoa phù hợp với tình trạng của bạn</p>
+                    </div>
+                    <div class="step-card-bd">
+                        @{
+                            // Map icon cho từng chuyên khoa phổ biến
+                            var ckIcons = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) {
+                                                {"nội khoa","bi-heart-pulse-fill"},{"tim mạch","bi-heart-fill"},
+                                                {"ngoại khoa","bi-bandaid-fill"},{"nhi","bi-emoji-smile-fill"},
+                                                {"sản phụ khoa","bi-gender-female"},{"da liễu","bi-person-fill"},
+                                                {"mắt","bi-eye-fill"},{"tai mũi họng","bi-ear-fill"},
+                                                {"thần kinh","bi-lightning-fill"},{"ung thư","bi-shield-fill"},
+                                                {"xương khớp","bi-activity"},{"tiêu hóa","bi-clipboard2-heart-fill"},
+                                                {"răng hàm mặt","bi-emoji-laughing-fill"},{"tâm thần","bi-brain"},
+                                                };
+                            string getIcon(string name)
+                            {
+                                foreach (var kv in ckIcons)
+                                    if (name?.ToLower().Contains(kv.Key) == true) return kv.Value;
+                                return "bi-hospital-fill";
+                            }
+                        }
+                        <div class="ck-grid" id="ckGrid">
+                            @foreach (SelectListItem item in (IEnumerable<SelectListItem>)ViewBag.ChuyenKhoas)
+                            {
+                                <div class="ck-btn" data-id="@item.Value" data-name="@item.Text"
+                                     onclick="selectCK(this)">
+                                    <div class="ck-icon">
+                                        <i class="bi @getIcon(item.Text)"></i>
+                                    </div>
+                                    <div class="ck-name">@item.Text</div>
+                                </div>
+                            }
+                        </div>
+                        @if (!((IEnumerable<SelectListItem>)ViewBag.ChuyenKhoas).Any())
+                        {
+                            <div class="empty-state">
+                                <i class="bi bi-hospital"></i>
+                                <p>Chưa có chuyên khoa nào.</p>
+                            </div>
+                        }
+                    </div>
+                    <div class="step-card-ft">
+                        <div></div>
+                        <button type="button" class="btn-next" onclick="goStep2()">
+                            Tiếp theo <i class="bi bi-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══ BƯỚC 2: BÁC SĨ ══ -->
+            <div class="step-panel" id="panel2">
+                <div class="step-card">
+                    <div class="step-card-hd">
+                        <h4>Bước 2 — Chọn bác sĩ</h4>
+                        <p id="step2Sub">Danh sách bác sĩ chuyên khoa</p>
+                    </div>
+                    <div class="step-card-bd">
+                        <div class="loading-wrap" id="docLoading">
+                            <div class="spinner-border text-primary mb-2"></div>
+                            <div>Đang tải danh sách bác sĩ...</div>
+                        </div>
+                        <div class="doctor-list" id="docList" style="display:none"></div>
+                        <div class="empty-state" id="docEmpty" style="display:none">
+                            <i class="bi bi-person-x"></i>
+                            <p>Không có bác sĩ nào khả dụng trong chuyên khoa này.</p>
+                        </div>
+                    </div>
+                    <div class="step-card-ft">
+                        <button type="button" class="btn-prev" onclick="goStep(1)">
+                            <i class="bi bi-arrow-left"></i> Quay lại
+                        </button>
+                        <button type="button" class="btn-next" onclick="goStep3()">
+                            Tiếp theo <i class="bi bi-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══ BƯỚC 3: NGÀY & GIỜ ══ -->
+            <div class="step-panel" id="panel3">
+                <div class="step-card">
+                    <div class="step-card-hd">
+                        <h4>Bước 3 — Chọn ngày & giờ</h4>
+                        <p>Chọn thời gian phù hợp với lịch của bạn</p>
+                    </div>
+                    <div class="step-card-bd">
+                        <div class="date-input-wrap">
+                            <div class="fg">
+                                <label><i class="bi bi-calendar3"></i> Ngày khám</label>
+                                <input type="date" id="inputDate" class="fc"
+                                       min="@DateTime.Today.ToString("yyyy-MM-dd")"
+                                       onchange="onDateChange(this.value)" />
+                            </div>
+                        </div>
+
+                        <div id="todayWarn" style="display:none;background:#fffbeb;border-radius:8px;
+                         padding:10px 14px;border-left:3px solid #f59e0b;font-size:13px;
+                         color:#92400e;margin-bottom:14px">
+                            <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                            Hôm nay — chỉ các giờ từ <strong id="minTimeStr"></strong> trở đi mới khả dụng.
+                        </div>
+
+                        <div id="slotSection" style="display:none">
+                            <div class="loading-wrap" id="slotLoading" style="padding:20px;display:none">
+                                <div class="spinner-border spinner-border-sm text-primary me-2"></div>
+                                Đang tải khung giờ...
+                            </div>
+                            <div id="slotsWrap">
+                                <div class="slot-section-label">
+                                    <i class="bi bi-sun"></i> Buổi sáng
+                                </div>
+                                <div class="slot-grid" id="slotMorning"></div>
+                                <div class="slot-section-label">
+                                    <i class="bi bi-cloud-sun"></i> Buổi chiều
+                                </div>
+                                <div class="slot-grid" id="slotAfternoon"></div>
+                            </div>
+                            <div class="slot-legend">
+                                <span><span class="sl-dot" style="background:#0d6efd;border-radius:3px"></span>Đã chọn</span>
+                                <span><span class="sl-dot" style="background:#f8fafc;border:1px solid #e2e8f0"></span>Đã đặt</span>
+                                <span><span class="sl-dot" style="background:#fef9f9;border:1px solid #fecaca"></span>Đã qua</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="step-card-ft">
+                        <button type="button" class="btn-prev" onclick="goStep(2)">
+                            <i class="bi bi-arrow-left"></i> Quay lại
+                        </button>
+                        <button type="button" class="btn-next" onclick="goStep4()">
+                            Tiếp theo <i class="bi bi-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══ BƯỚC 4: XÁC NHẬN ══ -->
+            <div class="step-panel" id="panel4">
+                <div class="step-card">
+                    <div class="step-card-hd">
+                        <h4>Bước 4 — Xác nhận thông tin</h4>
+                        <p>Kiểm tra lại trước khi đặt lịch</p>
+                    </div>
+                    <div class="step-card-bd">
+                        <div class="confirm-grid">
+                            <div class="confirm-item">
+                                <div class="confirm-lbl"><i class="bi bi-hospital"></i> Chuyên khoa</div>
+                                <div class="confirm-val" id="cf-ck">—</div>
+                            </div>
+                            <div class="confirm-item">
+                                <div class="confirm-lbl"><i class="bi bi-person-badge"></i> Bác sĩ</div>
+                                <div class="confirm-val" id="cf-bs">—</div>
+                            </div>
+                            <div class="confirm-item">
+                                <div class="confirm-lbl"><i class="bi bi-calendar3"></i> Ngày khám</div>
+                                <div class="confirm-val" id="cf-date">—</div>
+                            </div>
+                            <div class="confirm-item">
+                                <div class="confirm-lbl"><i class="bi bi-clock"></i> Giờ khám</div>
+                                <div class="confirm-val" id="cf-slot">—</div>
+                            </div>
+                        </div>
+
+                        <div class="fg">
+                            <label><i class="bi bi-chat-text"></i> Lý do khám (không bắt buộc)</label>
+                            <textarea name="LyDoKham" class="fc" rows="3"
+                                      placeholder="Mô tả triệu chứng hoặc lý do thăm khám..."></textarea>
+                        </div>
+
+                        <div style="background:#f0fdf4;border-radius:10px;padding:14px 18px;
+                                border-left:4px solid #10b981;font-size:13px;color:#166534;margin-top:14px">
+                            <i class="bi bi-info-circle-fill me-1"></i>
+                            Sau khi đặt, lịch sẽ ở trạng thái <strong>"Chờ xác nhận"</strong>
+                            cho đến khi bác sĩ duyệt.
+                        </div>
+                    </div>
+                    <div class="step-card-ft">
+                        <button type="button" class="btn-prev" onclick="goStep(3)">
+                            <i class="bi bi-arrow-left"></i> Quay lại
+                        </button>
+                        <button type="submit" class="btn-submit">
+                            <i class="bi bi-calendar-check-fill"></i> Xác nhận đặt lịch
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<script>
+    var MORNING   = ['07:30','08:00','08:30','09:00','09:30','10:00','10:30','11:00'];
+    var AFTERNOON = ['13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30'];
+
+    // STATE
+    var selCKId = '', selCKName = '';
+    var selBSId = '', selBSName = '';
+    var selDate = '', selSlot   = '';
+
+    // ── BƯỚC 1: CHỌN CHUYÊN KHOA ──
+    function selectCK(el) {
+        document.querySelectorAll('.ck-btn').forEach(function(b){ b.classList.remove('selected'); });
+        el.classList.add('selected');
+        selCKId   = el.dataset.id;
+        selCKName = el.dataset.name;
+        document.getElementById('hCK').value = selCKId;
+    }
+
+    function goStep2() {
+        if (!selCKId) {
+            alert('Vui lòng chọn chuyên khoa.');
+            return;
+        }
+        goStep(2);
+        loadDoctors();
+    }
+
+    // ── BƯỚC 2: CHỌN BÁC SĨ ──
+    function loadDoctors() {
+        document.getElementById('docLoading').style.display = 'block';
+        document.getElementById('docList').style.display    = 'none';
+        document.getElementById('docEmpty').style.display   = 'none';
+        document.getElementById('step2Sub').textContent     = 'Bác sĩ chuyên khoa ' + selCKName;
+
+        fetch('/BenhNhan/LichHen/GetDoctorsBySpecialty?specialtyId=' + selCKId)
+            .then(function(r){ return r.json(); })
+            .then(function(docs) {
+                document.getElementById('docLoading').style.display = 'none';
+                var list = document.getElementById('docList');
+                list.innerHTML = '';
+
+                if (!docs.length) {
+                    document.getElementById('docEmpty').style.display = 'block';
+                    return;
+                }
+
+                docs.forEach(function(d) {
+                    var imgHtml = d.imageUrl
+                        ? '<img src="' + d.imageUrl + '" class="doc-img" onerror="this.parentElement.innerHTML=\'<div class=doc-img-ph>' + getInitials(d.name) + '</div>\'">'
+                        : '<div class="doc-img-ph">' + getInitials(d.name) + '</div>';
+
+                    var btn = document.createElement('div');
+                    btn.className   = 'doc-btn';
+                    btn.dataset.id  = d.id;
+                    btn.dataset.name= d.name;
+                    btn.innerHTML   = imgHtml
+                        + '<div class="doc-name">' + escHtml(d.name) + '</div>'
+                        + '<div class="doc-spec">' + escHtml(selCKName) + '</div>';
+                    btn.onclick = function() { selectDoctor(this); };
+                    list.appendChild(btn);
+                });
+
+                list.style.display = 'grid';
+            })
+            .catch(function() {
+                document.getElementById('docLoading').style.display = 'none';
+                document.getElementById('docEmpty').style.display   = 'block';
+            });
+    }
+
+    function selectDoctor(el) {
+        document.querySelectorAll('.doc-btn').forEach(function(b){ b.classList.remove('selected'); });
+        el.classList.add('selected');
+        selBSId   = el.dataset.id;
+        selBSName = el.dataset.name;
+        document.getElementById('hBS').value = selBSId;
+    }
+
+    function goStep3() {
+        if (!selBSId) { alert('Vui lòng chọn bác sĩ.'); return; }
+        goStep(3);
+    }
+
+    // ── BƯỚC 3: NGÀY & GIỜ ──
+    function onDateChange(val) {
+        selDate = val;
+        if (!val) return;
+        document.getElementById('hDate').value = val;
+
+        var today = new Date(); today.setHours(0,0,0,0);
+        var sel   = new Date(val);
+        var isToday = sel.getTime() === today.getTime();
+
+        var todayWarn = document.getElementById('todayWarn');
+        if (isToday) {
+            var now = new Date();
+            var h = now.getHours(), m = now.getMinutes() + 30;
+            if (m >= 60) { h++; m -= 60; }
+            document.getElementById('minTimeStr').textContent
+                = String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0');
+            todayWarn.style.display = 'block';
+        } else {
+            todayWarn.style.display = 'none';
+        }
+
+        loadSlots(val, isToday);
+    }
+
+    function loadSlots(dateVal, isToday) {
+        document.getElementById('slotSection').style.display  = 'block';
+        document.getElementById('slotLoading').style.display  = 'block';
+        document.getElementById('slotMorning').innerHTML      = '';
+        document.getElementById('slotAfternoon').innerHTML    = '';
+        selSlot = '';
+        document.getElementById('hSlot').value = '';
+
+        fetch('/BenhNhan/LichHen/GetBookedSlots?bacSiId=' + selBSId + '&date=' + dateVal)
+            .then(function(r){ return r.json(); })
+            .then(function(data) {
+                document.getElementById('slotLoading').style.display = 'none';
+                renderSlots(MORNING,   'slotMorning',   data.booked||[], data.past||[]);
+                renderSlots(AFTERNOON, 'slotAfternoon', data.booked||[], data.past||[]);
+            })
+            .catch(function() {
+                document.getElementById('slotLoading').style.display = 'none';
+                renderSlots(MORNING,   'slotMorning',   [], []);
+                renderSlots(AFTERNOON, 'slotAfternoon', [], []);
+            });
+    }
+
+    function renderSlots(slots, containerId, booked, past) {
+        var grid = document.getElementById(containerId);
+        grid.innerHTML = '';
+        slots.forEach(function(s) {
+            var isBooked = booked.includes(s);
+            var isPast   = past.includes(s);
+            var btn = document.createElement('div');
+            btn.className    = 'slot-btn' + (isBooked?' booked':'') + (isPast?' past':'');
+            btn.dataset.slot = s;
+            btn.textContent  = s;
+            if (!isBooked && !isPast)
+                btn.onclick = function() { selectSlot(this); };
+            grid.appendChild(btn);
+        });
+    }
+
+    function selectSlot(el) {
+        document.querySelectorAll('.slot-btn').forEach(function(b){ b.classList.remove('selected'); });
+        el.classList.add('selected');
+        selSlot = el.dataset.slot;
+        document.getElementById('hSlot').value = selSlot;
+    }
+
+    function goStep4() {
+        if (!selDate) { alert('Vui lòng chọn ngày khám.'); return; }
+        if (!selSlot) { alert('Vui lòng chọn giờ khám.'); return; }
+
+        // Cập nhật tóm tắt
+        var dateDisp = new Date(selDate);
+        var days = ['Chủ nhật','Thứ 2','Thứ 3','Thứ 4','Thứ 5','Thứ 6','Thứ 7'];
+        var d = days[dateDisp.getDay()] + ', '
+              + String(dateDisp.getDate()).padStart(2,'0') + '/'
+              + String(dateDisp.getMonth()+1).padStart(2,'0') + '/'
+              + dateDisp.getFullYear();
+
+        document.getElementById('cf-ck').textContent   = selCKName;
+        document.getElementById('cf-bs').textContent   = selBSName;
+        document.getElementById('cf-date').textContent = d;
+        document.getElementById('cf-slot').textContent = selSlot;
+
+        goStep(4);
+    }
+
+    // ── STEPPER NAVIGATION ──
+    var currentStep = 1;
+
+    function goStep(n) {
+        document.getElementById('panel' + currentStep).classList.remove('active');
+
+        for (var i = 1; i <= 4; i++) {
+            var c = document.getElementById('sc' + i);
+            var l = document.getElementById('sl' + i);
+            c.classList.remove('active','done');
+            l.classList.remove('active');
+
+            if (i < n)  { c.classList.add('done');   c.innerHTML = '<i class="bi bi-check2"></i>'; }
+            if (i === n) { c.classList.add('active'); c.textContent = i; l.classList.add('active'); }
+            if (i > n)   { c.textContent = i; }
+            if (i < 4)
+                document.getElementById('sline'+i).classList.toggle('done', i < n);
+        }
+
+        document.getElementById('panel' + n).classList.add('active');
+        currentStep = n;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // ── HELPERS ──
+    function getInitials(name) {
+        if (!name) return '?';
+        var parts = name.trim().split(' ').filter(Boolean);
+        if (parts.length === 1) return parts[0][0].toUpperCase();
+        return (parts[0][0] + parts[parts.length-1][0]).toUpperCase();
+    }
+    function escHtml(s) {
+        if (!s) return '';
+        return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+</script>

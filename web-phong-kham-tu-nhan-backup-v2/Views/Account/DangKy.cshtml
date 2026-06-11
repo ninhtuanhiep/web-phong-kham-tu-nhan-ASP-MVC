@@ -1,0 +1,116 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Register</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+
+        body {
+            background: #f3f6fb;
+            font-family: Arial;
+        }
+
+        .register-box {
+            width: 420px;
+            margin: 60px auto;
+            background: white;
+            padding: 35px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        .register-title {
+            font-weight: 600;
+            font-size: 22px;
+        }
+
+        .register-desc {
+            color: #6c757d;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .form-control {
+            height: 45px;
+        }
+
+        .btn-register {
+            width: 100%;
+            height: 45px;
+            background: #3b7ddd;
+            border: none;
+        }
+
+            .btn-register:hover {
+                background: #2f6fd0;
+            }
+
+        .login-link {
+            text-align: center;
+            margin-top: 15px;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <div class="register-box">
+
+        <div class="register-title">
+            Tạo tài khoản
+        </div>
+
+        <div class="register-desc">
+            Đăng ký đặt lịch hẹn và quản lý sức khỏe của bạn
+        </div>
+
+        <form method="post" asp-action="Dangky">
+
+            <div class="mb-3">
+                <label class="form-label">Họ và tên</label>
+                <input name="fullName" class="form-control" placeholder="Nhập họ và tên của bạn" required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Email</label>
+                <input name="email" type="email" class="form-control" placeholder="Nhập email của bạn" required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Số điện thoại</label>
+                <input name="phoneNumber" type="text" class="form-control" placeholder="Nhập số điện thoại của bạn" required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Mật khẩu</label>
+                <input name="password" type="password" class="form-control" placeholder="Tạo mật khẩu" required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Xác nhận mật khẩu</label>
+                <input name="confirmPassword" type="password" class="form-control" placeholder="Hãy xác nhận mật khẩu của bạn" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-register">
+                TẠO TÀI KHOẢN
+            </button>
+
+        </form>
+
+        <div class="login-link">
+            Bạn đã có tài khoản?
+            <a href="/Account/Dangnhap">Đăng nhập tại đây</a>
+        </div>
+
+    </div>
+
+</body>
+</html>

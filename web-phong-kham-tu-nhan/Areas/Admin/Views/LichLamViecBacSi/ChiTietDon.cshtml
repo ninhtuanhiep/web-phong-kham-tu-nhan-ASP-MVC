@@ -1,0 +1,241 @@
+@model web_phong_kham_tu_nhan.Models.Entities.LichLamViecBacSi
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Chi tiết đơn xin nghỉ";
+    var lichHens = ViewBag.LichHenTrongNgay as List<web_phong_kham_tu_nhan.Models.Entities.LichHen> ?? new();
+    int soLichHen = (int)(ViewBag.SoLichHenTrongNgay ?? 0);
+    bool isDotXuat = (bool)(ViewBag.IsDotXuat ?? false);
+    string[] tenThu = {"Chủ nhật","Thứ 2","Thứ 3","Thứ 4","Thứ 5","Thứ 6","Thứ 7"};
+}
+
+<style>
+.ct-page { max-width: 800px; margin: 0 auto; padding: 24px 16px; }
+.ct-hd { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:10px; }
+.ct-hd h4 { margin:0; font-size:1.15rem; font-weight:700; color:#1e3a5f; }
+.info-card { background:#fff; border-radius:14px; border:1px solid #e2e8f0;
+             padding:20px 24px; margin-bottom:16px; box-shadow:0 1px 6px rgba(0,0,0,.05); }
+.info-card h6 { font-weight:700; font-size:13px; color:#64748b; text-transform:uppercase;
+                letter-spacing:.5px; margin-bottom:14px; display:flex; align-items:center; gap:7px; }
+.info-row { display:flex; justify-content:space-between; align-items:flex-start;
+            padding:8px 0; border-bottom:1px solid #f1f5f9; font-size:14px; }
+.info-row:last-child { border-bottom:none; }
+.ir-lbl { color:#64748b; flex-shrink:0; }
+.ir-val { font-weight:600; color:#1e293b; text-align:right; }
+/* cảnh báo số lịch hẹn */
+.alert-lichhen { border-radius:12px; padding:16px 20px; margin-bottom:16px;
+                 display:flex; align-items:flex-start; gap:12px; }
+.alert-lichhen.has { background:#fef2f2; border:1px solid #fca5a5; }
+.alert-lichhen.none { background:#f0fdf4; border:1px solid #86efac; }
+.alert-icon { font-size:1.5rem; flex-shrink:0; }
+.alert-body h6 { margin:0 0 4px; font-weight:700; font-size:14px; }
+.alert-body.has h6 { color:#b91c1c; }
+.alert-body.none h6 { color:#166534; }
+.alert-body p { margin:0; font-size:13px; color:#64748b; }
+/* bảng lịch hẹn */
+.table-lichhen { width:100%; border-collapse:collapse; font-size:13px; margin-top:10px; }
+.table-lichhen th { background:#f8fafc; padding:9px 12px; text-align:left;
+                    font-weight:600; color:#64748b; border-bottom:2px solid #e2e8f0; }
+.table-lichhen td { padding:9px 12px; border-bottom:1px solid #f1f5f9; color:#374151; }
+.table-lichhen tr:hover td { background:#fafafa; }
+.tt-pill { display:inline-flex; align-items:center; gap:4px; border-radius:6px;
+           padding:2px 9px; font-size:11px; font-weight:600; }
+/* actions */
+.action-row { display:flex; flex-wrap:wrap; gap:10px; margin-top:8px; }
+.btn-duyet-thuong { background:#10b981; color:#fff; border:none; border-radius:10px;
+                    padding:11px 22px; font-size:13px; font-weight:600; cursor:pointer;
+                    display:flex; align-items:center; gap:6px; }
+.btn-duyet-thuong:hover { opacity:.88; }
+.btn-duyet-dot { background:linear-gradient(135deg,#ef4444,#f87171); color:#fff; border:none;
+                 border-radius:10px; padding:11px 22px; font-size:13px; font-weight:600;
+                 cursor:pointer; display:flex; align-items:center; gap:6px; }
+.btn-duyet-dot:hover { opacity:.88; }
+.btn-tuchoi { background:#fff; color:#ef4444; border:1.5px solid #fca5a5; border-radius:10px;
+              padding:11px 20px; font-size:13px; font-weight:600; cursor:pointer;
+              display:flex; align-items:center; gap:6px; }
+.btn-tuchoi:hover { background:#fef2f2; }
+.dot-xuat-badge { display:inline-flex; align-items:center; gap:5px; background:#fef2f2;
+                  color:#ef4444; border:1px solid #fca5a5; border-radius:7px;
+                  padding:4px 11px; font-size:12px; font-weight:700; }
+</style>
+
+<div class="ct-page">
+    <div class="ct-hd">
+        <h4><i class="bi bi-file-earmark-medical me-2 text-primary"></i>Chi tiết đơn xin nghỉ</h4>
+        <a asp-area="Admin" asp-controller="LichLamViecBacSi" asp-action="DonXinNghi"
+           class="btn btn-outline-secondary btn-sm" style="border-radius:8px">
+            <i class="bi bi-arrow-left me-1"></i>Quay lại
+        </a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success d-flex gap-2 mb-3" style="border-radius:10px">
+            <i class="bi bi-check-circle-fill mt-1"></i> @TempData["Success"]
+        </div>
+    }
+
+    <!-- THÔNG TIN ĐƠN XIN NGHỈ -->
+    <div class="info-card">
+        <h6><i class="bi bi-person-badge text-primary"></i> Thông tin bác sĩ & ca nghỉ</h6>
+        <div class="info-row">
+            <span class="ir-lbl">Bác sĩ</span>
+            <span class="ir-val">@(Model.BacSi?.FullName ?? "—")</span>
+        </div>
+        <div class="info-row">
+            <span class="ir-lbl">Ngày xin nghỉ</span>
+            <span class="ir-val">
+                @tenThu[(int)Model.Ngay.DayOfWeek], @Model.Ngay.ToString("dd/MM/yyyy")
+            </span>
+        </div>
+        <div class="info-row">
+            <span class="ir-lbl">Ca làm việc</span>
+            <span class="ir-val">
+                @(Model.CaLam == "Sang" ? "Ca sáng" : Model.CaLam == "Chieu" ? "Ca chiều" : "Cả ngày")
+            </span>
+        </div>
+        <div class="info-row">
+            <span class="ir-lbl">Loại đơn</span>
+            <span class="ir-val">
+                @if (isDotXuat)
+                {
+                    <span class="dot-xuat-badge"><i class="bi bi-lightning-fill"></i> Nghỉ đột xuất (khẩn cấp)</span>
+                }
+                else
+                {
+                    <span class="tt-pill" style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe">
+                        <i class="bi bi-calendar-x"></i> Nghỉ phép thường
+                    </span>
+                }
+            </span>
+        </div>
+        <div class="info-row">
+            <span class="ir-lbl">Lý do</span>
+            <span class="ir-val">@(string.IsNullOrEmpty(Model.LyDoXinNghi) ? "Không có lý do" : Model.LyDoXinNghi)</span>
+        </div>
+        <div class="info-row">
+            <span class="ir-lbl">Thời gian nộp</span>
+            <span class="ir-val">@Model.ThoiGianTao.ToString("HH:mm – dd/MM/yyyy")</span>
+        </div>
+    </div>
+
+    <!-- CẢNH BÁO SỐ LỊCH HẸN BỊ ẢNH HƯỞNG -->
+    @if (soLichHen > 0)
+    {
+        <div class="alert-lichhen has">
+            <div class="alert-icon">⚠️</div>
+            <div class="alert-body has">
+                <h6>Có @soLichHen lịch hẹn sẽ bị ảnh hưởng nếu duyệt nghỉ!</h6>
+                <p>
+                    Nếu bạn duyệt <strong>Nghỉ đột xuất</strong>, hệ thống sẽ tự động
+                    <strong>gửi email thông báo</strong> đến @soLichHen bệnh nhân bên dưới
+                    và chuyển lịch hẹn sang trạng thái chờ sắp xếp lại.
+                    <br>Nếu duyệt <strong>Nghỉ thường</strong>, lịch hẹn sẽ không bị thay đổi tự động.
+                </p>
+            </div>
+        </div>
+
+        <!-- BẢNG LỊCH HẸN BỊ ẢNH HƯỞNG -->
+        <div class="info-card">
+            <h6><i class="bi bi-calendar2-x text-danger"></i> Danh sách lịch hẹn trong ngày (@Model.Ngay.ToString("dd/MM/yyyy"))</h6>
+            <table class="table-lichhen">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Bệnh nhân</th>
+                        <th>Giờ khám</th>
+                        <th>Lý do khám</th>
+                        <th>Email sẽ nhận thông báo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (int i = 0; i < lichHens.Count; i++)
+                    {
+                        var lh = lichHens[i];
+                        <tr>
+                            <td>@(i + 1)</td>
+                            <td><strong>@(lh.BenhNhan?.FullName ?? "—")</strong></td>
+                            <td>@(lh.TimeSlot ?? "—")</td>
+                            <td style="color:#64748b">@(string.IsNullOrEmpty(lh.LyDoKham) ? "—" : lh.LyDoKham)</td>
+                            <td>
+                                @{
+                                    string emailBN = lh.BenhNhan?.Email ?? "—";
+                                }
+                                @if (emailBN != "—")
+                                {
+                                    <span style="color:#0d6efd;font-size:12px">
+                                        <i class="bi bi-envelope-fill me-1"></i>@emailBN
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span style="color:#94a3b8;font-size:12px">Chưa có email</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="alert-lichhen none">
+            <div class="alert-icon">✅</div>
+            <div class="alert-body none">
+                <h6>Không có lịch hẹn nào trong ngày này</h6>
+                <p>Bác sĩ không có lịch hẹn với bệnh nhân vào ngày @Model.Ngay.ToString("dd/MM/yyyy"). Có thể duyệt an toàn.</p>
+            </div>
+        </div>
+    }
+
+    <!-- NÚT QUYẾT ĐỊNH -->
+    <div class="info-card">
+        <h6><i class="bi bi-check2-square text-success"></i> Quyết định</h6>
+        <div class="action-row">
+
+            <!-- Duyệt nghỉ thường -->
+            <form asp-area="Admin" asp-controller="LichLamViecBacSi" asp-action="DuyetNghi" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.Id" />
+                <input type="hidden" name="chaphuan" value="true" />
+                <input type="hidden" name="dotXuat" value="false" />
+                <button type="submit" class="btn-duyet-thuong">
+                    <i class="bi bi-check-circle-fill"></i> Duyệt nghỉ thường
+                    @if (soLichHen > 0)
+                    { <span style="font-size:11px;opacity:.85">(lịch hẹn giữ nguyên)</span> }
+                </button>
+            </form>
+
+            <!-- Duyệt đột xuất + tự động thông báo BN qua email -->
+            <form asp-area="Admin" asp-controller="LichLamViecBacSi" asp-action="DuyetNghi" method="post"
+                  onsubmit="return confirm('Duyệt nghỉ đột xuất?\n\nHệ thống sẽ TỰ ĐỘNG gửi email thông báo đến @soLichHen bệnh nhân và cập nhật trạng thái lịch hẹn.')">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.Id" />
+                <input type="hidden" name="chaphuan" value="true" />
+                <input type="hidden" name="dotXuat" value="true" />
+                <button type="submit" class="btn-duyet-dot">
+                    <i class="bi bi-lightning-fill"></i> Duyệt đột xuất
+                    @if (soLichHen > 0)
+                    { <span style="font-size:11px;opacity:.85">+ gửi email @soLichHen BN</span> }
+                </button>
+            </form>
+
+            <!-- Từ chối -->
+            <form asp-area="Admin" asp-controller="LichLamViecBacSi" asp-action="DuyetNghi" method="post"
+                  onsubmit="return confirm('Từ chối đơn? Lịch làm việc sẽ giữ nguyên.')">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.Id" />
+                <input type="hidden" name="chaphuan" value="false" />
+                <button type="submit" class="btn-tuchoi">
+                    <i class="bi bi-x-circle"></i> Từ chối đơn
+                </button>
+            </form>
+        </div>
+        <div style="font-size:12px;color:#94a3b8;margin-top:10px">
+            <i class="bi bi-info-circle me-1"></i>
+            "Duyệt đột xuất" sẽ gửi email đến <strong>tất cả bệnh nhân có lịch hẹn</strong> trong ngày @Model.Ngay.ToString("dd/MM/yyyy")
+            và chuyển trạng thái lịch hẹn thành <strong>Chờ sắp xếp lại</strong>.
+        </div>
+    </div>
+</div>

@@ -1,0 +1,202 @@
+@model List<web_phong_kham_tu_nhan.Models.Entities.LichLamViecBacSi>
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Duyệt đăng ký lịch làm việc";
+}
+<style>
+.dk-page { max-width:960px; margin:0 auto; padding:24px 16px; }
+.dk-hd { display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px; }
+.dk-hd h4 { margin:0;font-size:1.2rem;font-weight:700;color:#1e3a5f; }
+.dk-empty { text-align:center;padding:60px 20px;color:#94a3b8; }
+.dk-empty i { font-size:3rem;display:block;margin-bottom:10px; }
+.dk-card { background:#fff;border-radius:12px;padding:16px 20px;margin-bottom:12px;
+           box-shadow:0 1px 6px rgba(0,0,0,.07);border-left:4px solid #8b5cf6;
+           display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap; }
+.dk-avatar { width:44px;height:44px;border-radius:10px;background:#f5f3ff;
+             color:#8b5cf6;display:flex;align-items:center;justify-content:center;
+             font-size:1.2rem;font-weight:700;flex-shrink:0; }
+.dk-info { flex:1;min-width:200px; }
+.dk-name { font-weight:700;font-size:14px;color:#1e293b; }
+.dk-meta { font-size:12px;color:#64748b;margin-top:4px;display:flex;flex-wrap:wrap;gap:12px; }
+.dk-meta span { display:flex;align-items:center;gap:4px; }
+.dk-ghichu { font-size:12px;color:#64748b;margin-top:6px;font-style:italic; }
+.dk-actions { display:flex;gap:8px;flex-shrink:0;align-items:center;flex-wrap:wrap; }
+.btn-ok  { background:#10b981;color:#fff;border:none;border-radius:8px;
+           padding:8px 16px;font-size:12px;font-weight:600;cursor:pointer;
+           display:flex;align-items:center;gap:5px; }
+.btn-ok:hover { opacity:.88; }
+.btn-no  { background:#ef4444;color:#fff;border:none;border-radius:8px;
+           padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;
+           display:flex;align-items:center;gap:5px; }
+.btn-no:hover { opacity:.88; }
+.ca-pill { display:inline-flex;align-items:center;gap:4px;border-radius:6px;
+           padding:2px 9px;font-size:11px;font-weight:600; }
+.summary-bar { background:#f5f3ff;border-radius:10px;padding:12px 18px;
+               margin-bottom:18px;font-size:13px;color:#6d28d9;border:1px solid #ddd6fe; }
+/* modal ghi chu admin */
+.modal-overlay { position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;
+                 z-index:1050;align-items:center;justify-content:center; }
+.modal-overlay.show { display:flex; }
+.modal-box { background:#fff;border-radius:14px;width:90%;max-width:440px;overflow:hidden; }
+.modal-hd { background:linear-gradient(135deg,#10b981,#6ee7b7);padding:16px 20px;
+            display:flex;justify-content:space-between;align-items:center; }
+.modal-hd h5 { margin:0;color:#fff;font-size:1rem; }
+.modal-cl { background:rgba(255,255,255,.25);border:none;color:#fff;border-radius:6px;
+            width:28px;height:28px;cursor:pointer;font-size:16px; }
+.modal-bd { padding:20px; }
+</style>
+
+<div class="dk-page">
+  <div class="dk-hd">
+    <h4>
+      <i class="bi bi-calendar-plus me-2 text-primary"></i>Duyệt đăng ký lịch làm việc
+      @if (Model.Any())
+      { <span class="badge bg-primary ms-2">@Model.Count</span> }
+    </h4>
+    <div style="display:flex;gap:8px">
+      <a asp-area="Admin" asp-controller="LichLamViecBacSi" asp-action="DonXinNghi"
+         class="btn btn-outline-warning btn-sm" style="border-radius:8px;font-size:12px">
+        <i class="bi bi-bell me-1"></i>Đơn xin nghỉ
+        @if ((int)ViewBag.DonChoDuyet > 0)
+        { <span class="badge bg-warning text-dark ms-1">@ViewBag.DonChoDuyet</span> }
+      </a>
+      <a asp-area="Admin" asp-controller="LichLamViecBacSi" asp-action="Index"
+         class="btn btn-outline-secondary btn-sm" style="border-radius:8px;font-size:12px">
+        <i class="bi bi-arrow-left me-1"></i>Quay lại
+      </a>
+    </div>
+  </div>
+
+  <div class="notification-container">
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success d-flex align-items-center gap-2 mb-3" style="border-radius:10px">
+            <i class="bi bi-check-circle-fill"></i> @TempData["Success"]
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger d-flex align-items-center gap-2 mb-3" style="border-radius:10px">
+            <i class="bi bi-x-circle-fill"></i> @TempData["Error"]
+        </div>
+    }
+  </div>
+
+  @if (!Model.Any())
+  {
+      <div class="dk-empty">
+          <i class="bi bi-calendar-check text-success"></i>
+          <h5>Không có lịch đăng ký nào chờ duyệt</h5>
+          <p>Tất cả lịch đã được xử lý.</p>
+      </div>
+  }
+  else
+  {
+      <div class="summary-bar">
+        <i class="bi bi-info-circle me-1"></i>
+        Có <strong>@Model.Count</strong> ca làm việc do bác sĩ tự đăng ký đang chờ duyệt.
+        Bấm <strong>Duyệt</strong> để xác nhận lịch làm việc, hoặc <strong>Từ chối</strong> để xóa.
+      </div>
+
+      @foreach (var item in Model)
+      {
+          string caLabel = item.CaLam == "Sang" ? "Ca sáng"
+                         : item.CaLam == "Chieu" ? "Ca chiều" : "Cả ngày";
+          string caColor = item.CaLam == "Sang" ? "#0d6efd"
+                         : item.CaLam == "Chieu" ? "#f59e0b" : "#10b981";
+          string tenBacSi = item.BacSi?.FullName ?? "Không rõ";
+          string[] t = {"CN","T2","T3","T4","T5","T6","T7"};
+
+          <div class="dk-card">
+            <div class="dk-avatar">@tenBacSi[0]</div>
+            <div class="dk-info">
+              <div class="dk-name">BS. @tenBacSi</div>
+              <div class="dk-meta">
+                <span><i class="bi bi-calendar-event"></i> @t[(int)item.Ngay.DayOfWeek], @item.Ngay.ToString("dd/MM/yyyy")</span>
+                <span class="ca-pill" style="background:@(caColor)1a;color:@caColor;border:1px solid @(caColor)40">
+                  <i class="bi bi-sun"></i> @caLabel
+                </span>
+                <span><i class="bi bi-people-fill"></i> @item.SoBenhNhanToiDa BN tối đa</span>
+                <span><i class="bi bi-clock"></i> Đăng ký @item.ThoiGianTao.ToString("dd/MM HH:mm")</span>
+              </div>
+              @if (!string.IsNullOrEmpty(item.GhiChu))
+              {
+                  <div class="dk-ghichu"><i class="bi bi-sticky me-1"></i>@item.GhiChu</div>
+              }
+            </div>
+            <div class="dk-actions">
+              <!-- Duyệt nhanh -->
+              <form asp-area="Admin" asp-controller="LichLamViecBacSi" asp-action="DuyetDangKy" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@item.Id" />
+                <input type="hidden" name="chapNhan" value="true" />
+                <button type="submit" class="btn-ok">
+                  <i class="bi bi-check-circle-fill"></i> Duyệt
+                </button>
+              </form>
+
+              <!-- Duyệt có ghi chú -->
+              <button type="button" class="btn-ok" style="background:#0d6efd"
+                      onclick="openGhiChu(@item.Id, 'BS. @tenBacSi', '@item.Ngay.ToString("dd/MM/yyyy")', '@caLabel')">
+                <i class="bi bi-pencil-fill"></i> Duyệt + Ghi chú
+              </button>
+
+              <!-- Từ chối -->
+              <form asp-area="Admin" asp-controller="LichLamViecBacSi" asp-action="DuyetDangKy" method="post"
+                    onsubmit="return confirm('Từ chối lịch đăng ký này? Lịch sẽ bị xóa.')">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@item.Id" />
+                <input type="hidden" name="chapNhan" value="false" />
+                <button type="submit" class="btn-no">
+                  <i class="bi bi-x-circle-fill"></i> Từ chối
+                </button>
+              </form>
+            </div>
+          </div>
+      }
+  }
+</div>
+
+<!-- MODAL GHI CHÚ DUYỆT -->
+<div class="modal-overlay" id="modalGhiChu" onclick="if(event.target===this)this.classList.remove('show')">
+  <div class="modal-box">
+    <div class="modal-hd">
+      <h5><i class="bi bi-check-circle me-2"></i>Duyệt lịch kèm ghi chú</h5>
+      <button class="modal-cl" onclick="document.getElementById('modalGhiChu').classList.remove('show')">
+        <i class="bi bi-x"></i>
+      </button>
+    </div>
+    <div class="modal-bd">
+      <div class="mb-3">
+        <strong id="gcTitle">—</strong>
+        <div style="font-size:12px;color:#64748b;margin-top:2px" id="gcSub">—</div>
+      </div>
+      <form asp-area="Admin" asp-controller="LichLamViecBacSi" asp-action="DuyetDangKy" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="id" id="gcId" />
+        <input type="hidden" name="chapNhan" value="true" />
+        <div class="mb-3">
+          <label class="form-label fw-semibold" style="font-size:13px">
+            <i class="bi bi-chat-text me-1"></i>Ghi chú cho bác sĩ (tùy chọn)
+          </label>
+          <textarea name="ghiChuAdmin" class="form-control" rows="3"
+                    placeholder="Ví dụ: Được duyệt, chú ý giờ bắt đầu..."
+                    style="border-radius:8px;font-size:13px"></textarea>
+        </div>
+        <button type="submit" class="btn-ok w-100" style="justify-content:center">
+          <i class="bi bi-check-circle-fill me-2"></i>Xác nhận duyệt
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+function openGhiChu(id, bacSi, ngay, ca) {
+    document.getElementById('gcId').value = id;
+    document.getElementById('gcTitle').textContent = bacSi + ' — ' + ca;
+    document.getElementById('gcSub').textContent   = 'Ngày: ' + ngay;
+    document.getElementById('modalGhiChu').classList.add('show');
+}
+</script>
